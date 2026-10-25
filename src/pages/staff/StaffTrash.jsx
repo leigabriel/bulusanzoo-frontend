@@ -1,0 +1,304 @@
+import { Trash as TrashIcon, Undo as RestoreIcon, X as CloseIcon } from 'reicon-react';
+import { useState, useEffect } from 'react';
+import { staffAPI, reservationAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
+
+
+const TYPE_BADGES = {
+  User: 'bg-blue-100 text-blue-700',
+  Animal: 'bg-amber-100 text-amber-700',
+  Plant: 'bg-green-100 text-green-700',
+  Event: 'bg-purple-100 text-purple-700',
+  'Ticket Reservation': 'bg-cyan-100 text-cyan-700',
+  'Event Reservation': 'bg-fuchsia-100 text-fuchsia-700',
+  'Walk-In': 'bg-orange-100 text-orange-700',
+};
+
+const TABS = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations', 'Walk-Ins'];
+
+const StaffTrash = () => {
+  const [trashItems, setTrashItems] = useState([]);
+  const [activeTab, setActiveTab] = useState('All');
+  const [selected, setSelected] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetchTrashItems();
+  }, []);
+
+  const fetchTrashItems = async () => {
+    setLoading(true);
+    try {
+      const [users, animals, plants, events, reservations, walkIns] = await Promise.all([
+        staffAPI.getTrashUsers(),
+        staffAPI.getTrashAnimals(),
+        staffAPI.getTrashPlants(),
+        staffAPI.getTrashEvents(),
+        reservationAPI.getTrashReservations('staff'),
+        staffAPI.getTrashWalkIns(),
+      ]);
+
+      const all = [
+        ...(users.users || []).map(u => ({
+          id: u.id,
+          name: u.name || u.username || `User #${u.id}`,
+          type: 'User',
+          deleted_at: u.deleted_at,
+          deleted_by: u.deleted_by || '—',
+          original: u,
+        })),
+        ...(animals.animals || []).map(a => ({
+          id: a.id,
+          name: a.name || `Animal #${a.id}`,
+          type: 'Animal',
+          deleted_at: a.deleted_at,
+          deleted_by: a.deleted_by || '—',
+          original: a,
+        })),
+        ...(plants.plants || []).map(p => ({
+          id: p.id,
+          name: p.name || `Plant #${p.id}`,
+          type: 'Plant',
+          deleted_at: p.deleted_at,
+          deleted_by: p.deleted_by || '—',
+          original: p,
+        })),
+        ...(events.events || []).map(e => ({
+          id: e.id,
+          name: e.title || e.name || `Event #${e.id}`,
+          type: 'Event',
+          deleted_at: e.deleted_at,
+          deleted_by: e.deleted_by || '—',
+          original: e,
+        })),
+        ...(reservations.ticketReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.visitor_name, type: 'Ticket Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
+        ...(reservations.eventReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.venue_event_name, type: 'Event Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
+        ...(walkIns.records || []).map(w => ({ id: w.saleNumber, name: `${w.receiptNumber} - ${w.visitorName || 'Walk-in visitor'}`, type: 'Walk-In', deleted_at: w.deletedAt, deleted_by: w.deletedByName || '—', original: w })),
+      ];
+
+      all.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
+      setTrashItems(all);
+    } catch {
+      notify.error("Couldn't load trash items.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = activeTab === 'All'
+    ? trashItems
+    : trashItems.filter(i => {
+        if (activeTab === 'Reservations') return i.type.endsWith('Reservation');
+        if (activeTab === 'Walk-Ins') return i.type === 'Walk-In';
+        return i.type === activeTab.replace(/s$/, '');
+      });
+
+  const toggleSelect = (key) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(i => `${i.type}-${i.id}`)));
+    }
+  };
+
+  const restoreItem = async (item, undoable = true) => {
+    const key = `${item.type}-${item.id}`;
+    try {
+      if (item.type === 'User') await staffAPI.restoreUser(item.id);
+      else if (item.type === 'Animal') await staffAPI.restoreAnimal(item.id);
+      else if (item.type === 'Plant') await staffAPI.restorePlant(item.id);
+      else if (item.type === 'Event') await staffAPI.restoreEvent(item.id);
+      else if (item.type === 'Ticket Reservation') await reservationAPI.restoreTrashReservations('ticket', [item.id], 'staff');
+      else if (item.type === 'Event Reservation') await reservationAPI.restoreTrashReservations('event', [item.id], 'staff');
+      else if (item.type === 'Walk-In') await staffAPI.restoreWalkIn(item.id);
+
+      setTrashItems(prev => prev.filter(i => `${i.type}-${i.id}` !== key));
+      setSelected(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+
+      if (undoable) {
+        notify.success(`${item.name} restored.`, { duration: 5000, id: `restore-${key}` });
+      }
+      return true;
+    } catch {
+      notify.error(`Couldn't restore ${item.name}.`);
+      return false;
+    }
+  };
+
+  const restoreSelected = async () => {
+    const keys = [...selected];
+    const items = keys.map(k => trashItems.find(i => `${i.type}-${i.id}` === k)).filter(Boolean);
+
+    const results = await Promise.all(items.map(item => restoreItem(item, false)));
+    const restoredCount = results.filter(Boolean).length;
+
+    if (restoredCount > 0) notify.success(`${restoredCount} item(s) restored.`);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
+
+  const tabCounts = {
+    All: trashItems.length,
+    Users: trashItems.filter(i => i.type === 'User').length,
+    Animals: trashItems.filter(i => i.type === 'Animal').length,
+    Plants: trashItems.filter(i => i.type === 'Plant').length,
+    Events: trashItems.filter(i => i.type === 'Event').length,
+    Reservations: trashItems.filter(i => i.type.endsWith('Reservation')).length,
+    'Walk-Ins': trashItems.filter(i => i.type === 'Walk-In').length,
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-[1800px] mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="text-gray-400">
+            <TrashIcon className="w-5 h-5" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Trash</h1>
+          <span className="ml-2 text-sm text-gray-500">{trashItems.length} items</span>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 bg-white rounded-xl shadow-sm p-1 mb-6 border border-gray-100">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => { setActiveTab(tab); setSelected(new Set()); }}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? 'bg-green-400 text-gray-900 shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {tab}
+              <span className={`ml-1.5 text-xs ${activeTab === tab ? 'text-green-200' : 'text-gray-400'}`}>
+                {tabCounts[tab]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Batch actions bar */}
+        {selected.size > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex items-center gap-4 animate-in fade-in">
+            <span className="text-sm font-medium text-green-800">
+              {selected.size} item(s) selected
+            </span>
+            <button
+              onClick={restoreSelected}
+              className="flex items-center gap-2 bg-green-400 hover:bg-green-400 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <RestoreIcon className="w-4 h-4" />
+              Restore Selected
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <CloseIcon className="w-5 h-5 cursor-pointer hover:text-red-500" onClick={() => setSelected(new Set())} />
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          {loading ? (
+            <div className="p-12 text-center text-gray-400">
+              <div className="inline-block w-8 h-8 border-4 border-green-200 border-t-green-400 rounded-full animate-spin mb-3" />
+              <p>Loading trash...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center text-gray-400">
+              <TrashIcon className="w-5 h-5" />
+              <p className="mt-3 text-lg font-medium">Trash is empty</p>
+              <p className="text-sm">No deleted items to show.</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selected.size === filtered.length && filtered.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded border-gray-300 accent-green-400 focus:ring-green-400"
+                    />
+                  </th>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Deleted At</th>
+                  <th className="px-4 py-3">Deleted By</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map(item => {
+                  const key = `${item.type}-${item.id}`;
+                  return (
+                    <tr key={key} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(key)}
+                          onChange={() => toggleSelect(key)}
+                          className="rounded border-gray-300 accent-green-400 focus:ring-green-400"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-medium text-gray-800">{item.name}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${TYPE_BADGES[item.type]}`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {formatDate(item.deleted_at)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {item.deleted_by}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => restoreItem(item)}
+                          className="inline-flex items-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                          title="Restore"
+                        >
+                          <RestoreIcon className="w-4 h-4" />
+                          Restore
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StaffTrash;

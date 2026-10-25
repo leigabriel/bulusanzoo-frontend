@@ -1,0 +1,492 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { notify } from '../../utils/toast';
+import { userAPI } from '../../services/api-client';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { ChevronLeft, Home, Bell, Activity, HelpCircle, ChevronRight, Ticket, Message, Heart, Menu, X } from 'reicon-react';
+
+// Icons
+const LegacyIcons = {
+    Back: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+    ),
+    Home: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+    ),
+    Bell: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+    ),
+    Activity: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+    ),
+    Help: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+    ChevronRight: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+    ),
+    Ticket: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+        </svg>
+    ),
+    Message: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+    ),
+    Heart: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+    )
+};
+const Icons = { Back: ChevronLeft, Home, Bell, Activity, Help: HelpCircle, ChevronRight, Ticket, Message, Heart };
+
+const Settings = ({ embedded = false, onClose }) => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [activeSection, setActiveSection] = useState('notifications');
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // Notifications State
+    // Loading placeholder only. The server response is authoritative and always returns
+    // the complete preference set, so these five keys are never the source of truth.
+    const [notifications, setNotifications] = useState({
+        emailNotifications: true,
+        pushNotifications: true,
+        eventReminders: true,
+        ticketUpdates: true,
+        marketingEmails: false
+    });
+    
+    // Activities State
+    const [activities, setActivities] = useState([]);
+    const [activitiesLoading, setActivitiesLoading] = useState(false);
+    const [activitiesError, setActivitiesError] = useState(null);
+    const [activityFilter, setActivityFilter] = useState('all');
+    const [activitySort, setActivitySort] = useState('newest');
+    const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+    const [pendingKeys, setPendingKeys] = useState(() => new Set());
+    const [statusMessage, setStatusMessage] = useState('');
+    // Last value the server confirmed. Reverts restore from here rather than from a
+    // render closure, which is stale by the time a request settles.
+    const confirmedRef = useRef(null);
+
+    // Read from the ref, not `notifications`: depending on that state would re-fetch the
+    // settings after every successful toggle, which is a loop, not a refresh.
+    const fallbackRef = useRef({
+        emailNotifications: true,
+        pushNotifications: true,
+        eventReminders: true,
+        ticketUpdates: true,
+        marketingEmails: false
+    });
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchSettings = async () => {
+            try {
+                const response = await userAPI.getSettings(user.role);
+                if (response.success && response.settings) {
+                    const confirmed = { ...fallbackRef.current, ...response.settings };
+                    confirmedRef.current = confirmed;
+                    setNotifications(confirmed);
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, [user]);
+
+    const fetchActivities = useCallback(async () => {
+        setActivitiesLoading(true);
+        setActivitiesError(null);
+        try {
+            const response = await userAPI.getActivities(user.role);
+            if (response.success) {
+                setActivities(response.activities || []);
+            } else {
+                setActivitiesError("Unable to load activity history.");
+            }
+        } catch (error) {
+            console.error("Failed to fetch activities:", error);
+            setActivitiesError("Unable to load activity history.");
+        } finally {
+            setActivitiesLoading(false);
+        }
+    }, [user?.role]);
+
+    useEffect(() => {
+        if (activeSection === 'activities' && user) {
+            fetchActivities();
+        }
+    }, [activeSection, user, fetchActivities]);
+
+    const NOTIFICATION_LABELS = {
+        emailNotifications: 'Email Notifications',
+        pushNotifications: 'In-App Notifications',
+        eventReminders: 'Event Reminders',
+        ticketUpdates: 'Ticket Updates',
+        marketingEmails: 'Promotions & News'
+    };
+
+    const handleNotificationToggle = async (key, value) => {
+        // One save at a time per row. Rapid toggles previously raced: each fired its own
+        // request and a failure reverted from a stale render closure, leaving the UI
+        // disagreeing with what was actually saved.
+        if (pendingKeys.has(key)) return;
+
+        const previous = confirmedRef.current;
+        const nextSettings = { ...previous, [key]: value };
+
+        setNotifications(nextSettings);
+        setPendingKeys(prev => new Set(prev).add(key));
+
+        try {
+            const response = await userAPI.updateSettings(nextSettings, user.role);
+            const confirmed = response?.settings ?? nextSettings;
+            confirmedRef.current = confirmed;
+            setNotifications(confirmed);
+            setStatusMessage(`${NOTIFICATION_LABELS[key] || key} preference saved.`);
+        } catch (error) {
+            console.error("Failed to save settings:", error);
+            // Restore from the last server-confirmed snapshot, not from a render closure.
+            setNotifications(previous);
+            notify.error("Couldn't update settings.");
+            setStatusMessage('Could not save that preference. It has been changed back.');
+        } finally {
+            setPendingKeys(prev => {
+                const next = new Set(prev);
+                next.delete(key);
+                return next;
+            });
+        }
+    };
+
+    const menuItems = [
+        { id: 'notifications', label: 'Notifications', icon: Icons.Bell, description: 'Manage your alerts' },
+        { id: 'activities', label: 'Activity Log', icon: Icons.Activity, description: 'Your history & interactions' },
+        { id: 'help', label: 'Need Help?', icon: Icons.Help, description: 'Support & FAQs' }
+    ];
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full">
+                    <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Icons.Bell />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
+                    <p className="text-gray-600 mb-6">Please log in to manage your settings and view your activities.</p>
+                    <Link to="/login" className="block w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors">
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return date.toLocaleDateString('en-US', options);
+    };
+
+    const getActivityIcon = (type) => {
+        if (type?.includes('ticket') || type?.includes('reservation')) return <Icons.Ticket />;
+        if (type?.includes('like') || type?.includes('heart')) return <Icons.Heart />;
+        if (type?.includes('post') || type?.includes('comment') || type?.includes('message')) return <Icons.Message />;
+        return <Icons.Activity />;
+    };
+
+    const getActivityColor = (type) => {
+        if (type?.includes('ticket') || type?.includes('reservation')) return 'bg-blue-100 text-blue-600';
+        if (type?.includes('like') || type?.includes('heart')) return 'bg-red-100 text-red-600';
+        if (type?.includes('post')) return 'bg-emerald-100 text-emerald-600';
+        if (type?.includes('comment') || type?.includes('message')) return 'bg-purple-100 text-purple-600';
+        return 'bg-gray-100 text-gray-600';
+    };
+
+    const getActivityTitle = (activity) => {
+        return activity.title || activity.type?.replaceAll('_', ' ') || 'Activity';
+    };
+
+    const activityTypes = [...new Set(activities.filter(Boolean).map(activity => activity.type).filter(Boolean))];
+    const visibleActivities = activities
+        .filter(Boolean)
+        .filter(activity => activityFilter === 'all' || activity.type === activityFilter)
+        .toSorted((first, second) => {
+            const difference = new Date(second.created_at) - new Date(first.created_at);
+            return activitySort === 'newest' ? difference : -difference;
+        });
+
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <div className="flex items-center justify-center h-64">
+                    <LoadingSpinner size="lg" />
+                </div>
+            );
+        }
+
+        switch (activeSection) {
+            case 'notifications':
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Notification Preferences</h3>
+                            <p className="text-gray-500 mb-6 text-sm">Choose how you want us to communicate with you.</p>
+
+                            {/* Announces save results to screen readers; toasts alone are not announced. */}
+                            <p className="sr-only" role="status" aria-live="polite">{statusMessage}</p>
+
+                            <div className="space-y-4">
+                                {[
+                                    { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive important updates via email' },
+                                    { key: 'pushNotifications', label: 'In-App Notifications', desc: 'Alerts within the application' },
+                                    { key: 'eventReminders', label: 'Event Reminders', desc: 'Get reminded about upcoming zoo events' },
+                                    { key: 'ticketUpdates', label: 'Ticket Updates', desc: 'Updates about your bookings and reservations' },
+                                    { key: 'marketingEmails', label: 'Promotions & News', desc: 'Special offers, newsletters and zoo updates' }
+                                ].map(item => {
+                                    const isPending = pendingKeys.has(item.key);
+                                    return (
+                                    <div key={item.key} className="flex items-start sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100/50 rounded-xl transition-colors border border-gray-100">
+                                        <div className="pr-4">
+                                            <p className="font-semibold text-gray-800">{item.label}</p>
+                                            <p className="text-sm text-gray-500 mt-0.5">{item.desc}</p>
+                                            {isPending && (
+                                                <p className="text-xs text-gray-400 mt-1" aria-hidden="true">Saving…</p>
+                                            )}
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1 sm:mt-0">
+                                            <input
+                                                type="checkbox"
+                                                checked={notifications[item.key]}
+                                                disabled={isPending}
+                                                onChange={(e) => handleNotificationToggle(item.key, e.target.checked)}
+                                                className="sr-only peer disabled:cursor-not-allowed"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 border border-gray-200 peer-checked:border-emerald-500 peer-disabled:opacity-60"></div>
+                                        </label>
+                                    </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 'activities':
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Activity Log</h3>
+                                <p className="text-gray-500 text-sm">A history of your recent interactions and bookings.</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <label className="sr-only" htmlFor="activity-filter">Filter activity</label>
+                                <select id="activity-filter" value={activityFilter} onChange={(event) => setActivityFilter(event.target.value)} className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="all">All actions</option>
+                                    {activityTypes.map(type => <option key={type} value={type}>{type.replaceAll('_', ' ')}</option>)}
+                                </select>
+                                <label className="sr-only" htmlFor="activity-sort">Sort activity</label>
+                                <select id="activity-sort" value={activitySort} onChange={(event) => setActivitySort(event.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="newest">Newest first</option>
+                                    <option value="oldest">Oldest first</option>
+                                </select>
+                                <button onClick={fetchActivities} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100">Refresh</button>
+                            </div>
+                        </div>
+                        
+                        {activitiesLoading ? (
+                            <div className="flex flex-col items-center justify-center h-48 space-y-3">
+                                <LoadingSpinner />
+                                <p className="text-gray-500 text-sm animate-pulse">Loading your activity...</p>
+                            </div>
+                        ) : activitiesError ? (
+                            <div className="p-6 bg-red-50 text-red-600 rounded-xl text-center border border-red-100">
+                                <p>{activitiesError}</p>
+                                <button 
+                                    onClick={fetchActivities}
+                                    className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium text-sm transition-colors"
+                                >
+                                    Try Again
+                                </button>
+                            </div>
+                        ) : activities.length === 0 ? (
+                            <div className="p-10 bg-gray-50 rounded-xl text-center border border-gray-100">
+                                <div className="w-16 h-16 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icons.Activity />
+                                </div>
+                                <p className="text-gray-600 font-medium">No activity yet</p>
+                                <p className="text-sm text-gray-500 mt-1">When you book tickets or post in the community, it will show up here.</p>
+                            </div>
+                        ) : visibleActivities.length === 0 ? (
+                            <div className="rounded-xl border border-gray-100 bg-gray-50 p-8 text-center text-sm text-gray-500">No activity matches this action.</div>
+                        ) : (
+                            <div className="space-y-4">
+                                {visibleActivities.map((activity, index) => (
+                                    <div key={activity.id ? `${activity.type || 'activity'}-${activity.id}` : `activity-${index}`} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getActivityColor(activity.type)}`}>
+                                            {getActivityIcon(activity.type)}
+                                        </div>
+                                        <div className="flex-grow min-w-0">
+                                            <p className="font-semibold text-gray-800 truncate">
+                                                {getActivityTitle(activity)}
+                                            </p>
+                                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 font-medium">
+                                                <span>{formatDate(activity.created_at)}</span>
+                                                {activity.status && (
+                                                    <span className="capitalize px-2 py-0.5 bg-gray-100 rounded-md">
+                                                        {activity.status.replace('_', ' ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 'help':
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Need Help?</h3>
+                            <p className="text-gray-500 mb-6 text-sm">We're here to assist you with any questions or issues.</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div className="p-5 bg-emerald-50 rounded-xl border border-emerald-100">
+                                    <h4 className="font-semibold text-emerald-800 mb-2">Contact Support</h4>
+                                    <p className="text-emerald-600 text-sm mb-4">Email us directly for personalized assistance.</p>
+                                    <a href="mailto:support@bulusanzoo.com" className="inline-block px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors">
+                                        Email Support
+                                    </a>
+                                </div>
+                                <div className="p-5 bg-blue-50 rounded-xl border border-blue-100">
+                                    <h4 className="font-semibold text-blue-800 mb-2">Help Center</h4>
+                                    <p className="text-blue-600 text-sm mb-4">Browse our FAQs and guides for quick answers.</p>
+                                    <Link to="/help" className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                        Visit Help Center
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                                <h4 className="font-semibold text-gray-800 mb-3">Frequently Asked Questions</h4>
+                                <div className="space-y-3">
+                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
+                                        <summary className="font-medium text-sm text-gray-700">How do I get a refund for my ticket?</summary>
+                                        <p className="text-sm text-gray-500 mt-2 pl-2">Refunds must be requested at least 24 hours before your visit date. Please contact support with your booking reference.</p>
+                                    </details>
+                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
+                                        <summary className="font-medium text-sm text-gray-700">Can I change my visit date?</summary>
+                                        <p className="text-sm text-gray-500 mt-2 pl-2">Yes, you can reschedule your visit up to 48 hours prior. Contact support to arrange a new date.</p>
+                                    </details>
+                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
+                                        <summary className="font-medium text-sm text-gray-700">Do I need to print my tickets?</summary>
+                                        <p className="text-sm text-gray-500 mt-2 pl-2">No, you can simply show the QR code on your mobile device at the entrance.</p>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} bg-gray-50/50 flex flex-col`}>
+            {/* Floating Navigation */}
+            {!embedded && <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-gray-700 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium text-sm"
+                >
+                    <Icons.Back />
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+                <Link
+                    to="/"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-gray-700 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium text-sm"
+                >
+                    <Icons.Home />
+                    <span className="hidden sm:inline">Home</span>
+                </Link>
+            </div>}
+
+            {embedded && <div className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
+                    <h2 className="mt-1 text-lg font-bold text-gray-900">Account settings</h2>
+                </div>
+                <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings"><X className="h-5 w-5" /></button>
+            </div>}
+
+            {/* Hero Section */}
+            <section className={`relative border-b border-[#dce5dc] bg-[#e8f1e6] text-[#172018] ${embedded ? 'px-4 pb-8 pt-8' : 'pt-28 pb-14'} text-center`}>
+                <div className="relative z-10 px-4">
+                    <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">Account Settings</h1>
+                    <p className="text-[#56705a] max-w-md mx-auto text-sm md:text-base">Manage your notifications and view your activity history.</p>
+                </div>
+            </section>
+
+            {/* Main Content */}
+            <div className={`flex-grow container mx-auto px-4 ${embedded ? 'py-6' : 'py-8'} max-w-5xl`}>
+                <div>
+                    <div className="relative mb-4 flex items-center justify-between">
+                        <button type="button" onClick={() => setSettingsMenuOpen(open => !open)} aria-expanded={settingsMenuOpen} aria-haspopup="menu" className="inline-flex items-center gap-2 rounded-xl border border-[#dce5dc] bg-white px-3.5 py-2.5 text-sm font-bold text-gray-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                            <Menu className="h-5 w-5" />
+                            Settings menu
+                        </button>
+                        <p className="text-sm font-semibold text-emerald-700">{menuItems.find(item => item.id === activeSection)?.label}</p>
+                        {settingsMenuOpen && (
+                            <div role="menu" className="absolute left-0 top-full z-30 mt-2 w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-[#dce5dc] bg-white p-2 shadow-xl">
+                                {menuItems.map(item => (
+                                    <button key={item.id} role="menuitem" onClick={() => { setActiveSection(item.id); setSettingsMenuOpen(false); }} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${activeSection === item.id ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${activeSection === item.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}><item.icon /></span>
+                                        <span><span className="block text-sm font-bold">{item.label}</span><span className="block text-xs text-gray-500">{item.description}</span></span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                         <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#dce5dc] min-h-[500px]">
+                             {renderContent()}
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Settings;

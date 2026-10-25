@@ -1,0 +1,861 @@
+import { Calendar as ReiconCalendar, Check as ReiconCheck, Clock as ReiconClock, Edit as ReiconEdit, Eye as ReiconEye, Image as ReiconImage, Location as ReiconLocation, Plus as ReiconPlus, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
+import { useState, useEffect, useRef } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import { adminAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
+
+// Icons
+const PlusIcon = () => (
+    <ReiconPlus strokeWidth="2" className="w-5 h-5" />
+);
+
+const CloseIcon = () => (
+    <ReiconX strokeWidth="2" className="w-5 h-5" />
+);
+
+const CalendarIcon = () => (
+    <ReiconCalendar strokeWidth="2" className="w-5 h-5" />
+);
+
+const ClockIcon = () => (
+    <ReiconClock strokeWidth="2" className="w-5 h-5" />
+);
+
+const LocationIcon = () => (
+    <ReiconLocation strokeWidth="2" className="w-5 h-5" />
+);
+
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <ReiconTrash strokeWidth="2" className={className} />
+);
+
+const EditIcon = () => (
+    <ReiconEdit strokeWidth="2" className="w-4 h-4" />
+);
+
+const EyeIcon = () => (
+    <ReiconEye strokeWidth="2" className="w-4 h-4" />
+);
+
+const CheckIcon = () => (
+    <ReiconCheck strokeWidth="3" className="w-4 h-4" color="black" />
+);
+
+// Tag colors for events
+const TAG_COLORS = [
+    { name: 'Green', value: '#22c55e', bg: 'bg-green-500' },
+    { name: 'Blue', value: '#3b82f6', bg: 'bg-blue-500' },
+    { name: 'Purple', value: '#a855f7', bg: 'bg-purple-500' },
+    { name: 'Red', value: '#ef4444', bg: 'bg-red-500' },
+    { name: 'Yellow', value: '#eab308', bg: 'bg-yellow-500' },
+    { name: 'Pink', value: '#ec4899', bg: 'bg-pink-500' },
+    { name: 'Teal', value: '#14b8a6', bg: 'bg-teal-500' },
+    { name: 'Orange', value: '#f97316', bg: 'bg-orange-500' },
+];
+
+const AdminEvents = () => {
+    const calendarRef = useRef(null);
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMode, setModalMode] = useState('create');
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [currentView, setCurrentView] = useState('dayGridMonth');
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        eventDate: '',
+        startTime: '',
+        endTime: '',
+        imageUrl: '',
+        color: '#22c55e',
+        status: 'upcoming'
+    });
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [sidebarView, setSidebarView] = useState('upcoming');
+    const [imageInputMode, setImageInputMode] = useState('upload');
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
+    // Confirmation modal states
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmData, setConfirmData] = useState(null);
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const fetchEvents = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            const response = await adminAPI.getEvents();
+            if (response.success && response.events) {
+                const calendarEvents = response.events.map(event => {
+                    let eventDate;
+                    if (typeof event.event_date === 'string') {
+                        eventDate = event.event_date.split('T')[0];
+                    } else {
+                        const d = new Date(event.event_date);
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        eventDate = `${year}-${month}-${day}`;
+                    }
+                    return {
+                        id: event.id.toString(),
+                        title: event.title,
+                        start: event.start_time ? `${eventDate}T${event.start_time}` : eventDate,
+                        end: event.end_time ? `${eventDate}T${event.end_time}` : null,
+                        backgroundColor: event.color || '#22c55e',
+                        borderColor: event.color || '#22c55e',
+                        extendedProps: {
+                            description: event.description,
+                            imageUrl: event.image_url,
+                            status: event.status,
+                            eventDate: eventDate,
+                            startTime: event.start_time,
+                            endTime: event.end_time,
+                            color: event.color || '#22c55e'
+                        }
+                    };
+                });
+                setEvents(calendarEvents);
+            } else {
+                setEvents([]);
+            }
+        } catch {
+            setError('Failed to load events');
+            setEvents([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDateClick = (arg) => {
+        const clickedDate = arg.dateStr;
+        const eventsOnDate = events.filter(e => e.extendedProps.eventDate === clickedDate);
+        if (eventsOnDate.length > 0) {
+            const event = eventsOnDate[0];
+            setSelectedEvent(event);
+            setFormData({
+                title: event.title,
+                description: event.extendedProps.description || '',
+                eventDate: event.extendedProps.eventDate,
+                startTime: event.extendedProps.startTime || '',
+                endTime: event.extendedProps.endTime || '',
+                imageUrl: event.extendedProps.imageUrl || '',
+                color: event.extendedProps.color || '#22c55e',
+                status: event.extendedProps.status || 'upcoming'
+            });
+            setModalMode('view');
+            setShowModal(true);
+        } else {
+            setSelectedEvent(null);
+            setFormData({ title: '', description: '', eventDate: clickedDate, startTime: '09:00', endTime: '10:00', imageUrl: '', color: '#22c55e', status: 'upcoming' });
+            setModalMode('create');
+            setShowModal(true);
+        }
+    };
+
+    const handleEventClick = (arg) => {
+        const event = arg.event;
+        setSelectedEvent(event);
+        setFormData({
+            title: event.title,
+            description: event.extendedProps.description || '',
+            eventDate: event.extendedProps.eventDate,
+            startTime: event.extendedProps.startTime || '',
+            endTime: event.extendedProps.endTime || '',
+            imageUrl: event.extendedProps.imageUrl || '',
+            color: event.extendedProps.color || '#22c55e',
+            status: event.extendedProps.status || 'upcoming'
+        });
+        setModalMode('view');
+        setShowModal(true);
+    };
+
+    const handleEditMode = () => {
+        setModalMode('edit');
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (!formData.title || !formData.eventDate) {
+            setError('Title and date are required');
+            return;
+        }
+        const actionType = selectedEvent && modalMode === 'edit' ? 'update' : 'create';
+        setConfirmAction(actionType);
+        setConfirmData({ title: formData.title, eventDate: formData.eventDate, status: formData.status });
+        setShowConfirmModal(true);
+    };
+
+    const executeSubmit = async () => {
+        setSaving(true);
+        setShowConfirmModal(false);
+        try {
+            let imageUrl = formData.imageUrl;
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await adminAPI.uploadImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.message || 'Failed to upload image');
+                }
+            }
+            const eventData = {
+                title: formData.title,
+                description: formData.description,
+                eventDate: formData.eventDate,
+                startTime: formData.startTime || null,
+                endTime: formData.endTime || null,
+                imageUrl: imageUrl || null,
+                color: formData.color,
+                status: formData.status
+            };
+            if (selectedEvent && modalMode === 'edit') {
+                const response = await adminAPI.updateEvent(selectedEvent.id, eventData);
+                if (response.success) {
+                    await fetchEvents();
+                    notify.success('Event updated.');
+                    setShowModal(false);
+                    resetForm();
+                }
+            } else {
+                const response = await adminAPI.createEvent(eventData);
+                if (response.success) {
+                    await fetchEvents();
+                    notify.success('Event added.');
+                    setShowModal(false);
+                    resetForm();
+                }
+            }
+        } catch (err) {
+            notify.error(err.message || "Couldn't save event. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = () => {
+        if (!selectedEvent) return;
+        setConfirmAction('delete');
+        setConfirmData({
+            title: formData.title || selectedEvent.title,
+            eventDate: formData.eventDate || selectedEvent.extendedProps?.eventDate,
+            id: selectedEvent.id
+        });
+        setShowConfirmModal(true);
+    };
+
+    const executeDelete = async () => {
+        setSaving(true);
+        setShowConfirmModal(false);
+        try {
+            const response = await adminAPI.deleteEvent(selectedEvent.id);
+            if (response.success) {
+                await fetchEvents();
+                notify.success('Event moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await adminAPI.restoreEvent(selectedEvent.id);
+                                await fetchEvents();
+                                notify.success('Event restored.');
+                            } catch {
+                                notify.error('Failed to restore event');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
+                setShowModal(false);
+                resetForm();
+            }
+        } catch (err) {
+            notify.error(err.message || "Couldn't remove event. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleConfirmAction = () => {
+        if (confirmAction === 'delete') {
+            executeDelete();
+        } else {
+            executeSubmit();
+        }
+    };
+
+    const resetForm = () => {
+        setSelectedEvent(null);
+        setModalMode('create');
+        setFormData({ title: '', description: '', eventDate: '', startTime: '', endTime: '', imageUrl: '', color: '#22c55e', status: 'upcoming' });
+        setError('');
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
+    const handleViewChange = (view) => {
+        setCurrentView(view);
+        const calendarApi = calendarRef.current?.getApi();
+        if (calendarApi) {
+            calendarApi.changeView(view);
+        }
+    };
+
+    const formatTime = (time) => {
+        if (!time) return '';
+        const [hours, minutes] = time.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    };
+
+    const formatDisplayDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    const renderEventContent = (arg) => {
+        const imageUrl = arg.event.extendedProps.imageUrl || '/images/event-img-placeholder.jpg';
+        const isList = arg.view.type === 'listWeek';
+        return (
+            <div className={isList ? 'flex items-center gap-2 w-full' : 'w-full h-full overflow-hidden'}>
+                <img
+                    src={imageUrl}
+                    alt={arg.event.title}
+                    draggable={false}
+                    className={isList ? 'w-9 h-9 rounded object-cover flex-shrink-0' : 'w-full h-full object-cover'}
+                    onError={(e) => { e.target.src = '/images/event-img-placeholder.jpg'; }}
+                />
+            </div>
+        );
+    };
+
+    const upcomingOngoingEvents = events
+        .filter(e => e.extendedProps.status === 'upcoming' || e.extendedProps.status === 'ongoing')
+        .filter(e => new Date(e.extendedProps.eventDate + 'T00:00:00') >= new Date(new Date().toDateString()))
+        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .slice(0, 8);
+
+    const pastEvents = events
+        .filter(e => {
+            const eventDate = new Date(e.extendedProps.eventDate + 'T00:00:00');
+            const today = new Date(new Date().toDateString());
+            return eventDate < today || e.extendedProps.status === 'completed' || e.extendedProps.status === 'cancelled';
+        })
+        .sort((a, b) => new Date(b.start) - new Date(a.start))
+        .slice(0, 10);
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'ongoing': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+            case 'upcoming': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'completed': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
+            case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
+            default: return 'bg-green-400/20 text-green-800 border-green-400/30';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-400 animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Events Management</h1>
+                    <p className="text-gray-500">Create and manage zoo events</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex bg-green-50 rounded-xl p-1 border border-green-200">
+                        {[
+                            { value: 'dayGridMonth', label: 'Month' },
+                            { value: 'timeGridWeek', label: 'Week' },
+                            { value: 'timeGridDay', label: 'Day' },
+                            { value: 'listWeek', label: 'List' },
+                        ].map(view => (
+                            <button
+                                key={view.value}
+                                onClick={() => handleViewChange(view.value)}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${currentView === view.value
+                                        ? 'bg-green-400 text-black'
+                                        : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                            >
+                                {view.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            resetForm();
+                            const now = new Date();
+                            const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                            setFormData(prev => ({ ...prev, eventDate: todayLocal }));
+                            setModalMode('create');
+                            setShowModal(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-400 hover:bg-green-400 text-black font-medium rounded-xl transition-colors"
+                    >
+                        <PlusIcon />
+                        <span>New Event</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content Grid - Calendar */}
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                    {/* Calendar */}
+                    <div className="xl:col-span-3 bg-white border border-green-200 rounded-2xl p-4 sm:p-6">
+                        <style>{`
+                            .fc {
+                                --fc-border-color: #bbf7d0;
+                                --fc-button-bg-color: #f0fdf4;
+                                --fc-button-border-color: #86efac;
+                                --fc-button-text-color: #166534;
+                                --fc-button-hover-bg-color: #dcfce7;
+                                --fc-button-hover-border-color: #4ade80;
+                                --fc-button-active-bg-color: #4ade80;
+                                --fc-button-active-border-color: #4ade80;
+                                --fc-today-bg-color: rgba(34, 197, 94, 0.12);
+                                --fc-page-bg-color: #ffffff;
+                                --fc-neutral-bg-color: #f0fdf4;
+                                --fc-list-event-hover-bg-color: #f0fdf4;
+                                --fc-highlight-color: rgba(34, 197, 94, 0.15);
+                            }
+                            .fc .fc-toolbar-title { color: #111827; font-size: 1.25rem; font-weight: 600; }
+                            .fc .fc-col-header-cell-cushion { color: #6b7280; font-weight: 500; padding: 12px 4px; }
+                            .fc .fc-daygrid-day-number { color: #6b7280; padding: 8px; }
+                            .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #166534; font-weight: 600; }
+                            .fc .fc-daygrid-day-frame { min-height: 100px; }
+                            .fc .fc-daygrid-day:hover { background-color: rgba(34,197,94,0.06); cursor: pointer; }
+                            .fc .fc-event { border-radius: 8px; padding: 0 !important; font-size: 0.75rem; font-weight: 500; border: none; cursor: pointer; overflow: hidden; }
+                            .fc .fc-event .fc-event-title { color: #000000 !important; }
+                            .fc .fc-event .fc-event-time { color: #000000 !important; }
+                            .fc .fc-event:hover { opacity: 0.95; transform: scale(1.02); transition: all 0.2s; }
+                            .fc .fc-button { border-radius: 8px !important; padding: 8px 16px !important; font-weight: 500 !important; text-transform: capitalize !important; }
+                            .fc .fc-button-primary:not(:disabled).fc-button-active { color: #111827 !important; }
+                            .fc .fc-timegrid-slot-label-cushion { color: #6b7280; }
+                            .fc .fc-timegrid-axis-cushion { color: #6b7280; }
+                            .fc .fc-list-day-cushion { background-color: #f0fdf4 !important; }
+                            .fc .fc-list-day-text, .fc .fc-list-day-side-text { color: #111827 !important; }
+                            .fc .fc-list-event-time { color: #6b7280; }
+                            .fc .fc-list-event-title { color: #111827; }
+                            .fc-theme-standard td, .fc-theme-standard th { border-color: #bbf7d0; }
+                            .fc-scrollgrid { border-color: #bbf7d0 !important; }
+                            .fc .fc-scrollgrid-section > * { border-color: #bbf7d0; }
+                            .fc-day-other .fc-daygrid-day-number { color: #4a4a4a !important; }
+                            .fc .fc-event { padding: 0 !important; border: none !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+                            .fc .fc-event .fc-event-main { padding: 0; overflow: hidden; height: 100%; }
+                            .fc .fc-daygrid-event { height: auto !important; aspect-ratio: 1 / 1 !important; margin: 5px !important; }
+                            .fc .fc-timegrid-event { background-color: transparent !important; }
+                            .fc .fc-list-event .fc-event-main { overflow: visible; }
+                        `}</style>
+                        <FullCalendar
+                            ref={calendarRef}
+                            plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                            initialView={currentView}
+                            headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }}
+                            buttonIcons={false}
+                            events={events}
+                            editable={true}
+                            selectable={true}
+                            selectMirror={true}
+                            dayMaxEvents={3}
+                            weekends={true}
+                            dateClick={handleDateClick}
+                            eventClick={handleEventClick}
+                            eventContent={renderEventContent}
+                            eventDrop={async (info) => {
+                                const d = info.event.start;
+                                const newDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                try {
+                                    await adminAPI.updateEvent(info.event.id, {
+                                        ...info.event.extendedProps,
+                                        title: info.event.title,
+                                        eventDate: newDate,
+                                    });
+                                    await fetchEvents();
+                                } catch {
+                                    info.revert();
+                                }
+                            }}
+                            height="auto"
+                            contentHeight={600}
+                        />
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className="xl:col-span-1 space-y-6">
+                        <div className="bg-white border border-green-200 rounded-2xl p-5">
+                            <div className="flex items-center gap-2 mb-4">
+                                <button
+                                    onClick={() => setSidebarView('upcoming')}
+                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${sidebarView === 'upcoming' ? 'bg-green-400 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    Upcoming ({upcomingOngoingEvents.length})
+                                </button>
+                                <button
+                                    onClick={() => setSidebarView('past')}
+                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${sidebarView === 'past' ? 'bg-green-400 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    Past ({pastEvents.length})
+                                </button>
+                            </div>
+
+                            {sidebarView === 'upcoming' ? (
+                                upcomingOngoingEvents.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-gray-500 mb-2"><CalendarIcon /></div>
+                                        <p className="text-gray-500 text-sm">No upcoming events</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                        {upcomingOngoingEvents.map((event) => (
+                                            <div
+                                                key={event.id}
+                                                onClick={() => {
+                                                    setSelectedEvent(event);
+                                                    setFormData({
+                                                        title: event.title,
+                                                        description: event.extendedProps.description || '',
+                                                        eventDate: event.extendedProps.eventDate,
+                                                        startTime: event.extendedProps.startTime || '',
+                                                        endTime: event.extendedProps.endTime || '',
+                                                        imageUrl: event.extendedProps.imageUrl || '',
+                                                        color: event.extendedProps.color || '#22c55e',
+                                                        status: event.extendedProps.status || 'upcoming'
+                                                    });
+                                                    setModalMode('view');
+                                                    setShowModal(true);
+                                                }}
+                                                className="p-3 bg-green-50 rounded-xl hover:bg-green-50 transition cursor-pointer border-l-4 group"
+                                                style={{ borderColor: event.backgroundColor }}
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="font-medium text-gray-900 text-sm group-hover:text-green-800 transition line-clamp-1">{event.title}</p>
+                                                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>{event.extendedProps.status}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                                                    <span className="flex items-center gap-1">
+                                                        <CalendarIcon />
+                                                        {new Date(event.extendedProps.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                    {event.extendedProps.startTime && (
+                                                        <span className="flex items-center gap-1">
+                                                            <ClockIcon />
+                                                            {formatTime(event.extendedProps.startTime)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            ) : (
+                                pastEvents.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="text-gray-500 mb-2"><CalendarIcon /></div>
+                                        <p className="text-gray-500 text-sm">No past events</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                        {pastEvents.map((event) => (
+                                            <div
+                                                key={event.id}
+                                                onClick={() => {
+                                                    setSelectedEvent(event);
+                                                    setFormData({
+                                                        title: event.title,
+                                                        description: event.extendedProps.description || '',
+                                                        eventDate: event.extendedProps.eventDate,
+                                                        startTime: event.extendedProps.startTime || '',
+                                                        endTime: event.extendedProps.endTime || '',
+                                                        imageUrl: event.extendedProps.imageUrl || '',
+                                                        color: event.extendedProps.color || '#22c55e',
+                                                        status: event.extendedProps.status || 'completed'
+                                                    });
+                                                    setModalMode('view');
+                                                    setShowModal(true);
+                                                }}
+                                                className="p-3 bg-green-50 rounded-xl hover:bg-green-50 transition cursor-pointer border-l-4 group opacity-75"
+                                                style={{ borderColor: event.backgroundColor }}
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="font-medium text-gray-900 text-sm group-hover:text-green-800 transition line-clamp-1">{event.title}</p>
+                                                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>{event.extendedProps.status || 'completed'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                                                    <span className="flex items-center gap-1">
+                                                        <CalendarIcon />
+                                                        {new Date(event.extendedProps.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </span>
+                                                    {event.extendedProps.startTime && (
+                                                        <span className="flex items-center gap-1">
+                                                            <ClockIcon />
+                                                            {formatTime(event.extendedProps.startTime)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            )}
+                        </div>
+
+                        <div className="bg-white border border-green-200 rounded-2xl p-5">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Stats</h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                                    <span className="text-gray-500 text-sm">Total Events</span>
+                                    <span className="text-gray-900 font-bold">{events.length}</span>
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-green-400/10 rounded-xl border border-green-400/20">
+                                    <span className="text-green-800 text-sm">Upcoming</span>
+                                    <span className="text-green-800 font-bold">{events.filter(e => e.extendedProps.status === 'upcoming').length}</span>
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                    <span className="text-blue-700 text-sm">Ongoing</span>
+                                    <span className="text-blue-700 font-bold">{events.filter(e => e.extendedProps.status === 'ongoing').length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {/* Event Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-5 border-b border-green-200">
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {modalMode === 'view' ? 'Event Details' : modalMode === 'edit' ? 'Edit Event' : 'New Event'}
+                            </h2>
+                            <button onClick={() => { setShowModal(false); resetForm(); }} className="text-gray-500 hover:text-gray-900 transition">
+                                <CloseIcon />
+                            </button>
+                        </div>
+
+                        {modalMode === 'view' ? (
+                            <div className="p-5 space-y-4">
+                                <div className="h-2 rounded-full -mx-5 -mt-5" style={{ backgroundColor: formData.color }} />
+                                <div className="mt-4">
+                                    <h3 className="text-2xl font-bold text-gray-900">{formData.title}</h3>
+                                    <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusStyle(formData.status)}`}>{formData.status}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <CalendarIcon />
+                                    <span>{formatDisplayDate(formData.eventDate)}</span>
+                                </div>
+                                {formData.startTime && (
+                                    <div className="flex items-center gap-3 text-gray-700">
+                                        <ClockIcon />
+                                        <span>{formatTime(formData.startTime)}{formData.endTime && ` - ${formatTime(formData.endTime)}`}</span>
+                                    </div>
+                                )}
+                                {formData.imageUrl && (
+                                    <div className="mt-4 rounded-xl overflow-hidden shadow-md">
+                                        <img src={formData.imageUrl} alt="Event" className="w-full h-64 object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                    </div>
+                                )}
+                                {formData.description && (
+                                    <div className="pt-4 border-t border-green-200">
+                                        <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-line">{formData.description}</p>
+                                    </div>
+                                )}
+                                <div className="flex gap-3 pt-4">
+                                    <button type="button" onClick={handleDelete} disabled={saving} className="flex items-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-700 border border-red-500/30 rounded-xl font-medium transition disabled:opacity-50">
+                                        <TrashIcon />
+                                        Delete
+                                    </button>
+                                    <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                        Close
+                                    </button>
+                                    <button type="button" onClick={handleEditMode} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition">
+                                        <EditIcon />
+                                        Edit
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                                {error && (
+                                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700 text-sm">{error}</div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Title <span className="text-red-700">*</span></label>
+                                    <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Add title here" className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                    <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Enter event description here" rows={3} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition resize-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <span className="flex items-center gap-2"><CalendarIcon /> Date <span className="text-red-700">*</span></span>
+                                    </label>
+                                    <input type="date" value={formData.eventDate} onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition" required />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                                        <input type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                                        <input type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <span className="flex items-center gap-2">
+                                            <ReiconImage strokeWidth="2" className="w-5 h-5" />
+                                            Event Image
+                                        </span>
+                                    </label>
+                                    <input type="file" accept="image/*" onChange={handleImageFileChange} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400 transition" />
+                                    {(imagePreview || formData.imageUrl) && (
+                                        <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
+                                            <img src={imagePreview || formData.imageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            {imagePreview && (
+                                                <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-1 right-1 bg-red-500 text-gray-900 rounded-full p-1 hover:bg-red-600 transition">
+                                                    <ReiconX className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">Tag Color</label>
+                                        <span className="text-xs font-semibold text-green-800 uppercase tracking-wider">{TAG_COLORS.find(c => c.value === formData.color)?.name || 'Default'}</span>
+                                    </div>
+                                    <div className="flex gap-3 flex-wrap p-3 bg-green-50 rounded-xl border border-green-100">
+                                        {TAG_COLORS.map((color) => (
+                                            <button key={color.value} type="button" onClick={() => setFormData({ ...formData, color: color.value })} className={`w-10 h-10 rounded-xl ${color.bg} transition-all flex items-center justify-center shadow-sm ${formData.color === color.value ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-white scale-110 shadow-md' : 'hover:scale-105 opacity-80 hover:opacity-100'}`} title={color.name}>
+                                                {formData.color === color.value && <CheckIcon />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition">
+                                        <option value="upcoming">Upcoming</option>
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    {modalMode === 'edit' && (
+                                        <button type="button" onClick={handleDelete} disabled={saving} className="flex items-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-700 border border-red-500/30 rounded-xl font-medium transition disabled:opacity-50">
+                                            <TrashIcon />
+                                            Delete
+                                        </button>
+                                    )}
+                                    <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition disabled:opacity-50">
+                                        {saving ? (
+                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                        ) : modalMode === 'edit' ? (
+                                            <><EditIcon /> Update</>
+                                        ) : (
+                                            <><PlusIcon /> Add Event</>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmAction === 'delete' ? 'bg-red-500/20' : 'bg-green-400/20'}`}>
+                            {confirmAction === 'delete' ? <TrashIcon /> : confirmAction === 'update' ? <EditIcon /> : <PlusIcon />}
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                            {confirmAction === 'delete' ? 'Delete Event' : confirmAction === 'update' ? 'Update Event' : 'Create Event'}
+                        </h3>
+                        <p className="text-gray-500 text-center mb-4">
+                            {confirmAction === 'delete' ? 'Are you sure you want to delete this event? This action cannot be undone.' : confirmAction === 'update' ? 'Are you sure you want to update this event?' : 'Are you sure you want to create this event?'}
+                        </p>
+                        {confirmData && (
+                            <div className="bg-green-50 rounded-xl p-4 mb-6 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Title</span>
+                                    <span className="text-gray-900 font-medium">{confirmData.title}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Date</span>
+                                    <span className="text-gray-900 font-medium">
+                                        {confirmData.eventDate ? new Date(confirmData.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+                                    </span>
+                                </div>
+                                {confirmData.status && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Status</span>
+                                        <span className="text-gray-900 font-medium capitalize">{confirmData.status}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <div className="flex gap-3">
+                            <button onClick={() => { setShowConfirmModal(false); setConfirmAction(null); setConfirmData(null); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                Cancel
+                            </button>
+                            <button onClick={handleConfirmAction} disabled={saving} className={`flex-1 px-4 py-3 rounded-xl font-medium transition disabled:opacity-50 ${confirmAction === 'delete' ? 'bg-red-500 hover:bg-red-600 text-gray-900' : 'bg-green-400 hover:bg-green-400 text-black'}`}>
+                                {saving ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdminEvents;

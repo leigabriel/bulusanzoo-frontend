@@ -1,0 +1,832 @@
+import { Calendar as ReiconCalendar, ChartBar as ReiconChartBar, ChevronDown as ReiconChevronDown, ChevronExpandY as ReiconChevronExpandY, ChevronUp as ReiconChevronUp, Clipboard as ReiconClipboard, Download as ReiconDownload, FileText as ReiconFileText, Print as ReiconPrint, Refresh as ReiconRefresh, Search as ReiconSearch, Ticket as ReiconTicket, TrendUp as ReiconTrendUp, Users as ReiconUsers } from 'reicon-react';
+import { useState, useEffect, useMemo } from 'react';
+import * as XLSX from 'xlsx';
+import { adminAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
+import './Reports.css';
+
+// Icons
+const ChartIcon = () => (
+    <ReiconChartBar strokeWidth="2" className="w-6 h-6" />
+);
+
+const TicketIcon = () => (
+    <ReiconTicket strokeWidth="2" className="w-6 h-6" />
+);
+
+const UsersIcon = () => (
+    <ReiconUsers strokeWidth="2" className="w-6 h-6" />
+);
+
+const DownloadIcon = () => (
+    <ReiconDownload strokeWidth="2" className="w-4 h-4" />
+);
+
+const PrintIcon = () => (
+    <ReiconPrint strokeWidth="2" className="w-4 h-4" />
+);
+
+const RefreshIcon = () => (
+    <ReiconRefresh strokeWidth="2" className="w-4 h-4" />
+);
+
+const CalendarIcon = () => (
+    <ReiconCalendar strokeWidth="2" className="w-5 h-5" />
+);
+
+const FileTextIcon = () => (
+    <ReiconFileText strokeWidth="2" className="w-5 h-5" />
+);
+
+const ClipboardIcon = () => (
+    <ReiconClipboard strokeWidth="2" className="w-12 h-12 text-gray-500" />
+);
+
+const SearchIcon = ({ className = '' }) => (
+    <ReiconSearch strokeWidth="2" className={`w-4 h-4 pointer-events-none ${className}`} aria-hidden="true" />
+);
+
+const SortIcon = ({ direction }) => (
+    (direction === 'asc' ? <ReiconChevronUp strokeWidth="2" className="w-3 h-3 inline ml-1" /> : direction === 'desc' ? <ReiconChevronDown strokeWidth="2" className="w-3 h-3 inline ml-1" /> : <ReiconChevronExpandY strokeWidth="2" className="w-3 h-3 inline ml-1" />)
+);
+
+const TrendIcon = ({ className = '' }) => (
+    <ReiconTrendUp strokeWidth="2" className={`w-5 h-5 ${className}`} />
+);
+
+const Reports = () => {
+    const [reportType, setReportType] = useState('sales');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [reportData, setReportData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [reportError, setReportError] = useState('');
+    const [statsError, setStatsError] = useState(false);
+    const [quickStats, setQuickStats] = useState({
+        totalRevenue: 0,
+        ticketsSold: 0,
+        visitors: 0,
+    });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+
+    // Date preset options
+    const datePresets = [
+        { label: 'Today', getValue: () => { const d = new Date(); return { start: formatDate(d), end: formatDate(d) }; } },
+        { label: 'This Week', getValue: () => { const d = new Date(); const w = new Date(d.setDate(d.getDate() - d.getDay())); return { start: formatDate(w), end: formatDate(new Date()) }; } },
+        { label: 'This Month', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), d.getMonth(), 1)), end: formatDate(d) }; } },
+        { label: 'This Year', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), 0, 1)), end: formatDate(d) }; } },
+        { label: 'Last 30 Days', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 29)), end: formatDate(d) }; } },
+    ];
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    const normalizeReportDate = (value) => {
+        if (!value) return '';
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            const isoDateMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (isoDateMatch) return isoDateMatch[1];
+
+            const parsed = new Date(trimmed);
+            if (!Number.isNaN(parsed.getTime())) {
+                return formatDate(parsed);
+            }
+
+            return trimmed;
+        }
+
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            return formatDate(value);
+        }
+
+        return String(value);
+    };
+
+    const toExportNumber = (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : 0;
+    };
+
+    const normalizeStatus = (value) => {
+        const status = String(value || '').toLowerCase();
+        if (status === 'completed' || status === 'confirmed') return 'Completed';
+        if (status === 'cancelled' || status === 'canceled') return 'Cancelled';
+        if (status === 'pending') return 'Pending';
+        if (!status) return 'N/A';
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    };
+
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const formatLongDate = (value) => {
+        const normalized = normalizeReportDate(value);
+        if (!normalized) return '';
+        const parsed = new Date(`${normalized}T00:00:00`);
+        return Number.isNaN(parsed.getTime()) ? normalized : parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
+    const exportTimestamp = () => new Date().toLocaleString('sv-SE').replace(' ', '_').replace(/:/g, '-');
+
+    // Fetch quick stats on mount
+    useEffect(() => {
+        const fetchQuickStats = async () => {
+            try {
+                setStatsLoading(true);
+                const response = await adminAPI.getQuickStats();
+                if (response.success && response.data) {
+                    setQuickStats({
+                        totalRevenue: response.data.totalRevenue || 0,
+                        ticketsSold: response.data.ticketsSold || 0,
+                        visitors: response.data.visitors || 0,
+                    });
+                } else {
+                    setStatsError(true);
+                }
+            } catch (error) {
+                setStatsError(true);
+                console.error('Error fetching quick stats:', error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+        fetchQuickStats();
+    }, []);
+
+    const reportTypes = [
+        { value: 'all', label: 'All Reports', icon: FileTextIcon, description: 'Sales, visitors, events, and tickets' },
+        { value: 'sales', label: 'Sales Report', icon: ChartIcon, description: 'Revenue and earnings breakdown' },
+        { value: 'visitors', label: 'Visitor Report', icon: UsersIcon, description: 'Attendance and visitor data' },
+        { value: 'events', label: 'Event Report', icon: CalendarIcon, description: 'Event attendance and bookings' },
+        { value: 'tickets', label: 'Ticket Report', icon: TicketIcon, description: 'Ticket sales and validations' },
+    ];
+
+    const generateReport = async () => {
+        if (loading) return;
+        const effectiveEnd = dateRange.end || formatDate(new Date());
+        const end = new Date(`${effectiveEnd}T00:00:00`);
+        const effectiveStart = dateRange.start || formatDate(new Date(end.getFullYear(), end.getMonth(), end.getDate() - 29));
+
+        if (effectiveStart > effectiveEnd) {
+            setReportError('Start date must be on or before end date.');
+            notify.warning('Choose a valid date range.');
+            return;
+        }
+
+        if (!dateRange.start || !dateRange.end) {
+            setDateRange({
+                start: effectiveStart,
+                end: effectiveEnd
+            });
+        }
+        
+        setLoading(true);
+        setReportError('');
+        try {
+            let response;
+            if (reportType === 'all') {
+                const [sales, visitors, events] = await Promise.all(['sales', 'visitors', 'events'].map(type => adminAPI.getReportData(effectiveStart, effectiveEnd, type)));
+                if (![sales, visitors, events].every(result => result.success && result.data)) throw new Error('One or more report requests failed');
+                response = {
+                    success: true,
+                    data: {
+                        totalRevenue: toExportNumber(sales.data.totalRevenue) + toExportNumber(events.data.totalRevenue),
+                        ticketsSold: toExportNumber(sales.data.ticketsSold) + toExportNumber(events.data.ticketsSold),
+                        visitors: toExportNumber(sales.data.visitors) + toExportNumber(events.data.visitors),
+                        items: [
+                            ...sales.data.items.map(item => ({ ...item, reportGroup: 'Sales and Tickets' })),
+                            ...visitors.data.items.map(item => ({ ...item, reportGroup: 'Visitors' })),
+                            ...events.data.items.map(item => ({ ...item, reportGroup: 'Events' }))
+                        ]
+                    }
+                };
+            } else {
+                response = await adminAPI.getReportData(effectiveStart, effectiveEnd, reportType);
+            }
+            
+            if (response.success && response.data) {
+                setReportData({
+                    totalRevenue: response.data.totalRevenue || 0,
+                    ticketsSold: response.data.ticketsSold || 0,
+                    visitors: response.data.visitors || 0,
+                    items: response.data.items || [],
+                    generatedAt: new Date().toLocaleString(),
+                    dateRange: { start: effectiveStart, end: effectiveEnd },
+                    reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
+                    type: reportType,
+                });
+                setSearchTerm('');
+                notify.success('Report generated.');
+            } else {
+                throw new Error(response.message || 'Report request failed');
+            }
+        } catch (error) {
+            console.error('Error generating report:', error);
+            setReportError('Unable to generate report. Please try again. Any previous report is still shown below.');
+            notify.error("Couldn't generate report.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filtered and sorted data
+    const processedItems = useMemo(() => {
+        if (!reportData?.items) return [];
+        
+        let items = [...reportData.items];
+        
+        // Apply search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            items = items.filter(item => 
+                normalizeReportDate(item.date).toLowerCase().includes(term) ||
+                item.name?.toLowerCase().includes(term) ||
+                item.type?.toLowerCase().includes(term) ||
+                item.status?.toLowerCase().includes(term) ||
+                item.reference?.toLowerCase().includes(term)
+            );
+        }
+        
+        // Apply sorting
+        items.sort((a, b) => {
+            let aVal = a[sortConfig.key];
+            let bVal = b[sortConfig.key];
+            
+            if (sortConfig.key === 'amount' || sortConfig.key === 'quantity') {
+                aVal = Number(aVal) || 0;
+                bVal = Number(bVal) || 0;
+            }
+
+            if (sortConfig.key === 'date') {
+                aVal = normalizeReportDate(aVal);
+                bVal = normalizeReportDate(bVal);
+            }
+            
+            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        return items;
+    }, [reportData?.items, searchTerm, sortConfig]);
+
+    const handleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const reportRows = useMemo(() => processedItems.map(item => ({
+        date: normalizeReportDate(item.date),
+        reference: item.reference || 'N/A',
+        type: `${item.reportGroup ? `${item.reportGroup}: ` : ''}${item.name || item.type || 'N/A'}`,
+        quantity: toExportNumber(item.quantity),
+        amount: toExportNumber(item.amount),
+        status: normalizeStatus(item.status)
+    })), [processedItems]);
+
+    const reportTotals = useMemo(() => processedItems.reduce((acc, item) => ({
+        totalQuantity: acc.totalQuantity + toExportNumber(item.quantity),
+        totalAmount: acc.totalAmount + toExportNumber(item.amount)
+    }), { totalQuantity: 0, totalAmount: 0 }), [processedItems]);
+
+    const getReportMeta = () => {
+        const start = reportData?.dateRange?.start
+            || dateRange.start
+            || formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+        const end = reportData?.dateRange?.end || dateRange.end || formatDate(new Date());
+        const title = reportData?.reportType
+            || reportTypes.find(t => t.value === reportType)?.label
+            || 'Report';
+        const generatedAt = reportData?.generatedAt || new Date().toLocaleString();
+        return { start, end, title, generatedAt };
+    };
+
+    const exportReport = () => {
+        if (!reportData || reportRows.length === 0) {
+            notify.info('Generate a report first.');
+            return;
+        }
+
+        const { start, end, title } = getReportMeta();
+        const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount (PHP)', 'Status'];
+        const rows = reportRows.map(row => [
+            formatLongDate(row.date),
+            row.reference,
+            row.type,
+            row.quantity,
+            row.amount,
+            row.status
+        ]);
+
+        const sheetRows = [
+            ['Date Range', `${formatLongDate(start)} to ${formatLongDate(end)}`],
+            [],
+            ['Report Summary'],
+            ['Total Revenue (PHP)', toExportNumber(stats.totalRevenue)],
+            ['Tickets Sold', toExportNumber(stats.ticketsSold)],
+            ['Total Visitors', toExportNumber(stats.visitors)],
+            ['Average Revenue Per Day (PHP)', Math.round(toExportNumber(reportData.totalRevenue) / reportDays)],
+            ['Filtered Records', reportRows.length],
+            ['Filtered Quantity', reportTotals.totalQuantity],
+            ['Filtered Amount (PHP)', reportTotals.totalAmount],
+            [],
+            headers,
+            ...rows,
+            ['', '', 'Summary', reportTotals.totalQuantity, reportTotals.totalAmount, '']
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+
+        ws['!cols'] = headers.map((_, colIndex) => {
+            let maxLength = 10;
+            sheetRows.forEach(row => {
+                const cell = row[colIndex];
+                if (cell === null || cell === undefined) return;
+                const length = String(cell).length + 2;
+                if (length > maxLength) maxLength = length;
+            });
+            return { wch: Math.min(maxLength, 34) };
+        });
+
+        const dateStr = start && end ? `${start}_to_${end}` : formatDate(new Date());
+        const filename = `Zoo_${reportData.type}_Report_${dateStr}.xlsx`;
+
+        try {
+            XLSX.writeFile(wb, filename);
+            notify.success('Report exported.');
+        } catch (error) {
+            console.error('Error exporting report:', error);
+            notify.error("Couldn't export report.");
+        }
+    };
+
+    const handlePrint = () => {
+        if (!reportData || reportRows.length === 0) {
+            notify.info('Generate a report first.');
+            return;
+        }
+
+        const { start, end } = getReportMeta();
+        const totalAmount = reportTotals.totalAmount.toLocaleString();
+        const totalQuantity = reportTotals.totalQuantity.toLocaleString();
+        const summaryCards = [
+            ['Total Revenue', `PHP ${toExportNumber(stats.totalRevenue).toLocaleString()}`],
+            ['Tickets Sold', toExportNumber(stats.ticketsSold).toLocaleString()],
+            ['Total Visitors', toExportNumber(stats.visitors).toLocaleString()],
+            ['Average Revenue / Day', `PHP ${Math.round(toExportNumber(reportData.totalRevenue) / reportDays).toLocaleString()}`]
+        ].map(([label, value]) => `<div class="metric"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
+
+        const groupedRows = Object.values(reportRows.reduce((groups, row) => {
+            const classification = reportData.type === 'events'
+                ? 'Event Reservations'
+                : row.type.includes(':') ? row.type.split(':', 1)[0] : row.type;
+            const key = `${classification}|${row.status}`;
+            if (!groups[key]) groups[key] = { type: classification, status: row.status, quantity: 0, amount: 0, records: 0 };
+            groups[key].quantity += row.quantity;
+            groups[key].amount += row.amount;
+            groups[key].records += 1;
+            return groups;
+        }, {}));
+        const rowsHtml = groupedRows.map((row) => (
+            `<tr>
+                <td>${escapeHtml(row.type)}</td>
+                <td class="num">${escapeHtml(row.records.toLocaleString())}</td>
+                <td class="num">${escapeHtml(row.quantity.toLocaleString())}</td>
+                <td class="num">₱${escapeHtml(row.amount.toLocaleString())}</td>
+                <td>${escapeHtml(row.status)}</td>
+            </tr>`
+        )).join('');
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>BulusanZoo-Report-${exportTimestamp()}.pdf</title>
+    <style>
+        * { box-sizing: border-box; }
+         html, body { width: 210mm !important; max-width: 210mm !important; height: 297mm !important; margin: 0 !important; overflow: hidden !important; }
+         body { padding: 1in; font-family: Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.5; text-align: left; }
+         .letterhead { text-align: center; border-bottom: 2px solid #222; padding-bottom: 5px; }
+         .letterhead strong { display: block; font-size: 16pt; font-weight: 700; }
+         .letterhead span { font-size: 11pt; }
+         .subject { margin: 0 0 8pt; font-size: 16pt; font-weight: 700; text-align: center; }
+         p { margin: 0 0 8pt; text-align: left; }
+         .meta { font-size: 11pt; margin-bottom: 8pt; color: #333; }
+         .meta span { display: inline-block; margin-right: 14px; }
+         .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 7px 0; break-inside: avoid; }
+         .metric { border: 1px solid #777; padding: 5px; }
+         .metric strong, .metric span { display: block; }
+         .metric strong { font-size: 13pt; margin-bottom: 2pt; }
+         .metric span { color: #555; font-size: 11pt; }
+         table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+         th, td { border: 1px solid #777; padding: 3pt 4pt; font-size: 11pt; line-height: 1.5; text-align: left; }
+         th { background: #eee; }
+        td.num { text-align: right; }
+         tfoot td { font-weight: 700; background: #fafafa; }
+         thead { display: table-header-group; }
+         tfoot { display: table-footer-group; }
+         tr, .metric, .summary { break-inside: avoid; page-break-inside: avoid; }
+         .summary { margin-top: 8pt; font-size: 11pt; color: #333; }
+         @page { size: A4 portrait; margin: 0; }
+         @media print {
+             html, body { width: 210mm !important; height: 297mm !important; }
+         }
+    </style>
+</head>
+<body>
+    <header class="letterhead"><strong>Bulusan Zoo Calapan</strong><span>Administrative Report Memorandum</span></header>
+    <div class="subject">${escapeHtml(reportData.reportType)} Summary</div>
+    <p>To the concerned administrative officers:</p>
+    <p>This memorandum provides a consolidated review of operational records for the period indicated below. The summarized figures and classifications are presented for administrative evaluation, planning, and official reference.</p>
+    <div class="meta">
+        <span>Date Range: ${escapeHtml(formatLongDate(start))} to ${escapeHtml(formatLongDate(end))}</span>
+        <span>Records: ${reportRows.length}</span>
+    </div>
+    <div class="metrics">${summaryCards}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Report Classification</th>
+                <th>Records</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rowsHtml}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2">Summary</td>
+                <td class="num">${escapeHtml(totalQuantity)}</td>
+                <td class="num">₱${escapeHtml(totalAmount)}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="summary">Detailed record-level data remains available in the corresponding Excel export.</div>
+</body>
+</html>`;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;visibility:hidden';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        iframe.style.visibility = 'visible';
+        const printWhenReady = async () => {
+            try {
+                await iframe.contentDocument.fonts?.ready;
+                await new Promise(resolve => setTimeout(resolve, 300));
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (error) {
+                console.error('Error preparing PDF export:', error);
+                notify.error("Couldn't prepare the PDF export.");
+            } finally {
+                iframe.remove();
+            }
+        };
+        iframe.addEventListener('afterprint', () => iframe.remove(), { once: true });
+        setTimeout(() => iframe.remove(), 30000);
+        if (doc.readyState === 'complete') printWhenReady();
+        else iframe.addEventListener('load', printWhenReady, { once: true });
+    };
+
+    const getStatusBadge = (status) => {
+        const statusLower = (status || '').toLowerCase();
+        switch (statusLower) {
+            case 'completed':
+            case 'confirmed':
+                return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'pending':
+                return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'cancelled':
+            case 'refunded':
+                return 'bg-red-500/20 text-red-700 border-red-500/30';
+            default:
+                return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
+        }
+    };
+
+    const applyPreset = (preset) => {
+        const values = preset.getValue();
+        setDateRange(values);
+    };
+
+    const stats = reportData ?? quickStats;
+    const statsPending = !reportData && statsLoading;
+    const statsUnavailable = !reportData && statsError;
+    const reportDays = reportData ? Math.max(1, Math.round((Date.parse(reportData.dateRange.end) - Date.parse(reportData.dateRange.start)) / 86400000) + 1) : 0;
+
+    return (
+        <div className="admin-reports min-w-0 w-full space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <FileTextIcon />
+                        Reports
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">Generate and export detailed reports from database</p>
+                </div>
+                {reportData && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                        Last generated: {reportData.generatedAt}
+                    </div>
+                )}
+            </div>
+
+            {/* Report Generator Card */}
+            <div className="bg-white border border-green-200 rounded-2xl p-4 sm:p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <RefreshIcon />
+                    Generate Report
+                </h3>
+                
+                {/* Quick Date Presets */}
+                <fieldset disabled={loading} className="min-w-0">
+                <legend className="sr-only">Report criteria</legend>
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {datePresets.map((preset, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => applyPreset(preset)}
+                            className="px-3 py-1.5 text-xs font-medium bg-green-50 border border-green-200 text-gray-500 rounded-lg hover:border-green-400/50 hover:text-gray-900 transition-all"
+                        >
+                            {preset.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="report-controls grid gap-4">
+                    {/* Report Type */}
+                    <div>
+                        <label htmlFor="report-type" className="block text-sm font-medium text-gray-500 mb-2">Report Type</label>
+                        <select
+                            id="report-type"
+                            value={reportType}
+                            onChange={(e) => setReportType(e.target.value)}
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all cursor-pointer"
+                        >
+                            {reportTypes.map((type) => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">{reportTypes.find(t => t.value === reportType)?.description}</p>
+                    </div>
+
+                    {/* Start Date */}
+                    <div>
+                        <label htmlFor="report-start" className="block text-sm font-medium text-gray-500 mb-2">Start Date</label>
+                        <input
+                            id="report-start"
+                            max={dateRange.end || undefined}
+                            type="date"
+                            value={dateRange.start}
+                            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all"
+                        />
+                    </div>
+
+                    {/* End Date */}
+                    <div>
+                        <label htmlFor="report-end" className="block text-sm font-medium text-gray-500 mb-2">End Date</label>
+                        <input
+                            id="report-end"
+                            min={dateRange.start || undefined}
+                            type="date"
+                            value={dateRange.end}
+                            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all"
+                        />
+                    </div>
+
+                    {/* Generate Button */}
+                    <div className="report-generate flex items-start">
+                        <button
+                            onClick={generateReport}
+                            disabled={loading}
+                            className="w-full py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-green-300/50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin"></div>
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshIcon />
+                                    Generate Report
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+                </fieldset>
+                {reportError && <p role="alert" className="mt-4 text-sm text-red-700">{reportError}</p>}
+            </div>
+
+            {/* Quick Stats - Now with 4 columns */}
+            <div className="report-stats grid gap-4" aria-busy={statsPending}>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <ChartIcon />
+                        </div>
+                        <TrendIcon className="text-green-800" />
+                    </div>
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</h4>
+                    <p className="text-2xl font-bold text-green-800 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : `₱${toExportNumber(stats.totalRevenue).toLocaleString()}`}</p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? `${reportData.dateRange.start} - ${reportData.dateRange.end}` : 'All time'}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-700">
+                            <TicketIcon />
+                        </div>
+                    </div>
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tickets Sold</h4>
+                    <p className="text-2xl font-bold text-blue-700 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : toExportNumber(stats.ticketsSold).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? `${reportData.items.length} report rows` : 'All time'}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-700">
+                            <UsersIcon />
+                        </div>
+                    </div>
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Visitors</h4>
+                    <p className="text-2xl font-bold text-purple-700 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : toExportNumber(stats.visitors).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mt-1">Reserved visitors</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-700">
+                            <CalendarIcon />
+                        </div>
+                    </div>
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Revenue/Day</h4>
+                    <p className="text-2xl font-bold text-amber-700 mt-1">
+                        {reportData ? `₱${Math.round(toExportNumber(reportData.totalRevenue) / reportDays).toLocaleString()}` : 'N/A'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? 'Across selected date range' : 'Generate a report to calculate'}</p>
+                </div>
+            </div>
+
+            {/* Report Preview */}
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                <div className="report-toolbar p-4 md:p-6 border-b border-green-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1 basis-52">
+                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            {reportData?.reportType || 'Report'} Preview
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1 break-words">
+                            {processedItems.length} records {searchTerm && `matching "${searchTerm}"`}
+                        </p>
+                        {reportData && <p className="text-xs text-gray-500 mt-1">{reportData.dateRange.start} to {reportData.dateRange.end}</p>}
+                    </div>
+                    <div className="flex flex-wrap grow basis-96 min-w-0 gap-3">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-0 basis-48">
+                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <input
+                                type="text"
+                                aria-label="Search report records"
+                                placeholder="Search records..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-green-50 border border-green-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-green-400/50"
+                            />
+                        </div>
+                        {/* Export + Print */}
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={exportReport}
+                                disabled={loading || reportRows.length === 0}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 text-green-800 rounded-xl hover:bg-green-400/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                                <DownloadIcon />
+                                Export Excel
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                disabled={loading || reportRows.length === 0}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-700 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                                <PrintIcon />
+                                Export PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 md:p-6" aria-busy={loading}>
+                    {loading && <p role="status" className="mb-4 text-sm text-gray-500">Generating report...</p>}
+                    {reportData ? (
+                        processedItems.length > 0 ? (
+                            <div className="overflow-x-auto focus-visible:outline-green-500" role="region" aria-label="Report records, scroll horizontally to view all columns" tabIndex={0}>
+                                <table className="w-full min-w-[720px]">
+                                    <thead className="bg-green-50">
+                                        <tr>
+                                            <th 
+                                                onClick={() => handleSort('date')}
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-l-lg cursor-pointer hover:text-gray-900 transition"
+                                            >
+                                                Date
+                                                <SortIcon direction={sortConfig.key === 'date' ? sortConfig.direction : null} />
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ref</th>
+                                            <th 
+                                                onClick={() => handleSort('type')}
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
+                                            >
+                                                Type
+                                                <SortIcon direction={sortConfig.key === 'type' ? sortConfig.direction : null} />
+                                            </th>
+                                            <th 
+                                                onClick={() => handleSort('quantity')}
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
+                                            >
+                                                Qty
+                                                <SortIcon direction={sortConfig.key === 'quantity' ? sortConfig.direction : null} />
+                                            </th>
+                                            <th 
+                                                onClick={() => handleSort('amount')}
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
+                                            >
+                                                Amount
+                                                <SortIcon direction={sortConfig.key === 'amount' ? sortConfig.direction : null} />
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-r-lg">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-green-200">
+                                        {reportRows.map((item, index) => (
+                                            <tr key={index} className="hover:bg-green-50/50 transition-colors">
+                                                <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{normalizeReportDate(item.date)}</td>
+                                                <td className="px-4 py-4 text-gray-500 text-xs font-mono break-all">{item.reference}</td>
+                                                <td className="px-4 py-4 text-gray-900 font-medium break-words max-w-64">{item.type}</td>
+                                                <td className="px-4 py-4 text-gray-700">{item.quantity}</td>
+                                                <td className="px-4 py-4 text-green-800 font-medium">₱{(item.amount || 0).toLocaleString()}</td>
+                                                <td className="px-4 py-4">
+                                                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadge(item.status)}`}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot className="bg-green-50 border-t border-green-200">
+                                        <tr>
+                                            <td colSpan="3" className="px-4 py-3 text-sm font-bold text-gray-900">Summary</td>
+                                            <td className="px-4 py-3 text-sm font-bold text-gray-900">
+                                                {reportTotals.totalQuantity.toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm font-bold text-green-800">
+                                                ₱{reportTotals.totalAmount.toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center py-12 text-gray-500">
+                                <ClipboardIcon />
+                                <p className="mt-4">No records found for the selected criteria</p>
+                            </div>
+                        )
+                    ) : (
+                        <div className="flex flex-col items-center py-12 text-gray-500">
+                            <ClipboardIcon />
+                            <p className="mt-4 text-center">Select report type and date range, then click Generate to preview report</p>
+                            <p className="text-xs text-gray-500 mt-2">Use quick date presets above for faster selection</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Reports;

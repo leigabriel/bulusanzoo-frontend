@@ -1,0 +1,605 @@
+import { Activity as ReiconActivity, Clock as ReiconClock, Envelope as ReiconEnvelope, Login as ReiconLogin, Refresh as ReiconRefresh, Shield as ReiconShield, Ticket as ReiconTicket, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { adminAPI, reservationAPI } from '../../services/api-client';
+
+const UsersIcon = () => (
+    <ReiconUsers strokeWidth="2" className="w-5 h-5" />
+);
+
+const ActivityIcon = () => (
+    <ReiconActivity strokeWidth="2" className="w-5 h-5" />
+);
+
+const ClockIcon = () => (
+    <ReiconClock strokeWidth="2" className="w-4 h-4" />
+);
+
+const RefreshIcon = ({ className = '' }) => (
+    <ReiconRefresh strokeWidth="2" className={`w-4 h-4 ${className}`} />
+);
+
+const ShieldIcon = () => (
+    <ReiconShield strokeWidth="2" className="w-5 h-5" />
+);
+
+const LoginIcon = () => (
+    <ReiconLogin strokeWidth="2" className="w-4 h-4" />
+);
+
+const MessageIcon = () => (
+    <ReiconEnvelope strokeWidth="2" className="w-4 h-4" />
+);
+
+const TicketIcon = () => (
+    <ReiconTicket strokeWidth="2" className="w-4 h-4" />
+);
+
+const getActionPresentation = (actionType) => {
+    switch (actionType) {
+        case 'login':
+            return {
+                icon: <LoginIcon />,
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
+                label: 'Login',
+                responsibility: 'Access Control'
+            };
+        case 'logout':
+            return {
+                icon: <LoginIcon />,
+                chip: 'bg-slate-500/10 text-gray-700 border border-slate-500/30',
+                iconWrap: 'bg-slate-500/15 text-gray-700',
+                label: 'Logout',
+                responsibility: 'Access Control'
+            };
+        case 'message_reply':
+            return {
+                icon: <MessageIcon />,
+                chip: 'bg-sky-500/10 text-sky-700 border border-sky-500/30',
+                iconWrap: 'bg-sky-500/15 text-sky-700',
+                label: 'Message Reply',
+                responsibility: 'Support Desk'
+            };
+        case 'reservation_update':
+        case 'ticket_update':
+            return {
+                icon: <TicketIcon />,
+                chip: 'bg-violet-500/10 text-violet-700 border border-violet-500/30',
+                iconWrap: 'bg-violet-500/15 text-violet-700',
+                label: 'Reservation Action',
+                responsibility: 'Reservation Confirmation Desk'
+            };
+        case 'animal_update':
+            return {
+                icon: <ActivityIcon />,
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
+                label: 'Animal Update',
+                responsibility: 'Animal Records'
+            };
+        case 'plant_update':
+            return {
+                icon: <ActivityIcon />,
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
+                label: 'Plant Update',
+                responsibility: 'Plant Records'
+            };
+        default:
+            return {
+                icon: <ActivityIcon />,
+                chip: 'bg-gray-500/10 text-gray-700 border border-gray-500/30',
+                iconWrap: 'bg-gray-500/15 text-gray-700',
+                label: 'Staff Action',
+                responsibility: 'Operations'
+            };
+    }
+};
+
+const getPresenceDot = (status) => {
+    if (status === 'active') return 'bg-green-400';
+    if (status === 'away') return 'bg-amber-400';
+    return 'bg-gray-500';
+};
+
+const getListKey = (item, index, prefix) => {
+    const candidate = item?.id ?? item?.activity_id ?? item?.session_id ?? item?.staff_id ?? item?.date;
+    let value = candidate;
+    if (value && typeof value === 'object') value = value.id ?? value.value ?? JSON.stringify(value);
+    return `${prefix}-${String(value ?? 'item')}-${index}`;
+};
+
+const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+};
+
+const AdminStaffMonitoring = () => {
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState(null);
+    const [lastRefresh, setLastRefresh] = useState(new Date());
+    const [dashboardData, setDashboardData] = useState({
+        overview: { totalStaff: 0, onlineNow: 0, totalActivities: 0 },
+        activeSessions: [],
+        recentActivities: [],
+        staffMembers: [],
+        dailyActivity: []
+    });
+    const [selectedStaff, setSelectedStaff] = useState(null);
+    const [staffTimeline, setStaffTimeline] = useState([]);
+    const [loadingTimeline, setLoadingTimeline] = useState(false);
+    const [filterActionType, setFilterActionType] = useState('all');
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [reservationRefs, setReservationRefs] = useState({});
+
+    const fetchDashboardData = useCallback(async (showRefreshing = false) => {
+        try {
+            if (showRefreshing) setRefreshing(true);
+            const response = await adminAPI.getMonitoringDashboard();
+            if (response.success) {
+                setDashboardData(response.data || {});
+                setLastRefresh(new Date());
+                setError(null);
+            }
+        } catch {
+            setError('Failed to load monitoring data');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    const fetchStaffTimeline = async (staffId) => {
+        try {
+            setLoadingTimeline(true);
+            const response = await adminAPI.getStaffTimeline(staffId);
+            if (response.success) {
+                setStaffTimeline(Array.isArray(response.timeline) ? response.timeline : []);
+            }
+        } catch {
+            setStaffTimeline([]);
+        } finally {
+            setLoadingTimeline(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    useEffect(() => {
+        if (!autoRefresh) return;
+        const interval = setInterval(() => fetchDashboardData(true), 30000);
+        return () => clearInterval(interval);
+    }, [autoRefresh, fetchDashboardData]);
+
+    const fetchReservationReferences = useCallback(async () => {
+        try {
+            const [ticketRes, eventRes] = await Promise.all([
+                reservationAPI.getAllTicketReservations('admin').catch(() => null),
+                reservationAPI.getAllEventReservations('admin').catch(() => null)
+            ]);
+
+            const ticketReservations = Array.isArray(ticketRes?.reservations) ? ticketRes.reservations : [];
+            const eventReservations = Array.isArray(eventRes?.reservations) ? eventRes.reservations : [];
+
+            const byId = {};
+            ticketReservations.forEach((r) => {
+                byId[`reservation:${r.id}`] = {
+                    reference: r.reservation_reference || r.booking_reference || `Ticket #${r.id}`,
+                    confirmedById: r.confirmed_by || null,
+                    type: 'ticket'
+                };
+            });
+            eventReservations.forEach((r) => {
+                byId[`event:${r.id}`] = {
+                    reference: r.reservation_reference || `Event #${r.id}`,
+                    confirmedById: r.confirmed_by || null,
+                    type: 'event'
+                };
+                byId[`reservation:${r.id}`] = byId[`reservation:${r.id}`] || {
+                    reference: r.reservation_reference || `Event #${r.id}`,
+                    confirmedById: r.confirmed_by || null,
+                    type: 'event'
+                };
+            });
+
+            setReservationRefs(byId);
+        } catch {
+            setReservationRefs({});
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchReservationReferences();
+    }, [fetchReservationReferences]);
+
+    const handleStaffClick = (staff) => {
+        setSelectedStaff(staff);
+        fetchStaffTimeline(staff.id);
+    };
+
+    const filteredActivities = useMemo(() => {
+        const list = Array.isArray(dashboardData.recentActivities) ? dashboardData.recentActivities : [];
+        if (filterActionType === 'all') return list;
+        return list.filter((activity) => activity.action_type === filterActionType);
+    }, [dashboardData.recentActivities, filterActionType]);
+
+    const onlineStaffIds = useMemo(() => {
+        const sessions = Array.isArray(dashboardData.activeSessions) ? dashboardData.activeSessions : [];
+        return new Set(
+            sessions
+                .filter((s) => (Number(s.inactive_minutes) || 0) < 15)
+                .map((s) => Number(s.staff_id))
+                .filter((id) => Number.isFinite(id))
+        );
+    }, [dashboardData.activeSessions]);
+
+    const staffNameById = useMemo(() => {
+        const names = {};
+        (dashboardData.staffMembers || []).forEach((s) => {
+            names[s.id] = `${s.firstName || ''} ${s.lastName || ''}`.trim() || `Staff #${s.id}`;
+        });
+        (dashboardData.activeSessions || []).forEach((s) => {
+            if (!names[s.staff_id]) {
+                names[s.staff_id] = `${s.first_name || ''} ${s.last_name || ''}`.trim() || `Staff #${s.staff_id}`;
+            }
+        });
+        return names;
+    }, [dashboardData.staffMembers, dashboardData.activeSessions]);
+
+    const getReservationContext = (activity) => {
+        if (!['reservation_update', 'ticket_update'].includes(activity.action_type)) {
+            return null;
+        }
+        const key = `${activity.entity_type || 'reservation'}:${activity.entity_id}`;
+        const fallbackKey = `reservation:${activity.entity_id}`;
+        const reservation = reservationRefs[key] || reservationRefs[fallbackKey] || null;
+        if (!reservation) return null;
+
+        const responsible = reservation.confirmedById
+            ? (staffNameById[reservation.confirmedById] || `Staff #${reservation.confirmedById}`)
+            : 'Not confirmed yet';
+
+        return {
+            reference: reservation.reference,
+            responsible,
+            type: reservation.type
+        };
+    };
+
+    const reservationActions = filteredActivities.filter((a) => ['reservation_update', 'ticket_update'].includes(a.action_type)).length;
+
+    const actionTypeOptions = [
+        { value: 'all', label: 'All Actions' },
+        { value: 'login', label: 'Logins' },
+        { value: 'logout', label: 'Logouts' },
+        { value: 'message_reply', label: 'Messages' },
+        { value: 'reservation_update', label: 'Reservations' },
+        { value: 'ticket_update', label: 'Tickets' },
+        { value: 'animal_update', label: 'Animals' },
+        { value: 'plant_update', label: 'Plants' }
+    ];
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-400 animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-green-400/15 text-green-800 flex items-center justify-center">
+                        <ShieldIcon />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Staff Monitoring</h1>
+                        <p className="text-sm text-gray-500">Track responsibility, accountability, and real-time staff execution.</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 px-3 py-2 bg-white border border-green-200 rounded-xl">
+                        <ClockIcon />
+                        Updated {formatTimeAgo(lastRefresh)}
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer px-3 py-2 bg-white border border-green-200 rounded-xl">
+                        <input
+                            type="checkbox"
+                            checked={autoRefresh}
+                            onChange={(e) => setAutoRefresh(e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-600 bg-green-50 accent-green-400 focus:ring-green-400"
+                        />
+                        Auto-refresh
+                    </label>
+                    <button
+                        onClick={() => fetchDashboardData(true)}
+                        disabled={refreshing}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-400 text-gray-900 font-semibold hover:bg-green-400 disabled:bg-gray-200 disabled:text-gray-700 transition"
+                    >
+                        <RefreshIcon className={refreshing ? 'animate-spin' : ''} />
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-700">
+                    {error}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><UsersIcon /> Total Staff</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.totalStaff || 0}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><ActivityIcon /> Online Now</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.onlineNow || 0}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><ActivityIcon /> Logged Activities</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.totalActivities || 0}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><TicketIcon /> Reservation Actions</div>
+                    <p className="text-3xl font-bold text-gray-900">{reservationActions}</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Connected Activity Feed</h3>
+                            <p className="text-sm text-gray-500">See who performed each task and which responsibility area it belongs to.</p>
+                        </div>
+                        <select
+                            value={filterActionType}
+                            onChange={(e) => setFilterActionType(e.target.value)}
+                            className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
+                        >
+                            {actionTypeOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                        {filteredActivities.length === 0 ? (
+                            <p className="text-sm text-gray-500 text-center py-8">No activity found for this filter.</p>
+                        ) : (
+                            filteredActivities.map((activity, index) => {
+                                const style = getActionPresentation(activity.action_type);
+                                return (
+                                    <div key={getListKey(activity, index, 'activity')} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-400/30 transition">
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
+                                                {style.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-gray-900">
+                                                    <span className="font-semibold">{activity.first_name} {activity.last_name}</span>
+                                                    <span className="text-gray-700"> {activity.action_description || style.label}</span>
+                                                </p>
+                                                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                                    <span className={`px-2 py-1 rounded-full ${style.chip}`}>{style.label}</span>
+                                                    <span className="px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
+                                                        Responsibility: {style.responsibility}
+                                                    </span>
+                                                    {activity.entity_type && (
+                                                        <span className="px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
+                                                            {activity.entity_type}{activity.entity_id ? ` #${activity.entity_id}` : ''}
+                                                        </span>
+                                                    )}
+                                                    {getReservationContext(activity) && (
+                                                        <span className="px-2 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-300">
+                                                            {getReservationContext(activity).type === 'ticket' ? 'Ticket' : 'Event'} {getReservationContext(activity).reference}
+                                                        </span>
+                                                    )}
+                                                    {getReservationContext(activity) && (
+                                                        <span className="px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-400/40">
+                                                            Responsible: {getReservationContext(activity).responsible}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-2">{formatTimeAgo(activity.created_at)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Daily Activity Trend</h3>
+                    <p className="text-sm text-gray-500 mb-4">Staff activity count and participating staff by day.</p>
+                    <div className="space-y-3">
+                        {(dashboardData.dailyActivity || []).length === 0 ? (
+                            <p className="text-sm text-gray-500 py-6 text-center">No daily data available.</p>
+                        ) : (
+                            dashboardData.dailyActivity.map((day, index) => {
+                                const max = Math.max(...(dashboardData.dailyActivity || []).map((d) => Number(d.count) || 0), 1);
+                                const width = `${Math.max(10, Math.round(((Number(day.count) || 0) / max) * 100))}%`;
+                                return (
+                                    <div key={getListKey(day, index, 'day')}>
+                                        <div className="flex items-center justify-between text-xs mb-1">
+                                            <span className="text-gray-700">{new Date(day.date).toLocaleDateString()}</span>
+                                            <span className="text-gray-500">{day.count} actions • {day.active_staff} staff</span>
+                                        </div>
+                                        <div className="h-2 rounded-full bg-green-50 overflow-hidden">
+                                            <div className="h-full rounded-full bg-gradient-to-r from-green-300 via-green-400 to-green-500 " style={{ width }} />
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Staff Accountability Board</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[430px] overflow-y-auto pr-1">
+                        {(dashboardData.staffMembers || []).map((staff, index) => (
+                            <button
+                                key={getListKey(staff, index, 'staff')}
+                                type="button"
+                                onClick={() => handleStaffClick(staff)}
+                                className="text-left p-4 rounded-xl border border-green-200 bg-green-50 hover:border-green-400/35 transition"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="relative">
+                                        <div className="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center text-gray-700 font-semibold">
+                                            {staff.firstName?.[0]}{staff.lastName?.[0]}
+                                        </div>
+                                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${onlineStaffIds.has(Number(staff.id)) ? 'bg-green-400' : 'bg-gray-500'}`}></span>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{staff.firstName} {staff.lastName}</p>
+                                        <p className="text-xs text-gray-500 capitalize truncate">{staff.role}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-500">Actions this week</span>
+                                    <span className="text-green-800 font-semibold">{staff.actionsThisWeek || 0}</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Live Sessions</h3>
+                    <div className="space-y-3 max-h-[430px] overflow-y-auto pr-1">
+                        {(dashboardData.activeSessions || []).length === 0 ? (
+                            <p className="text-sm text-gray-500 text-center py-8">No active sessions.</p>
+                        ) : (
+                            dashboardData.activeSessions.map((session, index) => (
+                                <button
+                                    key={getListKey(session, index, 'session')}
+                                    type="button"
+                                    onClick={() => handleStaffClick({ id: session.staff_id, ...session })}
+                                    className="w-full text-left p-3 rounded-xl bg-green-50 border border-green-200 hover:border-green-400/35 transition"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-gray-700 text-sm font-semibold">
+                                                {session.first_name?.[0]}{session.last_name?.[0]}
+                                            </div>
+                                            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${getPresenceDot(session.status)}`}></span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm text-gray-900 font-medium truncate">{session.first_name} {session.last_name}</p>
+                                            <p className="text-xs text-gray-500 capitalize">{session.role}</p>
+                                        </div>
+                                        <span className="text-xs text-gray-500 capitalize">{session.status}</span>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {selectedStaff && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSelectedStaff(null)}>
+                    <div className="bg-white border border-green-200 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-gray-700 font-semibold">
+                                    {(selectedStaff.firstName || selectedStaff.first_name || '')?.[0]}
+                                    {(selectedStaff.lastName || selectedStaff.last_name || '')?.[0]}
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">
+                                        {selectedStaff.firstName || selectedStaff.first_name} {selectedStaff.lastName || selectedStaff.last_name}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">{selectedStaff.email}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSelectedStaff(null)}
+                                className="text-gray-500 hover:text-gray-900 transition"
+                            >
+                                <ReiconX strokeWidth="2" className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <h4 className="text-gray-900 font-semibold mb-3">Activity Timeline</h4>
+                        <div className="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
+                            {loadingTimeline ? (
+                                <div className="flex justify-center py-8">
+                                    <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            ) : staffTimeline.length === 0 ? (
+                                <p className="text-sm text-gray-500 text-center py-8">No activity recorded.</p>
+                            ) : (
+                                staffTimeline.map((activity, index) => {
+                                    const style = getActionPresentation(activity.action_type);
+                                    return (
+                                        <div key={getListKey(activity, index, 'timeline')} className="p-4 rounded-xl border border-green-200 bg-green-50">
+                                            <div className="flex items-start gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
+                                                    {style.icon}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm text-gray-900">{activity.action_description || style.label}</p>
+                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                        <span className={`text-xs px-2 py-1 rounded-full ${style.chip}`}>{style.label}</span>
+                                                        <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
+                                                            Responsibility: {style.responsibility}
+                                                        </span>
+                                                        {activity.entity_type && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
+                                                                {activity.entity_type}{activity.entity_id ? ` #${activity.entity_id}` : ''}
+                                                            </span>
+                                                        )}
+                                                        {getReservationContext(activity) && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-300">
+                                                                {getReservationContext(activity).type === 'ticket' ? 'Ticket' : 'Event'} {getReservationContext(activity).reference}
+                                                            </span>
+                                                        )}
+                                                        {getReservationContext(activity) && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-400/40">
+                                                                Responsible: {getReservationContext(activity).responsible}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-2">{formatTimeAgo(activity.created_at)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdminStaffMonitoring;

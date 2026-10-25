@@ -1,0 +1,738 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import Header from '../../Header';
+import Footer from '../../Footer';
+import {
+    loadLocalModel,
+    isModelReady,
+    detectAnimal
+} from '../../../services/ai-detection-service';
+import { fetchAnimalDescription } from '../../../services/animal-description-service';
+import { ANIMAL_DATABASE } from '../../../config/ai-service-config';
+import useScrollLock from '../../../hooks/use-scroll-lock';
+
+const UserIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+);
+const UploadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+);
+const PawIcon = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 10.5c-2.5 0-4.5 2.5-4.5 5.5 0 2 1.5 3.5 4.5 3.5s4.5-1.5 4.5-3.5c0-3-2-5.5-4.5-5.5zm-5.5-2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm11 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-8-1.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm5 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" /></svg>
+);
+const CameraIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+);
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+);
+const SwitchCameraIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" /><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" /><circle cx="12" cy="12" r="3" /><path d="m18 22-3-3 3-3" /><path d="m6 2 3 3-3 3" /></svg>
+);
+
+const ANIMAL_INFO = ANIMAL_DATABASE;
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
+
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || window.innerWidth < 768;
+};
+
+const AnimalClassifier = ({ embedded = false }) => {
+    const [messages, setMessages] = useState([
+        { id: 1, role: 'bot', type: 'text', content: `Hello! Upload a photo or use Camera to identify animals!` }
+    ]);
+    const [isModelLoading, setIsModelLoading] = useState(!isModelReady());
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const imageRef = useRef(null);
+    const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const currentFileName = useRef('');
+    const messageIdRef = useRef(1);
+    const objectUrlsRef = useRef([]);
+    const [analysisImage, setAnalysisImage] = useState(null);
+
+    const [showCameraModal, setShowCameraModal] = useState(false);
+    const [cameraReady, setCameraReady] = useState(false);
+    const [cameraFacing, setCameraFacing] = useState('environment');
+    const [cameraError, setCameraError] = useState(null);
+    const [isMobile, setIsMobile] = useState(isMobileDevice());
+    const videoRef = useRef(null);
+    const streamRef = useRef(null);
+    const cameraRequestRef = useRef(0);
+    useScrollLock(showCameraModal);
+
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+    const stopCameraStream = useCallback(() => {
+        cameraRequestRef.current += 1;
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        setCameraReady(false);
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(isMobileDevice());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const initModel = async () => {
+            if (isModelReady()) {
+                setIsModelLoading(false);
+                return;
+            }
+
+            try {
+                await loadLocalModel();
+                setIsModelLoading(false);
+            } catch {
+                addBotMessage('The local AI model could not be loaded. Please refresh and try again.');
+                setIsModelLoading(false);
+            }
+        };
+        initModel();
+    }, []);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isProcessing]);
+
+    useEffect(() => {
+        const objectUrls = objectUrlsRef.current;
+        return () => {
+            stopCameraStream();
+            objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        };
+    }, [stopCameraStream]);
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        currentFileName.current = file.name;
+        const imageUrl = URL.createObjectURL(file);
+        objectUrlsRef.current.push(imageUrl);
+
+        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: imageUrl }]);
+
+        setIsProcessing(true);
+        setAnalysisImage(imageUrl);
+        e.target.value = '';
+    };
+
+    const startCameraStream = useCallback(async (facingMode) => {
+        const requestId = cameraRequestRef.current + 1;
+        cameraRequestRef.current = requestId;
+
+        try {
+            setCameraError(null);
+            setCameraReady(false);
+
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: facingMode,
+                    width: { ideal: isMobile ? 1280 : 960 },
+                    height: { ideal: isMobile ? 720 : 540 },
+                    resizeMode: 'crop-and-scale'
+                },
+                audio: false
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+            if (cameraRequestRef.current !== requestId) {
+                stream.getTracks().forEach(track => track.stop());
+                return;
+            }
+
+            streamRef.current = stream;
+
+            if (videoRef.current) {
+                const video = videoRef.current;
+                video.srcObject = stream;
+                video.muted = true;
+                video.playsInline = true;
+                await video.play();
+                if (cameraRequestRef.current === requestId) setCameraReady(true);
+            }
+        } catch (err) {
+            if (cameraRequestRef.current !== requestId) return;
+            setCameraError(
+                err.name === 'NotAllowedError'
+                    ? 'Camera access denied. Please allow camera permission.'
+                    : 'Unable to access camera. Please try Upload instead.'
+            );
+        }
+    }, [isMobile]);
+
+    const openCameraModal = useCallback(() => {
+        setShowCameraModal(true);
+        setCameraError(null);
+        setCameraReady(false);
+
+    }, []);
+
+    useEffect(() => {
+        if (!showCameraModal) return undefined;
+        const timer = window.setTimeout(() => startCameraStream(cameraFacing), 0);
+        return () => window.clearTimeout(timer);
+    }, [showCameraModal, cameraFacing, startCameraStream]);
+
+    const closeCameraModal = useCallback(() => {
+        stopCameraStream();
+        setShowCameraModal(false);
+        setCameraError(null);
+
+    }, [stopCameraStream]);
+
+    const switchCamera = useCallback(async () => {
+        const newFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+        setCameraFacing(newFacing);
+    }, [cameraFacing]);
+
+    const capturePhoto = useCallback(() => {
+        if (!videoRef.current || !cameraReady) return;
+
+        const video = videoRef.current;
+        const sourceWidth = video.videoWidth || 960;
+        const sourceHeight = video.videoHeight || 540;
+        const sourceIsPortrait = sourceHeight > sourceWidth;
+        const deviceIsPortrait = isMobile && window.matchMedia('(orientation: portrait)').matches;
+        const rotateToDevice = isMobile && deviceIsPortrait !== sourceIsPortrait;
+        const canvas = document.createElement('canvas');
+        canvas.width = rotateToDevice ? sourceHeight : sourceWidth;
+        canvas.height = rotateToDevice ? sourceWidth : sourceHeight;
+        const ctx = canvas.getContext('2d');
+
+        if (rotateToDevice) {
+            ctx.translate(canvas.width, 0);
+            ctx.rotate(Math.PI / 2);
+        }
+
+        if (cameraFacing === 'user') {
+            ctx.translate(sourceWidth, 0);
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        closeCameraModal();
+
+        currentFileName.current = `camera-capture-${Date.now()}.jpg`;
+        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: dataUrl }]);
+        setIsProcessing(true);
+        setAnalysisImage(dataUrl);
+    }, [cameraReady, cameraFacing, closeCameraModal, isMobile]);
+
+    const addBotMessage = (text, meta = null) => {
+        const id = `${Date.now()}-${messageIdRef.current++}`;
+        setMessages(prev => [...prev, { id, role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
+        return id;
+    };
+
+    const runPrediction = async () => {
+        if (!imageRef.current) {
+            return;
+        }
+
+        try {
+            const result = await detectAnimal(imageRef.current);
+
+            if (!result.success) {
+                const errorMessage = result.error || "Sorry, I couldn't identify the animal in this image.";
+                if (result.errorType === 'EMPTY_RESULT' || result.errorType === 'NO_ANIMAL_DETECTED') {
+                    addBotMessage("I couldn't detect any animal in this image. Please try a clearer photo with the animal more visible.");
+                } else {
+                    addBotMessage(errorMessage);
+                }
+                return;
+            }
+
+            const { animal: animalName, confidence, category, isBulusanAnimal } = result;
+            const confidencePct = parseFloat(confidence);
+
+            if (animalName === 'Unknown' || confidencePct === 0) {
+                addBotMessage("I couldn't confidently identify the animal in this image. The detection result was inconclusive. Please try a different image.");
+                return;
+            }
+
+            const bulusanInfo = ANIMAL_INFO[animalName];
+            const isInBulusan = bulusanInfo?.bulusan || isBulusanAnimal || false;
+
+            saveToDatabase(animalName, confidencePct);
+
+            const resultMessageId = addBotMessage(`A ${animalName.toLowerCase()} has been identified with ${confidencePct}% confidence.`, {
+                animal: animalName,
+                confidence: confidencePct,
+                icon: animalName.toLowerCase(),
+                isBulusanAnimal: isInBulusan,
+                category: category || "Animal",
+                wikipediaData: null,
+                wikipediaLoading: true
+            });
+
+            fetchAnimalDescription(animalName)
+                .then((descriptionResult) => {
+                    if (!descriptionResult.success || !descriptionResult.description) {
+                        setMessages(prev => prev.map(message => message.id === resultMessageId
+                            ? { ...message, meta: { ...message.meta, wikipediaLoading: false } }
+                            : message));
+                        return;
+                    }
+
+                    setMessages(prev => prev.map(message => message.id === resultMessageId
+                        ? {
+                            ...message,
+                            content: descriptionResult.description,
+                            meta: {
+                                ...message.meta,
+                                category: descriptionResult.category || category || "Animal",
+                                wikipediaLoading: false,
+                                wikipediaData: {
+                                    title: descriptionResult.title,
+                                    thumbnail: descriptionResult.thumbnail,
+                                    pageUrl: descriptionResult.pageUrl,
+                                    scientificName: descriptionResult.scientificName
+                                }
+                            }
+                        }
+                        : message));
+                })
+                .catch(() => {
+                    setMessages(prev => prev.map(message => message.id === resultMessageId
+                        ? { ...message, meta: { ...message.meta, wikipediaLoading: false } }
+                        : message));
+                });
+
+        } catch (error) {
+            const userMessage = error.message || "Sorry, I encountered an error analyzing that image. Please try again.";
+            addBotMessage(userMessage);
+        } finally {
+            setIsProcessing(false);
+            setAnalysisImage(null);
+        }
+    };
+
+    const saveToDatabase = async (animal, confidence) => {
+        try {
+            const tabId = sessionStorage.getItem('TAB_ID');
+            const token = tabId ? sessionStorage.getItem(`user_token_${tabId}`) : sessionStorage.getItem('user_token');
+            await fetch(`${API_URL}/predictions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    ...(tabId ? { 'X-Tab-ID': tabId } : {})
+                },
+                body: JSON.stringify({
+                    filename: currentFileName.current,
+                    prediction: animal,
+                    confidence: parseFloat(confidence)
+                })
+            });
+        } catch {
+            // Prediction history is optional and should not block the scanner.
+        }
+    };
+
+    const messageVariants = {
+        hidden: { opacity: 0, y: 20, scale: 0.95 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: { type: 'spring', damping: 20, stiffness: 300 }
+        }
+    };
+
+    const containerClass = embedded
+        ? "h-full min-h-0 w-full flex flex-col bg-[#f3f6ef] overflow-hidden"
+        : "flex flex-col h-[100dvh] min-h-0 bg-[#f3f6ef] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-[#dfe8dc] md:shadow-xl relative";
+
+    return (
+        <div className={containerClass}>
+            {!embedded && <Header />}
+
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-7 sm:py-7 space-y-4 custom-scrollbar overscroll-contain">
+
+                {analysisImage && (
+                    <img
+                        ref={imageRef}
+                        src={analysisImage}
+                        className="hidden"
+                        onLoad={runPrediction}
+                        crossOrigin="anonymous"
+                        alt="analysis"
+                    />
+                )}
+
+                <AnimatePresence mode="popLayout">
+                    {messages.map((msg) => (
+                        <MotionDiv
+                            key={msg.id}
+                            className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            variants={messageVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            <div className={`flex min-w-0 ${embedded ? 'max-w-[96%]' : 'max-w-[90%] md:max-w-[78%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
+
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${msg.role === 'user' ? 'bg-[#1f3328] text-white' : 'bg-[#e5f0e3] border border-[#cfe0cc]'}`}>
+                                    {msg.role === 'user' ? <UserIcon /> : <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />}
+                                </div>
+
+                                <div className={`min-w-0 max-w-full p-3.5 sm:p-4 text-sm ${msg.role === 'user'
+                                    ? 'bg-[#1f3328] text-white rounded-2xl rounded-br-md shadow-[0_8px_22px_rgba(31,51,40,0.12)]'
+                                    : 'bg-[#fffefa] text-[#405047] rounded-2xl rounded-bl-md shadow-[0_8px_22px_rgba(31,51,40,0.06)] border border-[#dfe8dc]'
+                                    }`}>
+                                    {msg.type === 'image' && (
+                                        <div className="relative">
+                                             <img src={msg.content} alt="Uploaded animal" className={`block w-auto max-w-full rounded-xl ${embedded ? 'max-h-48' : 'max-h-64'} object-contain border border-white/30 mb-2`} />
+                                             <span className="absolute bottom-4 left-2 rounded-full bg-[#1f3328]/80 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">Photo sent</span>
+                                        </div>
+                                    )}
+
+                                    {msg.type === 'text' && <p className="leading-relaxed">{msg.content}</p>}
+
+                                    {msg.type === 'result' && (
+                                        <div className="w-full min-w-0 max-w-md">
+                                            <div className="flex items-start gap-3 mb-4 pb-4 border-b border-[#dfe8dc]">
+                                                <div className="p-2.5 bg-[#e5f0e3] rounded-xl shrink-0 text-[#315b37]">
+                                                    <PawIcon className="w-6 h-6" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
+                                                            <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
+                                                        </div>
+                                                         {/* <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span> */}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-3">
+                                                        <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-[#4e8354] transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
+                                                        </div>
+                                                        <span className="text-xs text-[#315b37] font-bold shrink-0">{msg.meta.confidence}% match</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                             <p className="text-[#506057] leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
+                                            {msg.meta.wikipediaLoading && (
+                                                <p className="mt-2 text-[11px] font-medium text-[#718078]">Loading Wikipedia details...</p>
+                                            )}
+                                            {msg.meta.wikipediaData?.scientificName && (
+                                                 <p className="mt-3 text-xs text-[#718078]"><span className="font-semibold text-[#405047]">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
+                                            )}
+                                             {msg.meta.wikipediaData?.pageUrl && (
+                                                 <a href={msg.meta.wikipediaData.pageUrl} target="_blank" rel="noreferrer" className="inline-flex mt-4 text-xs font-bold text-[#315b37] hover:text-[#1f3328] hover:underline">Learn more about {msg.meta.animal}</a>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </MotionDiv>
+                    ))}
+                </AnimatePresence>
+
+                {isProcessing && (
+                    <MotionDiv
+                        className="flex w-full justify-start"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <div className="flex gap-2.5 items-end">
+                            <div className="w-8 h-8 rounded-xl bg-[#e5f0e3] border border-[#cfe0cc] flex items-center justify-center overflow-hidden">
+                                <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />
+                            </div>
+                            <div className="bg-[#fffefa] px-4 py-3 rounded-2xl rounded-bl-md shadow-[0_8px_22px_rgba(31,51,40,0.06)] border border-[#dfe8dc] flex items-center gap-3">
+                                <span className="flex items-center gap-1.5">
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce"></span>
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                </span>
+                                <span className="text-xs font-medium text-slate-500">Analyzing image...</span>
+                            </div>
+                        </div>
+                    </MotionDiv>
+                )}
+
+                <div ref={messagesEndRef} />
+            </main>
+
+            <div className="p-3 sm:p-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[#fffefa] border-t border-[#dfe8dc]">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                        <div>
+                            <p className="text-sm font-bold text-[#1f3328]">Scan an animal</p>
+                            <p className="text-[11px] text-[#718078]">Upload a photo or use your camera</p>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${isModelLoading ? 'bg-amber-50 text-amber-700' : isProcessing ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${isModelLoading ? 'bg-amber-500 animate-pulse' : isProcessing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                            {isModelLoading ? 'Preparing AI' : isProcessing ? 'Scanning' : 'Ready'}
+                        </span>
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                         <MotionButton
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isProcessing || isModelLoading}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                                 ? 'bg-[#c8d1ca] cursor-not-allowed opacity-80'
+                                 : 'bg-[#1f3328] hover:bg-[#294536]'
+                                }`}
+                        >
+                            {isModelLoading ? (
+                                <><span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /><span className="text-xs">Preparing AI</span></>
+                            ) : (
+                                <>
+                                    <UploadIcon />
+                                    <span>Upload</span>
+                                </>
+                            )}
+                        </MotionButton>
+
+                        <MotionButton
+                            type="button"
+                            onClick={openCameraModal}
+                            disabled={isProcessing || isModelLoading}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                                 ? 'bg-[#c8d1ca] text-white cursor-not-allowed'
+                                 : 'bg-[#4e8354] text-white hover:bg-[#3f7046]'
+                                }`}
+                        >
+                            <CameraIcon />
+                            <span>Camera</span>
+                        </MotionButton>
+                    </div>
+
+                     <p className="text-center text-[11px] text-[#718078] mt-2.5 font-medium">
+                        Best results come from a clear, well-lit photo
+                    </p>
+                </div>
+            </div>
+
+            {showCameraModal && isMobile && ReactDOM.createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+                    <div className="flex-1 relative overflow-hidden">
+                        <video
+                            ref={videoRef}
+                            className={`w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
+                            playsInline
+                            muted
+                            autoPlay
+                        />
+
+                        {!cameraReady && !cameraError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p className="text-gray-300 text-sm">Starting camera...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {cameraError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black">
+                                <div className="text-center p-6">
+                                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-red-400 text-base mb-6">{cameraError}</p>
+                                    <button
+                                        onClick={closeCameraModal}
+                                        className="px-6 py-3 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition"
+                                    >
+                                        Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {cameraReady && (
+                            <div className="absolute inset-6 border-2 border-emerald-400/60 rounded-2xl pointer-events-none">
+                                <div className="absolute -top-px -left-px w-10 h-10 border-t-3 border-l-3 border-emerald-400 rounded-tl-2xl"></div>
+                                <div className="absolute -top-px -right-px w-10 h-10 border-t-3 border-r-3 border-emerald-400 rounded-tr-2xl"></div>
+                                <div className="absolute -bottom-px -left-px w-10 h-10 border-b-3 border-l-3 border-emerald-400 rounded-bl-2xl"></div>
+                                <div className="absolute -bottom-px -right-px w-10 h-10 border-b-3 border-r-3 border-emerald-400 rounded-br-2xl"></div>
+                            </div>
+                        )}
+
+                        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+                            <button
+                                onClick={closeCameraModal}
+                                className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
+                            >
+                                <CloseIcon />
+                            </button>
+                            <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full">
+                                <p className="text-white text-xs font-medium">Point at an animal</p>
+                            </div>
+                            <button
+                                onClick={switchCamera}
+                                disabled={!cameraReady}
+                                className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white disabled:opacity-50"
+                            >
+                                <SwitchCameraIcon />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-black p-6 flex items-center justify-center" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+                        <button
+                            onClick={capturePhoto}
+                            disabled={!cameraReady}
+                            className="w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-emerald-300"
+                        >
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            <AnimatePresence>
+                {showCameraModal && !isMobile && (
+                    <MotionDiv
+                        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <MotionDiv
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                        >
+                            <div className="flex items-center justify-between p-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-700 to-teal-700">
+                                <div className="flex items-center gap-2 text-white">
+                                    <CameraIcon />
+                                    <h3 className="font-bold">Camera Capture</h3>
+                                </div>
+                                <button
+                                    onClick={closeCameraModal}
+                                    className="p-1.5 hover:bg-white/20 rounded-lg transition text-white"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            </div>
+
+                            <div className="relative bg-black aspect-[4/3]">
+                                <video
+                                    ref={videoRef}
+                                    className={`w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
+                                    playsInline
+                                    muted
+                                    autoPlay
+                                />
+
+                                {!cameraReady && !cameraError && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                                        <div className="text-center">
+                                            <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                            <p className="text-gray-400 text-sm">Starting camera...</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {cameraError && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                                        <div className="text-center p-6">
+                                            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-red-400 text-sm mb-4">{cameraError}</p>
+                                            <button
+                                                onClick={closeCameraModal}
+                                                className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {cameraReady && (
+                                    <div className="absolute inset-4 border-2 border-emerald-400/50 rounded-xl pointer-events-none">
+                                        <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-lg"></div>
+                                        <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg"></div>
+                                        <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg"></div>
+                                        <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-lg"></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-4 bg-slate-100">
+                                <div className="flex items-center justify-center gap-6">
+                                    <button
+                                        onClick={switchCamera}
+                                        disabled={!cameraReady}
+                                        className="p-3 bg-slate-200 hover:bg-slate-300 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-emerald-700"
+                                        title="Switch Camera"
+                                    >
+                                        <SwitchCameraIcon />
+                                    </button>
+
+                                    <button
+                                        onClick={capturePhoto}
+                                        disabled={!cameraReady}
+                                        className="w-16 h-16 bg-white hover:bg-gray-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-emerald-200"
+                                        title="Capture Photo"
+                                    >
+                                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
+                                    </button>
+
+                                    <button
+                                        onClick={closeCameraModal}
+                                        className="p-3 bg-red-100 hover:bg-red-200 rounded-full transition text-red-500"
+                                        title="Cancel"
+                                    >
+                                        <CloseIcon />
+                                    </button>
+                                </div>
+                                <p className="text-center text-xs text-slate-500 mt-3">
+                                    Point camera at an animal and tap to capture
+                                </p>
+                            </div>
+                        </MotionDiv>
+                    </MotionDiv>
+                )}
+            </AnimatePresence>
+
+            {!embedded && <Footer />}
+        </div>
+    );
+};
+
+export default AnimalClassifier;

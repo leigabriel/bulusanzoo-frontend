@@ -1,0 +1,743 @@
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { trackVisit } from '../../services/visitor-tracking';
+import { authAPI, messageAPI } from '../../services/api-client';
+import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
+import AuthSuccessModal from '../../components/common/AuthSuccessModal';
+import useScrollLock from '../../hooks/use-scroll-lock';
+import { PRIVACY_POLICY_CONTENT, TERMS_OF_SERVICE_CONTENT } from '../legal/policyContent';
+import { appendConsentRecord } from '../../utils/consent';
+
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+);
+
+const SuccessIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22,4 12,14.01 9,11.01" />
+    </svg>
+);
+
+const ErrorIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+);
+
+const GoogleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+);
+
+const CheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <polyline points="20,6 9,17 4,12" />
+    </svg>
+);
+
+const XIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+);
+
+const validatePassword = (password) => {
+    return {
+        minLength: password.length >= 8,
+        hasUppercase: /[A-Z]/.test(password),
+        hasNumber: /[0-9]/.test(password),
+        hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+};
+
+const isPasswordValid = (password) => {
+    const validation = validatePassword(password);
+    return validation.minLength && validation.hasUppercase && validation.hasNumber && validation.hasSymbol;
+};
+
+const getErrorMessage = (errorCode) => {
+    const decodedError = decodeURIComponent(errorCode).toLowerCase();
+
+    const errorMessages = {
+        'google_auth_cancelled': 'Google sign-in was cancelled. Please try again.',
+        'access_denied': 'Google sign-in was cancelled. Please try again.',
+        'invalid_request': 'Invalid authentication request. Please try again.',
+        'invalid_state': 'Authentication session expired. Please try again.',
+        'token_exchange_failed': 'Failed to complete authentication. Please try again.',
+        'no_id_token': 'Failed to verify your identity. Please try again.',
+        'invalid_user_data': 'Could not retrieve your profile. Please try again.',
+        'email_linked_different_account': 'This email is already linked to a different account.',
+        'account_deactivated': 'Your account has been deactivated. Please contact support.',
+        'authentication_failed': 'Authentication failed. Please try again.',
+        'configuration_error': 'Service configuration error. Please try again later.'
+    };
+
+    if (errorMessages[errorCode]) {
+        return errorMessages[errorCode];
+    }
+
+    if (decodedError.includes('missing required google oauth')) {
+        return 'Google Sign-In is not configured. Please contact support.';
+    }
+    if (decodedError.includes('invalid token') || decodedError.includes('token signature')) {
+        return 'Failed to verify your identity. Please try again.';
+    }
+    if (decodedError.includes('expired')) {
+        return 'Authentication session expired. Please try again.';
+    }
+    if (decodedError.includes('network') || decodedError.includes('fetch')) {
+        return 'Network error. Please check your connection and try again.';
+    }
+
+    if (import.meta.env.DEV && errorCode !== 'authentication_failed') {
+        console.error('OAuth error:', errorCode, decodedError);
+    }
+
+    return 'An error occurred during sign-in. Please try again.';
+};
+
+const PolicyModal = ({ isOpen, onClose, title, content }) => {
+    useScrollLock(isOpen);
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, onClose]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                    <h2 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        aria-label="Close modal"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6" data-lenis-prevent>
+                    <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                        {content}
+                    </div>
+                </div>
+                <div className="p-4 sm:p-6 border-t border-gray-200">
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 min-h-[44px]"
+                    >
+                        I Understand
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const EmailIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+);
+
+const EmailVerificationModal = ({ isOpen, onClose, email, onNavigateToLogin }) => {
+    useScrollLock(isOpen);
+
+    if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="verification-modal-title"
+        >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+                <div className="p-6 sm:p-8 text-center">
+                    <div className="mx-auto w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                        <span className="text-emerald-600"><EmailIcon /></span>
+                    </div>
+                    <h2 id="verification-modal-title" className="text-2xl font-bold text-gray-900 mb-3">
+                        Verify Your Email
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                        We've sent a verification link to:
+                    </p>
+                    <p className="text-emerald-600 font-semibold mb-6 break-all">
+                        {email}
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                        <p className="text-amber-800 text-sm">
+                            Please check your inbox and click the verification link to activate your account.
+                            The link will expire in <strong>1 hour</strong>.
+                        </p>
+                    </div>
+                    <p className="text-gray-500 text-sm mb-6">
+                        Didn't receive the email? Check your spam folder or request a new verification link from the login page.
+                    </p>
+                    <button
+                        onClick={onNavigateToLogin}
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 min-h-[44px] transition-colors"
+                    >
+                        Go to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const RegisterPage = () => {
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        dataConsent: false
+    });
+    const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [errors, setErrors] = useState([]);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [touched, setTouched] = useState({});
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showVerificationModal, setShowVerificationModal] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
+
+    const passwordValidation = validatePassword(formData.password);
+
+    useEffect(() => {
+        const errorParam = searchParams.get('error');
+        if (errorParam) {
+            const errorMessage = getErrorMessage(errorParam);
+            const debugInfo = import.meta.env.DEV ? ` (Code: ${decodeURIComponent(errorParam)})` : '';
+            setErrors([errorMessage + debugInfo]);
+            window.history.replaceState(null, '', '/signup');
+        }
+    }, [location, searchParams]);
+
+    const handleGoogleSignUp = () => {
+        setGoogleLoading(true);
+        setErrors([]);
+
+        const backendUrl = import.meta.env.VITE_BACKEND_URL ||
+            import.meta.env.VITE_API_URL?.replace('/api', '') ||
+            'http://localhost:5000';
+        window.location.href = `${backendUrl}/auth/google`;
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        let sanitizedValue = e.target.type === 'checkbox' ? e.target.checked : value;
+
+        if (e.target.type !== 'checkbox') {
+            if (name === 'email') {
+                sanitizedValue = sanitizeEmail(value);
+            } else if (name !== 'password' && name !== 'confirmPassword') {
+                sanitizedValue = sanitizeInput(value);
+            }
+        }
+
+        setFormData({ ...formData, [name]: sanitizedValue });
+        if (errors.length > 0) {
+            setErrors([]);
+        }
+    };
+
+    const handleBlur = (e) => {
+        setTouched({ ...touched, [e.target.name]: true });
+    };
+
+    const validateForm = () => {
+        const validationErrors = [];
+
+        if (!formData.firstName.trim()) validationErrors.push('First name is required');
+        if (!formData.lastName.trim()) validationErrors.push('Last name is required');
+        if (!formData.username.trim()) validationErrors.push('Username is required');
+        if (formData.username && formData.username.length < 3) {
+            validationErrors.push('Username must be at least 3 characters long');
+        }
+        if (!formData.email.trim()) validationErrors.push('Email is required');
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            validationErrors.push('Please enter a valid email address');
+        }
+
+        if (!formData.password) {
+            validationErrors.push('Password is required');
+        } else if (!isPasswordValid(formData.password)) {
+            validationErrors.push('Password must be at least 8 characters with uppercase, number, and symbol');
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            validationErrors.push('Passwords do not match');
+        }
+
+        if (!formData.dataConsent) {
+            validationErrors.push('You must agree to the Terms of Service and Privacy Policy to create an account');
+        }
+
+        return validationErrors;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setErrors([]);
+        setSuccessMessage('');
+
+        const validationErrors = validateForm();
+
+        if (validationErrors.length > 0) {
+            setErrors(validationErrors);
+            notify.warning(validationErrors[0] || 'Check your form details.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await authAPI.register({
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                username: formData.username.trim(),
+                email: formData.email.trim().toLowerCase(),
+                password: formData.password
+            });
+
+            if (response.success) {
+                appendConsentRecord({
+                    type: 'account_registration',
+                    summary: `Account registration consent for ${formData.email.trim().toLowerCase()}`,
+                    data: { email: formData.email.trim().toLowerCase(), consented: Boolean(formData.dataConsent) }
+                });
+                trackVisit('/signup');
+                if (response.requiresVerification) {
+                    setRegisteredEmail(formData.email.trim().toLowerCase());
+                    setShowVerificationModal(true);
+                    notify.success('Account created. Verify email.');
+                    setFormData({
+                        firstName: '',
+                        lastName: '',
+                        username: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    });
+                } else {
+                    // Show success modal for immediate registration without email verification
+                    setShowSuccessModal(true);
+                    notify.success('Account created.');
+                    setFormData({
+                        firstName: '',
+                        lastName: '',
+                        username: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    });
+                }
+            } else {
+                const message = response.message || "Couldn't create account.";
+                setErrors([message]);
+                notify.error(message);
+            }
+        } catch (err) {
+            const message = err.message || "Couldn't create account.";
+            setErrors([message]);
+            notify.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex min-h-screen w-full bg-white">
+            <AuthSuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    navigate('/login', { state: { message: 'Registration successful! Please log in to continue.' } });
+                }}
+                type="register"
+                message="Your account has been created successfully. You can now log in."
+                autoCloseDelay={2500}
+            />
+
+            <PolicyModal
+                isOpen={showPrivacyModal}
+                onClose={() => setShowPrivacyModal(false)}
+                title="Privacy Policy"
+                content={PRIVACY_POLICY_CONTENT}
+            />
+
+            <PolicyModal
+                isOpen={showTermsModal}
+                onClose={() => setShowTermsModal(false)}
+                title="Terms of Service"
+                content={TERMS_OF_SERVICE_CONTENT}
+            />
+
+            <EmailVerificationModal
+                isOpen={showVerificationModal}
+                onClose={() => setShowVerificationModal(false)}
+                email={registeredEmail}
+                onNavigateToLogin={() => {
+                    setShowVerificationModal(false);
+                    navigate('/login', { state: { message: 'Please check your email to verify your account before logging in.' } });
+                }}
+            />
+
+            <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 lg:p-16 overflow-hidden bg-emerald-900 min-h-screen">
+                <img
+                    src="https://images.unsplash.com/photo-1522435229388-6f7a422cd95b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    alt="Wildlife background"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-900/40 to-transparent"></div>
+
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div className="flex items-center gap-3 text-white">
+                        <span className="font-bold text-xl tracking-widest uppercase">Bulusan Zoo</span>
+                    </div>
+
+                    <div className="mt-auto">
+                        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-8">
+                            Become part of<br />
+                            Bulusan Zoo<br />
+                            family.
+                        </h1>
+                        <div className="flex flex-wrap gap-3 text-sm font-medium">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white min-h-screen overflow-y-auto">
+                <div className="w-full max-w-md mx-auto">
+                    <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                        <span className='text-emerald-600 text-[1.5rem]'>Bulusan Zoo</span> <br />
+                        Create Account
+                    </h2>
+                    <p className="text-gray-500 text-sm lg:text-base mb-8 leading-relaxed">
+                        Register to explore Bulusan Zoo's amazing wildlife.
+                    </p>
+
+                    {successMessage && (
+                        <div className="p-4 mb-6 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-3">
+                            <span className="flex-shrink-0"><SuccessIcon /></span>
+                            <span className="text-sm font-medium">{successMessage}</span>
+                        </div>
+                    )}
+
+                    {errors.length > 0 && (
+                        <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-800 border border-red-200">
+                            <div className="flex items-center gap-2 mb-2">
+                                <ErrorIcon />
+                                <span className="font-medium text-sm">Please fix the following errors:</span>
+                            </div>
+                            <ul className="list-disc pl-8 m-0 text-sm space-y-1 text-red-700">
+                                {errors.map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">First Name <span className="text-emerald-600">*</span></label>
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    autoComplete="given-name"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
+                                    placeholder="Juan"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">Last Name <span className="text-emerald-600">*</span></label>
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    autoComplete="family-name"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
+                                    placeholder="Dela Cruz"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Username <span className="text-emerald-600">*</span></label>
+                            <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                autoComplete="username"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
+                                placeholder="juandelacruz"
+                            />
+                            {touched.username && formData.username && formData.username.length < 3 && (
+                                <p className="text-xs text-red-500 mt-2 font-medium">Username must be at least 3 characters</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Email <span className="text-emerald-600">*</span></label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                autoComplete="email"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
+                                placeholder="juan@example.com"
+                            />
+                            {touched.email && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+                                <p className="text-xs text-red-500 mt-2 font-medium">Please enter a valid email address</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Password <span className="text-emerald-600">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    autoComplete="new-password"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pr-12 text-sm"
+                                    placeholder="Min. 8 characters"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                            </div>
+                            {formData.password && (
+                                <div className="mt-3 space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div className="grid grid-cols-2 gap-3 text-xs font-medium">
+                                        <div className={`flex items-center gap-2 ${passwordValidation.minLength ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                            {passwordValidation.minLength ? <CheckIcon /> : <XIcon />}
+                                            <span>8+ characters</span>
+                                        </div>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasUppercase ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                            {passwordValidation.hasUppercase ? <CheckIcon /> : <XIcon />}
+                                            <span>Uppercase letter</span>
+                                        </div>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasNumber ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                            {passwordValidation.hasNumber ? <CheckIcon /> : <XIcon />}
+                                            <span>Number</span>
+                                        </div>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasSymbol ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                            {passwordValidation.hasSymbol ? <CheckIcon /> : <XIcon />}
+                                            <span>Symbol (!@#$...)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Confirm Password <span className="text-emerald-600">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    autoComplete="new-password"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pr-12 text-sm"
+                                    placeholder="Confirm password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                            </div>
+                            {touched.confirmPassword && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                                <p className="text-xs text-red-500 mt-2 font-medium">Passwords do not match</p>
+                            )}
+                        </div>
+
+                        <label className="flex items-start gap-3 cursor-pointer group mt-4">
+                            <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
+                                <input
+                                    type="checkbox"
+                                    name="dataConsent"
+                                    checked={formData.dataConsent}
+                                    onChange={handleChange}
+                                    className="peer appearance-none w-5 h-5 border border-gray-300 rounded bg-white checked:bg-emerald-600 checked:border-emerald-600 transition-all cursor-pointer"
+                                />
+                                <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                    <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                                I have read and agree to the{' '}
+                                <Link to="/terms" className="text-emerald-600 font-semibold hover:underline">
+                                    Terms of Service
+                                </Link>
+                                {' '}and{' '}
+                                <Link to="/privacy" className="text-emerald-600 font-semibold hover:underline">
+                                    Privacy Policy
+                                </Link>
+                                , and I consent to Bulusan Zoo collecting and processing my personal information as described therein.
+                            </p>
+                        </label>
+
+                        <button
+                            type="submit"
+                            disabled={loading || googleLoading}
+                            className="w-full bg-emerald-600 text-white py-3.5 mt-6 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                            {loading ? 'Creating account...' : 'Register'}
+                        </button>
+
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="px-4 bg-white text-gray-400 font-medium">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleGoogleSignUp}
+                            disabled={loading || googleLoading}
+                            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3.5 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                            {googleLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-600"></div>
+                                    <span>Connecting...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <GoogleIcon />
+                                    <span>Continue with Google</span>
+                                </>
+                            )}
+                        </button>
+
+                        <div className="text-center mt-8 text-sm text-gray-600">
+                            Already have an account?{' '}
+                            <Link to="/login" className="text-emerald-600 font-bold hover:underline">
+                                Login
+                            </Link>
+                        </div>
+
+                        <div className="text-center text-xs text-gray-400 mt-8 pt-6">
+                            By registering, you agree to our{' '}
+                            <Link to="/terms" className="text-gray-500 hover:text-gray-800 transition-colors underline">
+                                Terms of Service
+                            </Link>
+                            {' '}and{' '}
+                            <Link to="/privacy" className="text-gray-500 hover:text-gray-800 transition-colors underline">
+                                Privacy Policy
+                            </Link>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default RegisterPage;

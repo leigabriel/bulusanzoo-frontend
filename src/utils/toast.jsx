@@ -1,0 +1,107 @@
+import { gooeyToast } from 'goey-toast';
+
+const actionHint = (title, type) => {
+    if (type === 'error') return 'Please try again.';
+    if (type === 'warning') return 'Please check and try again.';
+    if (type !== 'success') return 'Please check the details.';
+
+    const t = title.toLowerCase();
+
+    if (/(added|created|submitted|new)/.test(t)) return 'Added successfully.';
+    if (/(updated|saved|changed|edited)/.test(t)) return 'Changes saved.';
+    if (/(deleted|removed|moved to trash|cancelled|canceled|archived|declined|deactivated)/.test(t)) return 'Removed successfully.';
+    if (/(restored|restore)/.test(t)) return 'Restored successfully.';
+    if (/(liked|hearted|shared|followed|joined)/.test(t)) return 'Done successfully.';
+    if (/(copied|exported|downloaded|printed)/.test(t)) return 'Ready.';
+    if (/(verified|checked|confirmed|checked in|checked-in)/.test(t)) return 'Confirmed successfully.';
+    if (/(read|marked as read|replied|sent|posted|commented)/.test(t)) return 'Done successfully.';
+    if (/(refund|payment|charged)/.test(t)) return 'Payment updated.';
+    if (/(approved|approve)/.test(t)) return 'Approved successfully.';
+
+    return 'Done successfully.';
+};
+
+const fallbackMessages = {
+    saved: 'Changes saved.',
+    deleted: 'Removed successfully.',
+    loading: 'Please wait...',
+    retry: 'Please try again.',
+    required: 'Please fill in the required fields.'
+};
+
+const soundUrls = {
+    success: '/sound/success-sfx.mp3',
+    error: '/sound/error-sfx.mp3'
+};
+const sounds = {};
+
+const playToastSound = (type) => {
+    if (typeof Audio === 'undefined' || !soundUrls[type]) return;
+    const audio = sounds[type] || new Audio(soundUrls[type]);
+    sounds[type] = audio;
+    audio.volume = 0.45;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+};
+
+const friendlyMessage = (message, fallbackKey = 'retry') => {
+    if (!message || typeof message !== 'string') {
+        return fallbackMessages[fallbackKey] || fallbackMessages.retry;
+    }
+
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('network error') || lowerMessage.includes('offline')) {
+        return "You're offline. Check your connection and try again.";
+    }
+
+    if (lowerMessage.includes('unauthorized') || lowerMessage.includes('401') || lowerMessage.includes('permission')) {
+        return "You don't have permission to do that.";
+    }
+
+    if (lowerMessage.includes('not found') || lowerMessage.includes('404')) {
+        return "We couldn't find what you're looking for.";
+    }
+
+    if (lowerMessage.includes('file too large') || lowerMessage.includes('size limit')) {
+        return "That file is too big. Please pick a smaller one.";
+    }
+
+    const cleaned = message
+        .replace(/request failed with status \d+/i, 'Something went wrong.')
+        .replace(/server error/ig, 'Something went wrong.')
+        .replace(/upload error/ig, "We couldn't upload your file.")
+        .trim();
+
+    return cleaned || fallbackMessages[fallbackKey] || fallbackMessages.retry;
+};
+
+const showToast = (type, message, options) => {
+    const title = friendlyMessage(message, type === 'error' ? 'retry' : type === 'warning' ? 'required' : 'saved');
+    playToastSound(type);
+    const description = options?.description ?? actionHint(title, type);
+    const toastOptions = { description, ...options };
+    return type === 'default' ? gooeyToast(title, toastOptions) : gooeyToast[type](title, toastOptions);
+};
+
+export const notify = {
+    success: (message, options) => showToast('success', message, options),
+    error: (message, options) => showToast('error', message, options),
+    info: (message, options) => showToast('info', message, options),
+    warning: (message, options) => showToast('warning', message, options),
+    loading: (message, options) => showToast('info', message, { duration: Infinity, description: 'Working on it. This may take a moment.', ...options }),
+    promise: (promise, config) => gooeyToast.promise(promise, config),
+    update: (id, { type = 'default', message, title, isLoading = false, ...options } = {}) => {
+        if (!isLoading) playToastSound(type);
+        const resolvedTitle = friendlyMessage(title || message, type === 'error' ? 'retry' : 'saved');
+        gooeyToast.update(id, {
+            ...options,
+            title: resolvedTitle,
+            type: isLoading ? 'info' : type,
+            description: options.description ?? actionHint(resolvedTitle, isLoading ? 'info' : type)
+        });
+    },
+    dismiss: (id) => gooeyToast.dismiss(id)
+};
+
+export { friendlyMessage };

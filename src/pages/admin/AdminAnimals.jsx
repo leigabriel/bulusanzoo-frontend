@@ -1,0 +1,794 @@
+import { Edit as ReiconEdit, Paw as ReiconPaw, Plus as ReiconPlus, Search as ReiconSearch, Sort as ReiconSort, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
+import { useEffect, useState } from 'react';
+import { adminAPI } from '../../services/api-client';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
+
+// Icons
+const SearchIcon = () => (
+    <ReiconSearch strokeWidth="2" className="w-4 h-4" />
+);
+
+const PlusIcon = () => (
+    <ReiconPlus strokeWidth="2" className="w-5 h-5" />
+);
+
+const EditIcon = () => (
+    <ReiconEdit strokeWidth="2" className="w-4 h-4" />
+);
+
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <ReiconTrash strokeWidth="2" className={className} />
+);
+
+const CloseIcon = () => (
+    <ReiconX strokeWidth="2" className="w-5 h-5" />
+);
+
+const AnimalsHeaderIcon = () => (
+    <ReiconPaw className="w-6 h-6" weight="Filled" />
+);
+
+const SortIcon = () => (
+    <ReiconSort strokeWidth="2" className="w-4 h-4" />
+);
+
+const AdminAnimals = ({ globalSearch = '' }) => {
+    const [animals, setAnimals] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [editingAnimal, setEditingAnimal] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortField, setSortField] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [deleting, setDeleting] = useState(false);
+    const [trashTarget, setTrashTarget] = useState(null);
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [speciesFilter, setSpeciesFilter] = useState('all');
+    const [form, setForm] = useState({
+        name: '',
+        species: '',
+        exhibit: '',
+        description: '',
+        imageUrl: '',
+        status: 'healthy',
+        lifespan: '',
+        weight: '',
+        length: '',
+        habitat: '',
+        diet: '',
+        animalInformation: ''
+    });
+    const [saving, setSaving] = useState(false);
+    const [imageInputMode, setImageInputMode] = useState('upload');
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
+    const effectiveSearch = globalSearch || searchQuery;
+
+    useEffect(() => { fetchAnimals(); }, []);
+
+    const fetchAnimals = async () => {
+        try {
+            setLoading(true);
+            const res = await adminAPI.getAnimals();
+            if (res.success) setAnimals(res.animals || []);
+            else throw new Error(res.message || 'Failed to fetch animals');
+        } catch (err) {
+            setError(err.message || 'Error');
+        } finally { setLoading(false); }
+    };
+
+    const openCreateModal = () => {
+        setEditingAnimal(null);
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
+        setShowModal(true);
+    };
+
+    const openEditModal = (animal) => {
+        setEditingAnimal(animal);
+        setForm({
+            name: animal.name || '',
+            species: animal.species || '',
+            exhibit: animal.habitat || animal.exhibit || '',
+            description: animal.description || '',
+            imageUrl: animal.image_url || animal.imageUrl || '',
+            status: animal.status || 'healthy',
+            lifespan: animal.lifespan || '',
+            weight: animal.weight || '',
+            length: animal.length || '',
+            habitat: animal.habitat || '',
+            diet: animal.diet || '',
+            animalInformation: animal.animalInformation || animal.animal_information || ''
+        });
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingAnimal(null);
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const saveAnimal = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            let imageUrl = form.imageUrl;
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await adminAPI.uploadImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.message || 'Failed to upload image');
+                }
+            }
+            const animalData = { ...form, imageUrl };
+            let res;
+            if (editingAnimal) {
+                res = await adminAPI.updateAnimal(editingAnimal.id, animalData);
+            } else {
+                res = await adminAPI.createAnimal(animalData);
+            }
+            if (res.success) {
+                await fetchAnimals();
+                notify.success(editingAnimal ? 'Animal updated.' : 'Animal added.');
+                closeModal();
+            } else throw new Error(res.message || 'Save failed');
+        } catch (err) {
+            notify.error(err.message || "Couldn't save animal. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ==================== TRASH HANDLERS ====================
+
+    const trashAnimal = async (animal) => {
+        try {
+            const res = await adminAPI.deleteAnimal(animal.id);
+            if (res.success) {
+                setAnimals(animals.filter(a => a.id !== animal.id));
+                notify.success('Animal moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await adminAPI.restoreAnimal(animal.id);
+                                setAnimals(prev => [animal, ...prev]);
+                                notify.success('Animal restored.');
+                            } catch {
+                                notify.error('Failed to restore animal');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
+            }
+        } catch {
+            notify.error('Failed to move animal to trash');
+        }
+    };
+
+    const handleConfirmTrash = async () => {
+        if (!trashTarget) return;
+        setDeleting(true);
+        await trashAnimal(trashTarget);
+        setTrashTarget(null);
+        setDeleting(false);
+    };
+
+    const handleConfirmBulkTrash = async () => {
+        setDeleting(true);
+        await trashSelected();
+        setShowBulkModal(false);
+        setDeleting(false);
+    };
+
+    const getStatusBadgeColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'healthy': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'sick': return 'bg-red-500/20 text-red-700 border-red-500/30';
+            // case 'recovering': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'quarantine': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
+        }
+    };
+
+    const uniqueSpecies = [...new Set(animals.map(a => a.species).filter(Boolean))];
+
+    const filteredAnimals = animals
+        .filter(animal => {
+            const matchesSearch =
+                animal.name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                animal.species?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                (animal.habitat || animal.exhibit || '').toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                animal.description?.toLowerCase().includes(effectiveSearch.toLowerCase());
+            const matchesSpecies = speciesFilter === 'all' || animal.species === speciesFilter;
+            return matchesSearch && matchesSpecies;
+        })
+        .sort((a, b) => {
+            let aVal, bVal;
+            if (sortField === 'exhibit') {
+                aVal = (a.habitat || a.exhibit || '').toString().toLowerCase();
+                bVal = (b.habitat || b.exhibit || '').toString().toLowerCase();
+            } else {
+                aVal = (a[sortField] || '').toString().toLowerCase();
+                bVal = (b[sortField] || '').toString().toLowerCase();
+            }
+            if (sortOrder === 'asc') return aVal.localeCompare(bVal);
+            return bVal.localeCompare(aVal);
+        });
+
+    const toggleSort = (field) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('asc');
+        }
+    };
+
+    const animalCounts = {
+        total: animals.length,
+        healthy: animals.filter(a => a.status === 'healthy').length,
+        sick: animals.filter(a => a.status === 'sick').length,
+        other: animals.filter(a => !['healthy', 'sick'].includes(a.status)).length,
+    };
+
+    const allFilteredSelected = filteredAnimals.length > 0 && filteredAnimals.every(a => selectedIds.includes(a.id));
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (allFilteredSelected) setSelectedIds([]);
+        else setSelectedIds([...new Set([...selectedIds, ...filteredAnimals.map(a => a.id)])]);
+    };
+
+    const trashSelected = async () => {
+        const selectedAnimals = filteredAnimals.filter(a => selectedIds.includes(a.id));
+        if (selectedAnimals.length === 0) return;
+        try {
+            await Promise.all(selectedAnimals.map(a => adminAPI.deleteAnimal(a.id)));
+            setAnimals(prev => prev.filter(a => !selectedIds.includes(a.id)));
+            setSelectedIds([]);
+            const count = selectedAnimals.length;
+            notify.success(`${count} animal${count > 1 ? 's' : ''} moved to trash.`, {
+                action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                        try {
+                            await Promise.all(selectedAnimals.map(a => adminAPI.restoreAnimal(a.id)));
+                            setAnimals(prev => [...selectedAnimals, ...prev]);
+                            notify.success('Animals restored.');
+                        } catch {
+                            notify.error('Failed to restore animals');
+                        }
+                    },
+                    successLabel: 'Restored'
+                }
+            });
+        } catch {
+            notify.error('Failed to move animals to trash');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading animals...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
+                {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Header Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <AnimalsHeaderIcon />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.total}</p>
+                            <p className="text-xs text-gray-500">Total Animals</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <span className="text-lg font-bold">H</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.healthy}</p>
+                            <p className="text-xs text-gray-500">Healthy</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-700">
+                            <span className="text-lg font-bold">S</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.sick}</p>
+                            <p className="text-xs text-gray-500">Sick</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700">
+                            <span className="text-lg font-bold">O</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.other}</p>
+                            <p className="text-xs text-gray-500">Other Status</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Card */}
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                {/* Toolbar */}
+                <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 flex-wrap">
+                        <div className="relative flex-1 min-w-[200px] max-w-sm">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                <SearchIcon />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search animals..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all"
+                            />
+                        </div>
+
+                        {/* Species Filter */}
+                        <div className="relative">
+                            <select
+                                value={speciesFilter}
+                                onChange={(e) => setSpeciesFilter(e.target.value)}
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
+                            >
+                                <option value="all">All Species</option>
+                                {uniqueSpecies.map(species => (
+                                    <option key={species} value={species}>{species}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="relative">
+                            <select
+                                value={`${sortField}-${sortOrder}`}
+                                onChange={(e) => {
+                                    const [field, order] = e.target.value.split('-');
+                                    setSortField(field);
+                                    setSortOrder(order);
+                                }}
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
+                            >
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="species-asc">Species (A-Z)</option>
+                                <option value="species-desc">Species (Z-A)</option>
+                                <option value="exhibit-asc">Exhibit (A-Z)</option>
+                                <option value="exhibit-desc">Exhibit (Z-A)</option>
+                            </select>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                                <SortIcon />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon />
+                            Add Animal
+                        </button>
+                    </div>
+                </div>
+
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border-b border-green-200">
+                        <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                                Cancel
+                            </button>
+                            <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
+                                <ReiconTrash strokeWidth="2" className="w-4 h-4" /> Trash selected ({selectedIds.length})
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Animals Table */}
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-green-50">
+                            <tr>
+                                <th className="px-6 py-4 text-left w-12">
+                                    <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label="Select all animals" />
+                                </th>
+                                <th
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
+                                    onClick={() => toggleSort('name')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Name
+                                        {sortField === 'name' && (
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
+                                    onClick={() => toggleSort('species')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Species
+                                        {sortField === 'species' && (
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
+                                    onClick={() => toggleSort('exhibit')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Exhibit/Habitat
+                                        {sortField === 'exhibit' && (
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-green-200">
+                            {filteredAnimals.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                        {searchQuery || speciesFilter !== 'all' ? 'No animals match your filters' : 'No animals found'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredAnimals.map(animal => (
+                                    <tr key={animal.id} className="hover:bg-green-50/50 transition-colors">
+                                        <td className="px-6 py-4 w-12">
+                                            <input type="checkbox" checked={selectedIds.includes(animal.id)} onChange={() => toggleSelect(animal.id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label={`Select ${animal.name}`} />
+                                        </td>
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
+                                                    {animal.image_url ? (
+                                                        <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        (animal.name || 'A').charAt(0).toUpperCase()
+                                                    )}
+                                                </div>
+                                                <p className="font-medium text-gray-900">{animal.name}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.species}</td>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.habitat || animal.exhibit}</td>
+                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate cursor-pointer" onClick={() => openEditModal(animal)}>{animal.description}</td>
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
+                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>
+                                                {animal.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={(event) => { event.stopPropagation(); openEditModal(animal); }}
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
+                                                    title="Edit animal"
+                                                >
+                                                    <EditIcon />
+                                                </button>
+                                                <button
+                                                    onClick={(event) => { event.stopPropagation(); setTrashTarget(animal); }}
+                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
+                                                    title="Move to trash"
+                                                >
+                                                    <TrashIcon />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Table Footer */}
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                        Showing {filteredAnimals.length} of {animals.length} animals
+                    </p>
+                </div>
+            </div>
+
+            {trashTarget && (
+                <ConfirmModal
+                    title={`Delete ${trashTarget.name || 'Animal'}?`}
+                    message={`Are you sure you want to move this animal to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setTrashTarget(null)}
+                    onConfirm={handleConfirmTrash}
+                />
+            )}
+
+            {showBulkModal && (
+                <ConfirmModal
+                    title={`Delete ${selectedIds.length} Animals?`}
+                    message={`Are you sure you want to move ${selectedIds.length} selected animals to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setShowBulkModal(false)}
+                    onConfirm={handleConfirmBulkTrash}
+                />
+            )}
+
+            {/* Create/Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {editingAnimal ? 'Edit Animal' : 'Add New Animal'}
+                            </h3>
+                            <button
+                                onClick={closeModal}
+                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+
+                        {/* Modal Form */}
+                        <form onSubmit={saveAnimal} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Name *</label>
+                                <input
+                                    type="text"
+                                    value={form.name}
+                                    onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                    placeholder="e.g., African Lion"
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Species *</label>
+                                    <input
+                                        type="text"
+                                        value={form.species}
+                                        onChange={e => setForm({ ...form, species: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., Panthera leo"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Exhibit/Habitat *</label>
+                                    <input
+                                        type="text"
+                                        value={form.exhibit}
+                                        onChange={e => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., Savanna Zone"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
+                                <textarea
+                                    value={form.description}
+                                    onChange={e => setForm({ ...form, description: sanitizeInput(e.target.value) })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all resize-none"
+                                    placeholder="Enter animal description..."
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Lifespan</label>
+                                    <input
+                                        type="text"
+                                        value={form.lifespan}
+                                        onChange={e => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., 10-15 years"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Weight</label>
+                                    <input
+                                        type="text"
+                                        value={form.weight}
+                                        onChange={e => setForm({ ...form, weight: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., 200 kg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Length</label>
+                                    <input
+                                        type="text"
+                                        value={form.length}
+                                        onChange={e => setForm({ ...form, length: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., 2.5 m"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Natural Habitat</label>
+                                    <input
+                                        type="text"
+                                        value={form.habitat}
+                                        onChange={e => setForm({ ...form, habitat: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., African Savanna"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Diet</label>
+                                    <input
+                                        type="text"
+                                        value={form.diet}
+                                        onChange={e => setForm({ ...form, diet: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
+                                        placeholder="e.g., Carnivore"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Additional Information</label>
+                                <textarea
+                                    value={form.animalInformation}
+                                    onChange={e => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all resize-none"
+                                    placeholder="Enter additional details about the animal..."
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
+                                <div className="space-y-3">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageFileChange}
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400"
+                                    />
+                                    {(imagePreview || form.imageUrl) && (
+                                        <div className="relative">
+                                            <img
+                                                src={imagePreview || form.imageUrl}
+                                                alt="Preview"
+                                                className="w-full h-40 object-cover rounded-xl"
+                                                onError={(e) => e.target.style.display = 'none'}
+                                                onLoad={(e) => e.target.style.display = 'block'}
+                                            />
+                                            {imagePreview && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageFile(null);
+                                                        setImagePreview(null);
+                                                    }}
+                                                    className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-gray-900 hover:bg-red-600"
+                                                >
+                                                    <ReiconX strokeWidth="2" className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                                <select
+                                    value={form.status}
+                                    onChange={e => setForm({ ...form, status: e.target.value })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all cursor-pointer"
+                                >
+                                    <option value="healthy">Healthy</option>
+                                    <option value="sick">Sick</option>
+                                    {/* <option value="recovering">Recovering</option> */}
+                                    <option value="quarantine">Quarantine</option>
+                                </select>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all disabled:opacity-50"
+                                >
+                                    {saving ? 'Saving...' : (editingAnimal ? 'Update' : 'Add Animal')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+export default AdminAnimals;

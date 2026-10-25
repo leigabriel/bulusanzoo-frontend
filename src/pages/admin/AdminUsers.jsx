@@ -1,0 +1,684 @@
+import { Ban as ReiconBan, CheckCircle as ReiconCheckCircle, Edit as ReiconEdit, Eye as ReiconEye, Filter as ReiconFilter, Plus as ReiconPlus, Search as ReiconSearch, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
+import { useEffect, useState } from 'react';
+import { adminAPI, getProfileImageUrl } from '../../services/api-client';
+import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
+import { useAuth } from '../../context/AuthContext';
+import PasswordInput from '../../components/common/PasswordInput';
+
+// Icons
+const SearchIcon = () => (
+    <ReiconSearch strokeWidth="2" className="w-4 h-4" />
+);
+
+const PlusIcon = () => (
+    <ReiconPlus strokeWidth="2" className="w-5 h-5" />
+);
+
+const EditIcon = () => (
+    <ReiconEdit strokeWidth="2" className="w-4 h-4" />
+);
+
+const BanIcon = () => (
+    <ReiconBan strokeWidth="2" className="w-4 h-4" />
+);
+
+const UnbanIcon = () => (
+    <ReiconCheckCircle strokeWidth="2" className="w-4 h-4" />
+);
+
+const EyeIcon = () => (
+    <ReiconEye strokeWidth="2" className="w-4 h-4" />
+);
+
+const CloseIcon = () => (
+    <ReiconX strokeWidth="2" className="w-5 h-5" />
+);
+
+const UsersHeaderIcon = () => (
+    <ReiconUsers strokeWidth="2" className="w-6 h-6" />
+);
+
+const FilterIcon = () => (
+    <ReiconFilter strokeWidth="2" className="w-4 h-4" />
+);
+
+const AdminUsers = ({ globalSearch = '' }) => {
+    const { user: currentUser } = useAuth();
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const emptyForm = { firstName: '', lastName: '', username: '', email: '', role: 'user', password: '', confirmPassword: '' };
+    const [form, setForm] = useState(emptyForm);
+    const [saving, setSaving] = useState(false);
+
+    // Suspend modal states
+    const [suspendUser, setSuspendUser] = useState(null);
+    const [suspendReason, setSuspendReason] = useState('');
+    const [suspendOtherReason, setSuspendOtherReason] = useState('');
+    const [suspending, setSuspending] = useState(false);
+    
+    // Unsuspend confirmation
+    const [unsuspendTarget, setUnsuspendTarget] = useState(null);
+    
+    // View user modal
+    const [viewUser, setViewUser] = useState(null);
+
+    const suspendReasonOptions = [
+        'Inappropriate content or behavior',
+        'Violation of community guidelines',
+        'Spam or fraudulent activity',
+        'Harassment or bullying',
+        'Fake identity or impersonation',
+        'Other'
+    ];
+
+    // Combine local and global search
+    const effectiveSearch = globalSearch || searchQuery;
+
+    useEffect(() => {
+        fetchUsers();
+        const interval = setInterval(() => fetchUsers(false), 15000);
+        const refreshOnFocus = () => fetchUsers(false);
+        window.addEventListener('focus', refreshOnFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', refreshOnFocus); };
+    }, []);
+
+    const fetchUsers = async (showLoading = true) => {
+        try {
+            if (showLoading) setLoading(true);
+            const res = await adminAPI.getUsers();
+            if (res.success) setUsers(res.users || []);
+            else throw new Error(res.message || 'Failed to fetch users');
+        } catch (err) {
+            console.error(err);
+            setError(err.message || 'Error');
+        } finally { if (showLoading) setLoading(false); }
+    };
+
+    const openCreateModal = () => {
+        setEditingUser(null);
+        setForm(emptyForm);
+        setShowModal(true);
+    };
+
+    const openEditModal = (user) => {
+        setEditingUser(user);
+        setForm({
+            firstName: user.firstName || user.first_name || '',
+            lastName: user.lastName || user.last_name || '',
+            username: user.username || '',
+            email: user.email || '',
+            role: user.role || 'user',
+            password: '',
+            confirmPassword: ''
+        });
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingUser(null);
+        setForm(emptyForm);
+    };
+
+    const saveUser = async (e) => {
+        e.preventDefault();
+        if (!editingUser && form.password !== form.confirmPassword) {
+            notify.error('Passwords do not match.');
+            return;
+        }
+        setSaving(true);
+        try {
+            const payload = { ...form };
+            delete payload.confirmPassword;
+            if (!payload.password) delete payload.password;
+            let res;
+            if (editingUser) {
+                res = await adminAPI.updateUser(editingUser.id, payload);
+            } else {
+                res = await adminAPI.createUser(payload);
+            }
+            if (res.success) {
+                await fetchUsers();
+                if (!editingUser && res.emailSent === false) notify.warning(res.message);
+                else notify.success(editingUser ? 'User updated.' : 'User created. A verification link was sent.');
+                closeModal();
+            } else throw new Error(res.message || 'Save failed');
+        } catch (err) {
+            console.error(err);
+            notify.error(err.message || "Couldn't save user. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSuspendUser = async () => {
+        if (!suspendUser) return;
+        const finalReason = suspendReason === 'Other' ? suspendOtherReason.trim() : suspendReason;
+        if (!finalReason) return;
+        
+        setSuspending(true);
+        try {
+            const res = await adminAPI.suspendUser(suspendUser.id, finalReason);
+            if (res.success) {
+                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, is_active: false, suspension_reason: finalReason } : u));
+                notify.success('Account suspended.');
+                setSuspendUser(null);
+                setSuspendReason('');
+                setSuspendOtherReason('');
+            } else throw new Error(res.message || 'Suspend failed');
+        } catch (err) {
+            console.error(err);
+            notify.error(err.message || "Couldn't update this account. Please try again.");
+        } finally {
+            setSuspending(false);
+        }
+    };
+
+    const handleUnsuspendUser = async (userId) => {
+        setSuspending(true);
+        try {
+            const res = await adminAPI.unsuspendUser(userId);
+            if (res.success) {
+                setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, is_active: true, suspension_reason: null } : u));
+                notify.success('Account restored.');
+                setUnsuspendTarget(null);
+            } else throw new Error(res.message || 'Unsuspend failed');
+        } catch (err) {
+            console.error(err);
+            notify.error(err.message || "Couldn't restore this account. Please try again.");
+        } finally {
+            setSuspending(false);
+        }
+    };
+
+    const getRoleBadgeColor = (role) => {
+        switch (role?.toLowerCase()) {
+            case 'admin': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'staff': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
+        }
+    };
+
+    const getAccountStatus = (user) => user.is_suspended
+        ? { label: 'Suspended', dot: 'bg-red-500', text: 'text-red-700' }
+        : (user.is_active === false || user.is_active === 0 || user.is_active === '0')
+            ? { label: 'Inactive', dot: 'bg-gray-400', text: 'text-gray-600' }
+            : { label: 'Active', dot: 'bg-green-500', text: 'text-green-700' };
+
+    const filteredUsers = users.filter(user => {
+        const fullName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.toLowerCase();
+        const matchesSearch = fullName.includes(effectiveSearch.toLowerCase()) ||
+            user.email?.toLowerCase().includes(effectiveSearch.toLowerCase());
+        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+        return matchesSearch && matchesRole;
+    });
+
+    const userCounts = {
+        total: users.length,
+        admin: users.filter(u => u.role === 'admin').length,
+        staff: users.filter(u => u.role === 'staff').length,
+        user: users.filter(u => u.role === 'user').length,
+        active: users.filter(u => !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
+        suspended: users.filter(u => u.is_suspended).length,
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading users...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
+                {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Header Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <UsersHeaderIcon />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.total}</p>
+                            <p className="text-xs text-gray-500">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700"><span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" /></div>
+                        <div><p className="text-2xl font-bold text-gray-900">{userCounts.active}</p><p className="text-xs text-gray-500">Active <span className="text-red-600">· {userCounts.suspended} suspended</span></p></div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-700">
+                            <span className="text-lg font-bold">S</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.staff}</p>
+                            <p className="text-xs text-gray-500">Staff</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-500/10 rounded-xl flex items-center justify-center text-gray-500">
+                            <span className="text-lg font-bold">U</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.user}</p>
+                            <p className="text-xs text-gray-500">Regular Users</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Card */}
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                {/* Toolbar */}
+                <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                        {/* Search */}
+                        <div className="relative flex-1 max-w-sm">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                <SearchIcon />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all"
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
+                            >
+                                <option value="all">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="staff">Staff</option>
+                                <option value="user">User</option>
+                            </select>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                                <FilterIcon />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon />
+                            Add User
+                        </button>
+                    </div>
+                </div>
+
+                {/* Users Table */}
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-green-50">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-green-200">
+                            {filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                        {searchQuery || roleFilter !== 'all' ? 'No users match your filters' : 'No users found'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map(user => (
+                                    <tr
+                                        key={user.id}
+                                        className="hover:bg-green-50/50 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-500"
+                                        onClick={() => setViewUser(user)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                setViewUser(user);
+                                            }
+                                        }}
+                                        tabIndex={0}
+                                        aria-label={`View ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
+                                                    {(user.profileImage || user.profile_image) ? (
+                                                        <img
+                                                            src={getProfileImageUrl(user.profileImage || user.profile_image)}
+                                                            alt={user.firstName || user.first_name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.nextSibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                    ) : null}
+                                                    <span className={`text-green-800 font-medium ${(user.profileImage || user.profile_image) ? 'hidden' : 'flex'}`}>
+                                                        {(user.firstName || user.first_name || 'U').charAt(0).toUpperCase()}{(user.lastName || user.last_name || '').charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">
+                                                        {user.firstName || user.first_name} {user.lastName || user.last_name}
+                                                    </p>
+                                                    <p className="text-gray-500 text-sm">@{user.username}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700"><p>{user.email}</p><span className={`text-xs font-medium ${user.email_verified ? 'text-emerald-700' : 'text-amber-700'}`}>{user.email_verified ? 'Verified' : 'Verification pending'}</span></td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(user.role)}`}>
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {(() => { const status = getAccountStatus(user); return <span className={`inline-flex items-center gap-1.5 text-sm ${status.text}`}><span className={`h-2 w-2 rounded-full ${status.dot}`} />{status.label}</span>; })()}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={(event) => { event.stopPropagation(); setViewUser(user); }}
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-blue-500/50 text-gray-500 hover:text-blue-700 rounded-lg transition-all"
+                                                    title="View user"
+                                                >
+                                                    <EyeIcon />
+                                                </button>
+                                                {user.role !== 'user' && <button
+                                                    onClick={(event) => { event.stopPropagation(); openEditModal(user); }}
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
+                                                    title="Edit user"
+                                                >
+                                                    <EditIcon />
+                                                </button>}
+                                                {String(user.id) !== String(currentUser?.id) && (user.is_suspended ? (
+                                                    <button
+                                                        onClick={(event) => { event.stopPropagation(); setUnsuspendTarget(user); }}
+                                                        disabled={suspending}
+                                                        className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all disabled:opacity-50"
+                                                        title="Unsuspend user"
+                                                    >
+                                                        <UnbanIcon />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={(event) => { event.stopPropagation(); setSuspendUser(user); }}
+                                                        className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
+                                                        title="Suspend user"
+                                                    >
+                                                        <BanIcon />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Table Footer */}
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                        Showing {filteredUsers.length} of {users.length} users
+                    </p>
+                </div>
+            </div>
+
+            {/* Create/Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {editingUser ? 'Edit User' : 'Create New User'}
+                            </h3>
+                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
+                                <CloseIcon />
+                            </button>
+                        </div>
+                         <form onSubmit={saveUser} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">First Name</label>
+                                    <input type="text" value={form.firstName} onChange={e => setForm({ ...form, firstName: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="John" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Last Name</label>
+                                    <input type="text" value={form.lastName} onChange={e => setForm({ ...form, lastName: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="Doe" required />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Username</label>
+                                <input type="text" value={form.username} onChange={e => setForm({ ...form, username: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="johndoe123" required disabled={!!editingUser} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Email</label>
+                                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: sanitizeEmail(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="john@example.com" required disabled={!!editingUser} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Role</label>
+                                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all cursor-pointer">
+                                    {!editingUser && <option value="user">User</option>}
+                                    <option value="staff">Staff</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            {!editingUser && (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                     <label className="block text-sm font-medium text-gray-500 mb-2">Password</label>
+                                     <PasswordInput value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="At least 8 characters" required />
+                                    </div>
+                                    <div>
+                                     <label className="block text-sm font-medium text-gray-500 mb-2">Confirm Password</label>
+                                     <PasswordInput value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="Repeat password" required />
+                                    </div>
+                                    <p className="text-xs text-gray-500 sm:col-span-2">Use 8+ characters with an uppercase letter, number, and special character.</p>
+                                </div>
+                            )}
+                            <div className="flex gap-3 pt-4">
+                                <button type="button" onClick={closeModal} className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
+                                <button type="submit" disabled={saving} className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all disabled:opacity-50">
+                                    {saving ? 'Saving...' : (editingUser ? 'Update' : 'Create')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Suspend User Modal */}
+            {suspendUser && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white border border-red-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-red-100">
+                            <div className="w-12 h-12 rounded-full bg-red-500/15 text-red-600 flex items-center justify-center mx-auto mb-3">
+                                <BanIcon />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 text-center">Suspend User</h3>
+                            <p className="text-gray-500 text-sm mt-1 text-center">
+                                Suspend <span className="text-gray-900 font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>?
+                            </p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Suspension *</label>
+                                <select
+                                    value={suspendReason}
+                                    onChange={(e) => setSuspendReason(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 transition-all cursor-pointer"
+                                >
+                                    <option value="">Select a reason...</option>
+                                    {suspendReasonOptions.map(reason => (
+                                        <option key={reason} value={reason}>{reason}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {suspendReason === 'Other' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Specify Reason *</label>
+                                    <textarea
+                                        value={suspendOtherReason}
+                                        onChange={(e) => setSuspendOtherReason(e.target.value)}
+                                        placeholder="Enter the reason for suspending this user..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 resize-none transition-all"
+                                    />
+                                </div>
+                            )}
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                <p className="text-amber-700 text-sm">
+                                    <strong>Note:</strong> Suspended users cannot access their account. They can submit an appeal to request reinstatement.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button onClick={() => { setSuspendUser(null); setSuspendReason(''); setSuspendOtherReason(''); }} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
+                                <button
+                                    onClick={handleSuspendUser}
+                                    disabled={(!suspendReason || (suspendReason === 'Other' && !suspendOtherReason.trim())) || suspending}
+                                    className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {suspending ? 'Suspending...' : 'Suspend User'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unsuspend Confirmation Modal */}
+            {unsuspendTarget && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <div className="w-12 h-12 rounded-full bg-green-500/15 text-green-600 flex items-center justify-center mx-auto mb-4">
+                            <UnbanIcon />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Unsuspend User?</h3>
+                        <p className="text-gray-500 text-center mb-6">
+                            This will restore <span className="font-medium text-gray-900">{unsuspendTarget.firstName || unsuspendTarget.first_name} {unsuspendTarget.lastName || unsuspendTarget.last_name}</span>'s account access. They will be able to log in again.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setUnsuspendTarget(null)} disabled={suspending} className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-medium transition disabled:opacity-50">
+                                Cancel
+                            </button>
+                            <button onClick={() => handleUnsuspendUser(unsuspendTarget.id)} disabled={suspending} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
+                                {suspending ? 'Restoring...' : 'Yes, Unsuspend'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View User Modal */}
+            {viewUser && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">User Details</h3>
+                            <button onClick={() => setViewUser(null)} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"><CloseIcon /></button>
+                        </div>
+                        <div className="p-6 space-y-5">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200 shrink-0">
+                                    {(viewUser.profileImage || viewUser.profile_image) ? (
+                                        <img src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)} alt={viewUser.firstName || viewUser.first_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-green-800 font-medium text-xl">
+                                            {(viewUser.firstName || viewUser.first_name || 'U').charAt(0).toUpperCase()}{(viewUser.lastName || viewUser.last_name || '').charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-semibold text-gray-900">{viewUser.firstName || viewUser.first_name} {viewUser.lastName || viewUser.last_name}</h4>
+                                    <p className="text-gray-500 text-sm">@{viewUser.username}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Email</span>
+                                    <span className="text-sm font-medium text-gray-900">{viewUser.email}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Role</span>
+                                    <span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(viewUser.role)}`}>{viewUser.role}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Status</span>
+                                    <span className={`text-sm font-medium ${getAccountStatus(viewUser).text}`}>{getAccountStatus(viewUser).label}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Email verification</span>
+                                    <span className={`text-sm font-medium ${viewUser.email_verified ? 'text-emerald-700' : 'text-amber-700'}`}>{viewUser.email_verified ? 'Verified' : 'Pending'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Joined</span>
+                                    <span className="text-sm font-medium text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</span>
+                                </div>
+                                {viewUser.is_suspended && (
+                                    <div className="flex items-start justify-between py-2.5">
+                                        <span className="text-sm text-gray-500 shrink-0">Suspension Reason</span>
+                                        <span className="text-sm text-red-700 text-right ml-4">{viewUser.suspension_reason || 'No reason provided'}</span>
+                                    </div>
+                                )}
+                                {viewUser.is_suspended && viewUser.suspended_at && (
+                                    <div className="flex items-center justify-between py-2.5">
+                                        <span className="text-sm text-gray-500">Suspended On</span>
+                                        <span className="text-sm font-medium text-gray-900">{viewUser.suspended_at.split('T')[0]}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                {viewUser.role !== 'user' && <button onClick={() => { setViewUser(null); openEditModal(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Edit User</button>}
+                                {String(viewUser.id) !== String(currentUser?.id) && (viewUser.is_suspended ? (
+                                    <button onClick={() => { setViewUser(null); setUnsuspendTarget(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Unsuspend</button>
+                                ) : (
+                                    <button onClick={() => { setViewUser(null); setSuspendUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Suspend</button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+export default AdminUsers;

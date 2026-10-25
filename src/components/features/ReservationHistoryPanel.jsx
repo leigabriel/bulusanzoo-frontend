@@ -1,0 +1,1697 @@
+﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/use-auth';
+import { reservationAPI, userAPI } from '../../services/api-client';
+import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
+import { QRCodeSVG } from 'qrcode.react';
+import { notify } from '../../utils/toast';
+import useScrollLock from '../../hooks/use-scroll-lock';
+import { appendConsentRecord } from '../../utils/consent';
+import { canRequestRefund, isPaidAtVenue, paymentMethodLabel } from '../../utils/payment-status';
+import { Ticket, Calendar, X, Archive, RotateLeft, CreditCard, DollarCircle } from 'reicon-react';
+
+const LegacyIcons = {
+    Ticket: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M1.5 6.375c0-1.036.84-1.875 1.875-1.875h17.25c1.035 0 1.875.84 1.875 1.875v3.026a.75.75 0 01-.375.65 2.249 2.249 0 000 3.898.75.75 0 01.375.65v3.026c0 1.035-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 17.625v-3.026a.75.75 0 01.374-.65 2.249 2.249 0 000-3.898.75.75 0 01-.374-.65V6.375zm15-1.125a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V6a.75.75 0 01.75-.75zm.75 4.5a.75.75 0 00-1.5 0v.75a.75.75 0 001.5 0v-.75zm-.75 3a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0v-.75a.75.75 0 01.75-.75zm.75 4.5a.75.75 0 00-1.5 0V18a.75.75 0 001.5 0v-.75zM6 12a.75.75 0 01.75-.75H12a.75.75 0 010 1.5H6.75A.75.75 0 016 12zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clipRule="evenodd" />
+        </svg>
+    ),
+    Calendar: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clipRule="evenodd" />
+        </svg>
+    ),
+    Close: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+        </svg>
+    ),
+    Archive: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+            <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
+            <path fillRule="evenodd" d="M3.087 9l.54 9.176A3 3 0 006.62 21h10.757a3 3 0 002.995-2.824L20.913 9H3.087zm6.163 3.75A.75.75 0 0110 12h4a.75.75 0 010 1.5h-4a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+        </svg>
+    ),
+    Restore: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd" d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z" clipRule="evenodd" />
+        </svg>
+    ),
+    CreditCard: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
+            <path fillRule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 003 3h15a3 3 0 003-3v-7.5zm-18 3.75a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clipRule="evenodd" />
+        </svg>
+    ),
+    Cash: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path d="M4.5 6.375a2.625 2.625 0 00-2.625 2.625v7.5A2.625 2.625 0 004.5 19.125h15a2.625 2.625 0 002.625-2.625v-7.5A2.625 2.625 0 0019.5 6.375h-15zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z" />
+            <path d="M12 10.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+        </svg>
+    )
+};
+const Icons = { Ticket, Calendar, Close: X, Archive, Restore: RotateLeft, CreditCard, Cash: DollarCircle };
+
+// Shared label + control for the self-service edit modal. Mirrors the styling used across
+// the app's forms: white surface, 16px text (no iOS zoom on focus), 52px minimum height.
+const Field = ({ id, label, value, onChange, type = 'text', placeholder }) => (
+    <div>
+        <label htmlFor={id} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+        <input
+            id={id}
+            type={type}
+            value={value || ''}
+            placeholder={placeholder}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15"
+        />
+    </div>
+);
+
+// focusReference: open a freshly created reservation's receipt as soon as the
+// list has loaded, so "Pay Now" lands on the booking the visitor just made
+// instead of making them find it in the list. onFocusHandled clears the request.
+const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focusReference = null, onFocusHandled = null }) => {
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
+    const [activeTab, setActiveTab] = useState('all');
+    const [ticketReservations, setTicketReservations] = useState([]);
+    const [eventReservations, setEventReservations] = useState([]);
+    const [eventPaymentConfig, setEventPaymentConfig] = useState({ enabled: false, qrphEnabled: false, amountPerParticipant: 0 });
+    // Ticket admission pricing is configured separately on the backend, so it is
+    // fetched separately and must never fall back to the event figures.
+    const [ticketPaymentConfig, setTicketPaymentConfig] = useState({ qrphEnabled: false, adultPrice: 40, childPrice: 20, residentPrice: 0 });
+    const [archivedReservations, setArchivedReservations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('all');
+    const [showArchived, setShowArchived] = useState(false);
+    const [archiving, setArchiving] = useState(false);
+    // Keys are `${type}:${id}` so a ticket and an event that share an id cannot collide.
+    // Keyed by `type:id` so the Map deduplicates like a Set, but carries the structured
+// { type, id } record as its value.
+    const [selected, setSelected] = useState(() => new Map());
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, keys: [] });
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [deleting, setDeleting] = useState(false);
+    const [passwordModal, setPasswordModal] = useState({ isOpen: false, pendingKeys: [] });
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSaving, setPasswordSaving] = useState(false);
+    // Self-service amend/cancel. Only offered while the booking is still pending; the
+    // server re-checks ownership and status, so these are a convenience, not the guard.
+    const [editModal, setEditModal] = useState({ isOpen: false, reservation: null });
+    const [cancelModal, setCancelModal] = useState({ isOpen: false, reservation: null });
+    const [editAdult, setEditAdult] = useState(0);
+    const [editChild, setEditChild] = useState(0);
+    const [editParticipants, setEditParticipants] = useState(1);
+    const [editNotes, setEditNotes] = useState('');
+    const [editError, setEditError] = useState('');
+    const [editDraft, setEditDraft] = useState({});
+    const [selfSaving, setSelfSaving] = useState(false);
+
+    const setEditField = (key, value) => setEditDraft((prev) => ({ ...prev, [key]: value }));
+
+    const openEditModal = (reservation) => {
+        const isEvent = reservation.type === 'event';
+        setEditAdult(Number(reservation.adult_quantity ?? 0) || 0);
+        setEditChild(Number(reservation.child_quantity ?? 0) || 0);
+        setEditParticipants(Number(reservation.number_of_participants ?? 1) || 1);
+        setEditNotes(reservation.notes || '');
+        setEditDraft({
+            name: isEvent ? (reservation.participant_name || '') : (reservation.visitor_name || ''),
+            email: isEvent ? (reservation.participant_email || '') : (reservation.visitor_email || ''),
+            phone: isEvent ? (reservation.participant_phone || '') : (reservation.visitor_phone || ''),
+            date: isEvent ? (reservation.venue_event_date || '') : (reservation.reservation_date || ''),
+            startTime: isEvent ? (reservation.venue_event_start_time || '') : (reservation.reservation_time || ''),
+            endTime: isEvent ? (reservation.venue_event_end_time || '') : '',
+            designation: reservation.venue_event_name || '',
+            description: reservation.venue_event_description || ''
+        });
+        setEditError('');
+        setEditModal({ isOpen: true, reservation });
+    };
+
+    const submitSelfEdit = async () => {
+        const { reservation } = editModal;
+        if (!reservation) return;
+        if (!editDraft.name?.trim()) {
+            setEditError('Please enter a contact name.');
+            return;
+        }
+        setSelfSaving(true);
+        setEditError('');
+        try {
+            if (reservation.type === 'event') {
+                await reservationAPI.updateMyEventReservation(reservation.id, {
+                    numberOfParticipants: editParticipants,
+                    notes: editNotes,
+                    participantName: editDraft.name,
+                    participantEmail: editDraft.email,
+                    participantPhone: editDraft.phone,
+                    venueEventName: editDraft.designation,
+                    venueEventDate: editDraft.date,
+                    venueEventStartTime: editDraft.startTime,
+                    venueEventEndTime: editDraft.endTime,
+                    venueEventDescription: editDraft.description
+                }, 'user');
+            } else {
+                await reservationAPI.updateMyTicketReservation(reservation.id, {
+                    adultQuantity: editAdult,
+                    childQuantity: editChild,
+                    visitorName: editDraft.name,
+                    visitorEmail: editDraft.email,
+                    visitorPhone: editDraft.phone,
+                    reservationDate: editDraft.date,
+                    reservationTime: editDraft.startTime,
+                    notes: editNotes
+                }, 'user');
+            }
+            notify.success('Your booking has been updated.');
+            setEditModal({ isOpen: false, reservation: null });
+            await fetchReservations();
+            setSelectedReservation(null);
+        } catch (error) {
+            setEditError(error?.message || "Couldn't update your booking.");
+        } finally {
+            setSelfSaving(false);
+        }
+    };
+
+    const submitSelfCancel = async () => {
+        const { reservation } = cancelModal;
+        if (!reservation) return;
+        setSelfSaving(true);
+        try {
+            if (reservation.type === 'event') {
+                await reservationAPI.cancelEventReservation(reservation.id, '', 'user');
+            } else {
+                await reservationAPI.cancelTicketReservation(reservation.id, '', 'user');
+            }
+            notify.success('Your booking has been cancelled.');
+            setCancelModal({ isOpen: false, reservation: null });
+            await fetchReservations();
+            setSelectedReservation(null);
+        } catch (error) {
+            notify.error(error?.message || "Couldn't cancel your booking.");
+        } finally {
+            setSelfSaving(false);
+        }
+    };
+    const [selectedReservation, setSelectedReservation] = useState(null);
+    const receiptRef = useRef(null);
+    const [downloading, setDownloading] = useState(false);
+    const [downloadingPayment, setDownloadingPayment] = useState(false);
+    const [showPaymentDemo, setShowPaymentDemo] = useState(false);
+    const [paymentOption, setPaymentOption] = useState(null);
+    const [paymentConsent, setPaymentConsent] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [refundLoading, setRefundLoading] = useState(false);
+    const [showQR, setShowQR] = useState(false);
+    const [isMounted, setIsMounted] = useState(isOpen);
+
+    const handleDownload = async () => {
+        if (!selectedReservation || !receiptRef.current) return;
+        try {
+            setDownloading(true);
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            const buyerName = selectedReservation.user_name || selectedReservation.visitor_name || selectedReservation.participant_name || 'Guest';
+
+            const baseWidth = 700;
+             const baseHeight = selectedReservation.type === 'ticket' ? 1100 : 1250;
+            const scale = window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = baseWidth * scale;
+            canvas.height = baseHeight * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 34px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('ZOO BULUSAN', baseWidth / 2, 76);
+
+            ctx.font = 'bold 20px sans-serif';
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Reservation Receipt', baseWidth / 2, 112);
+
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, 140);
+            ctx.lineTo(baseWidth - 40, 140);
+            ctx.stroke();
+
+            ctx.textAlign = 'left';
+
+            let y = 190;
+            const addRow = (label, value, isBold = false, isHighlight = false) => {
+                ctx.font = 'normal 16px sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText(label, 50, y);
+
+                ctx.font = isBold ? 'bold 16px sans-serif' : 'normal 16px sans-serif';
+                ctx.fillStyle = isHighlight ? '#0f172a' : '#334155';
+                ctx.textAlign = 'right';
+                ctx.fillText(value, baseWidth - 50, y);
+                ctx.textAlign = 'left';
+                y += 35;
+            };
+
+            addRow('Buyer', buyerName, true);
+            addRow('Reference ID', selectedReservation.reservation_reference, true);
+            addRow('Type', selectedReservation.type === 'ticket' ? 'Zoo Visit' : (selectedReservation.venue_event_name || selectedReservation.event_title || 'Venue Booking'), true);
+            addRow('Status', selectedReservation.status.toUpperCase(), true);
+
+            const dateStr = formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date);
+            addRow('Date', dateStr, true);
+
+            const timeStr = selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A';
+            addRow('Time', timeStr, true);
+
+            if (selectedReservation.venue_event_end_time) {
+                addRow('End Time', selectedReservation.venue_event_end_time, true);
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(40, y + 5);
+            ctx.lineTo(baseWidth - 40, y + 5);
+            ctx.stroke();
+            y += 40;
+
+            if (selectedReservation.type === 'ticket') {
+                if (selectedReservation.adult_quantity > 0) addRow('Adults', `${selectedReservation.adult_quantity} x P${ticketPrice('adultPrice', 40)}`);
+                if (selectedReservation.child_quantity > 0) addRow('Children', `${selectedReservation.child_quantity} x P${ticketPrice('childPrice', 20)}`);
+                if (selectedReservation.bulusan_resident_quantity > 0) addRow('Bulusan Residents', `${selectedReservation.bulusan_resident_quantity} (FREE)`);
+
+                y += 10;
+                ctx.font = 'bold 20px sans-serif';
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText('Total Amount', 50, y);
+
+                ctx.textAlign = 'right';
+                const total = calculateTotal(selectedReservation);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText(total === 0 ? 'FREE' : `P${total}`, baseWidth - 50, y);
+                ctx.textAlign = 'left';
+                y += 40;
+            } else {
+                addRow('Participants', selectedReservation.number_of_participants, true);
+                addRow('Organizer', selectedReservation.participant_name, true);
+                addRow('Amount', getEventAmount(selectedReservation) > 0 ? `P${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured', true);
+                addRow('Payment', ['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected', true);
+                addRow('Payment Status', (selectedReservation.payment_status || 'unpaid').toUpperCase(), true);
+            }
+
+             if (selectedReservation.reservation_reference) {
+                 const qrSvg = receiptRef.current.querySelector('.receipt-qr-code');
+                 if (qrSvg) {
+                     const svgMarkup = new XMLSerializer().serializeToString(qrSvg);
+                     const qrImage = await new Promise((resolve, reject) => {
+                         const image = new Image();
+                         image.onload = () => resolve(image);
+                         image.onerror = reject;
+                         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+                     });
+                     y += 10;
+                     const qrSize = 280;
+                     ctx.imageSmoothingEnabled = false;
+                     ctx.fillStyle = '#ffffff';
+                     ctx.fillRect((baseWidth - qrSize - 24) / 2, y - 12, qrSize + 24, qrSize + 24);
+                     ctx.drawImage(qrImage, (baseWidth - qrSize) / 2, y, qrSize, qrSize);
+                     y += 300;
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('SCAN THIS CODE AT THE ENTRANCE', baseWidth / 2, y);
+                }
+            }
+
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `Receipt_${selectedReservation.reservation_reference}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            notify.error("Couldn't download receipt.");
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    const handleDownloadPaymentReceipt = async () => {
+        if (!selectedReservation || selectedReservation.payment_status !== 'paid') return;
+        try {
+            setDownloadingPayment(true);
+            const canvas = document.createElement('canvas');
+            const width = 700;
+            const scale = Math.min(window.devicePixelRatio || 2, 2);
+            canvas.width = width * scale;
+            canvas.height = 760 * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, width, 760);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 34px sans-serif';
+            ctx.fillText('ZOO BULUSAN', width / 2, 76);
+            ctx.font = 'bold 20px sans-serif';
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Payment Receipt', width / 2, 112);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.beginPath(); ctx.moveTo(40, 140); ctx.lineTo(width - 40, 140); ctx.stroke();
+            ctx.textAlign = 'left';
+            const isTicketReceipt = selectedReservation.type === 'ticket';
+            const receiptAmount = isTicketReceipt
+                ? calculateTotal(selectedReservation)
+                : getEventAmount(selectedReservation);
+            const rows = [
+                ['Status', (selectedReservation.payment_status || 'paid').toUpperCase()],
+                ['Payment method', ['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'],
+                ['Amount', receiptAmount > 0 ? `P${receiptAmount.toFixed(2)}` : 'Free entry'],
+                ...(isTicketReceipt ? [['Booking', 'Zoo admission'], ['Visitors', String(selectedReservation.total_visitors ?? '')]] : []),
+                ['Reservation', selectedReservation.reservation_reference || '-'],
+                ['Payment reference', selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '-'],
+                ['Paid on', formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })]
+            ];
+            rows.forEach(([label, value], index) => {
+                const y = 205 + (index * 58);
+                ctx.fillStyle = '#64748b'; ctx.font = '16px sans-serif'; ctx.fillText(label, 50, y);
+                ctx.fillStyle = label === 'Status' ? '#059669' : '#334155'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(value, width - 50, y); ctx.textAlign = 'left';
+            });
+            ctx.fillStyle = '#94a3b8'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Keep this receipt for your records.', width / 2, 650);
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png', 1);
+            link.download = `Payment_Receipt_${selectedReservation.reservation_reference || 'reservation'}.png`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        } catch {
+            notify.error("Couldn't download payment receipt.");
+        } finally {
+            setDownloadingPayment(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsMounted(true);
+            return undefined;
+        }
+
+        const timeout = window.setTimeout(() => setIsMounted(false), 300);
+        return () => window.clearTimeout(timeout);
+    }, [isOpen]);
+
+    useScrollLock(isMounted);
+
+    useEffect(() => {
+        if (isOpen && isAuthenticated) {
+            fetchReservations();
+        }
+    }, [isOpen, isAuthenticated]);
+
+    useEffect(() => {
+        if (!isOpen || !isAuthenticated || !paymentReturn) return undefined;
+        const interval = window.setInterval(fetchReservations, 2000);
+        const timeout = window.setTimeout(() => window.clearInterval(interval), 15000);
+        return () => {
+            window.clearInterval(interval);
+            window.clearTimeout(timeout);
+        };
+    }, [isOpen, isAuthenticated, paymentReturn]);
+
+    const fetchReservations = async () => {
+        try {
+            setLoading(true);
+            const [ticketRes, eventRes, paymentConfigRes, ticketPaymentConfigRes] = await Promise.all([
+                reservationAPI.getMyTicketReservations(),
+                reservationAPI.getMyEventReservations(),
+                reservationAPI.getEventPaymentConfig(),
+                reservationAPI.getTicketPaymentConfig()
+            ]);
+
+            if (ticketRes.success) {
+                const active = (ticketRes.reservations || []).filter(r => !r.is_archived);
+                const archived = (ticketRes.reservations || []).filter(r => r.is_archived);
+                setTicketReservations(active);
+                setArchivedReservations(prev => [...prev.filter(r => r.type !== 'ticket'), ...archived.map(r => ({ ...r, type: 'ticket' }))]);
+            }
+            if (eventRes.success) {
+                const active = (eventRes.reservations || []).filter(r => !r.is_archived);
+                const archived = (eventRes.reservations || []).filter(r => r.is_archived);
+                setEventReservations(active);
+                setArchivedReservations(prev => [...prev.filter(r => r.type !== 'event'), ...archived.map(r => ({ ...r, type: 'event' }))]);
+            }
+            if (paymentConfigRes.success && paymentConfigRes.config) {
+                setEventPaymentConfig(paymentConfigRes.config);
+            }
+            if (ticketPaymentConfigRes.success && ticketPaymentConfigRes.config) {
+                setTicketPaymentConfig(ticketPaymentConfigRes.config);
+            }
+        } catch {
+            notify.error("Couldn't load reservations.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleArchive = async (reservation) => {
+        setArchiving(true);
+        try {
+            const res = reservation.type === 'ticket'
+                ? await reservationAPI.archiveTicketReservation(reservation.id)
+                : await reservationAPI.archiveEventReservation(reservation.id);
+            if (res.success) {
+                notify.success('Reservation archived.');
+                await fetchReservations();
+                setSelectedReservation(null);
+            } else {
+                notify.error(res.message || "Couldn't archive the reservation.");
+            }
+        } catch (error) {
+            notify.error(error.message || "Couldn't archive the reservation.");
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const handleUnarchive = async (reservation) => {
+        setArchiving(true);
+        try {
+            const res = reservation.type === 'ticket'
+                ? await reservationAPI.unarchiveTicketReservation(reservation.id)
+                : await reservationAPI.unarchiveEventReservation(reservation.id);
+            if (res.success) {
+                notify.success('Reservation restored.');
+                await fetchReservations();
+                setSelectedReservation(null);
+            } else {
+                notify.error(res.message || "Couldn't restore the reservation.");
+            }
+        } catch (error) {
+            notify.error(error.message || "Couldn't restore the reservation.");
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    // Memoised so the focus effect below is not re-run on every render.
+    const combinedReservations = useMemo(() => [
+        ...ticketReservations.map(r => ({ ...r, type: 'ticket' })),
+        ...eventReservations.map(r => ({ ...r, type: 'event' }))
+    ], [ticketReservations, eventReservations]);
+
+    const selectionKey = (reservation) => `${reservation.type}:${reservation.id}`;
+
+    // The list arrives asynchronously, so this waits for the reference to appear
+    // rather than opening an empty modal on the first render.
+    useEffect(() => {
+        if (!isOpen || !focusReference) return;
+        const match = [...combinedReservations, ...archivedReservations]
+            .find(reservation => reservation.reservation_reference === focusReference);
+        if (!match) return;
+        setSelectedReservation(match);
+        setActiveTab('all');
+        setFilter('all');
+        setShowArchived(archivedReservations.includes(match));
+        if (onFocusHandled) onFocusHandled();
+    }, [isOpen, focusReference, combinedReservations, archivedReservations, onFocusHandled]);
+
+    // Reservation ids are OPAQUE `pid_` tokens, not database integers — the API encodes every
+    // id field before sending it. Coercing one with Number() yields NaN, which is what made
+    // selection silently do nothing (NaN is rejected as a row) and, before the selection was
+    // stored as data, serialize to `null` and produce an opaque "Select at least one
+    // reservation" from the server. The token is sent through untouched; the server's
+    // decodeRequestIdentifiers middleware turns it back into the real id.
+    const toSelectable = (reservation) => {
+        const raw = reservation?.id;
+        let id = null;
+        if (typeof raw === 'string' && raw.trim() !== '') {
+            id = raw.trim();
+        } else if (typeof raw === 'number' && Number.isInteger(raw) && raw > 0) {
+            id = raw;
+        }
+        if (id === null) return null;
+
+        const type = reservation?.type;
+        if (type !== 'ticket' && type !== 'event') return null;
+        return { type, id };
+    };
+
+    const toggleSelected = (reservation) => {
+        const entry = toSelectable(reservation);
+        if (!entry) return;
+        const key = selectionKey(reservation);
+        setSelected((current) => {
+            const next = new Map(current);
+            if (next.has(key)) next.delete(key);
+            else next.set(key, entry);
+            return next;
+        });
+    };
+
+    // "Select all" applies to what is currently on screen, so it can never quietly select
+    // rows hidden behind the active tab or status filter.
+    const selectAllVisible = (visible) => {
+        setSelected((current) => {
+            const next = new Map(current);
+            const allSelected = visible.length > 0
+                && visible.every((r) => current.has(selectionKey(r)));
+            visible.forEach((r) => {
+                const entry = toSelectable(r);
+                if (!entry) return;
+                if (allSelected) next.delete(selectionKey(r));
+                else next.set(selectionKey(r), entry);
+            });
+            return next;
+        });
+    };
+
+    // The bulk endpoints take one reservation type per call, so a mixed selection is split.
+    // Reads the stored {type, id} records directly — no string splitting.
+    const groupSelectionByType = (entries) => {
+        const byType = { ticket: [], event: [] };
+        entries.forEach(({ type, id }) => {
+            if (byType[type]) byType[type].push(id);
+        });
+        return byType;
+    };
+
+    // A 404 here means the API process predates the archive routes, which reads as "nothing
+// happened" with no clue why. Name the actual cause instead of a generic failure.
+const explainFailure = (error, fallback) => {
+    if (/404/.test(error?.message || '')) {
+        return 'This server is running an older version. Restart the backend, then try again.';
+    }
+    return error?.message || fallback;
+};
+
+    const archiveSelected = async () => {
+        const entries = [...selected.values()];
+        if (!entries.length || archiving) return;
+
+        setArchiving(true);
+        try {
+            const groups = groupSelectionByType(entries);
+            // Sequential rather than parallel: the panel refetches once at the end anyway.
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.archiveSelectedReservations({ type, ids: groups[type] });
+                if (!res.success) {
+                    notify.error(res.message || "Couldn't archive those reservations.");
+                    return;
+                }
+            }
+            notify.success(`${entries.length} reservation${entries.length > 1 ? 's' : ''} moved to archive.`);
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            notify.error(explainFailure(error, "Couldn't archive those reservations."));
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const restoreSelected = async () => {
+        const entries = [...selected.values()];
+        if (!entries.length || archiving) return;
+
+        setArchiving(true);
+        try {
+            const groups = groupSelectionByType(entries);
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.restoreSelectedReservations({ type, ids: groups[type] });
+                if (!res.success) {
+                    notify.error(res.message || "Couldn't restore those reservations.");
+                    return;
+                }
+            }
+            notify.success(`${entries.length} reservation${entries.length > 1 ? 's' : ''} restored.`);
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            notify.error(explainFailure(error, "Couldn't restore those reservations."));
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const openPermanentDelete = () => {
+        const entries = [...selected.values()];
+        if (!entries.length) return;
+        setDeletePassword('');
+        setDeleteError('');
+        setDeleteModal({ isOpen: true, keys: entries });
+    };
+
+    const confirmPermanentDelete = async () => {
+        if (deleting) return;
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            const groups = groupSelectionByType(deleteModal.keys);
+            let total = 0;
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.permanentlyDeleteArchivedReservations({
+                    type,
+                    ids: groups[type],
+                    password: deletePassword
+                });
+                if (!res.success) {
+                    // A missing password is a setup problem, not a wrong guess: hand off to
+                    // the create-password modal rather than leaving them to retry blindly.
+                    if (res.reason === 'password_setup_required') {
+                        const keys = deleteModal.keys;
+                        setDeleteModal({ isOpen: false, keys });
+                        setPasswordModal({ isOpen: true, pendingKeys: keys });
+                        return;
+                    }
+                    setDeleteError(res.message || "Couldn't delete those reservations.");
+                    return;
+                }
+                total += res.count || 0;
+            }
+            notify.success(`${total} reservation${total > 1 ? 's' : ''} permanently deleted.`);
+            setDeleteModal({ isOpen: false, keys: [] });
+            setDeletePassword('');
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            setDeleteError(explainFailure(error, "Couldn't delete those reservations."));
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const submitInitialPassword = async () => {
+        if (passwordSaving) return;
+        setPasswordSaving(true);
+        setPasswordError('');
+        try {
+            const res = await userAPI.setInitialPassword({ newPassword, confirmPassword });
+            if (!res.success) {
+                setPasswordError(res.message || "Couldn't create a password.");
+                return;
+            }
+            notify.success('Password created. You can continue.');
+            const keys = passwordModal.pendingKeys;
+            setPasswordModal({ isOpen: false, pendingKeys: [] });
+            setNewPassword('');
+            setConfirmPassword('');
+            // Re-open the confirmation step now that the account has a password.
+            setDeleteModal({ isOpen: true, keys });
+            setDeletePassword('');
+        } catch (error) {
+            setPasswordError(error.message || "Couldn't create a password.");
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
+    const filteredReservations = (showArchived ? archivedReservations : (
+        activeTab === 'all' ? combinedReservations :
+            activeTab === 'tickets' ? ticketReservations.map(r => ({ ...r, type: 'ticket' })) :
+                eventReservations.map(r => ({ ...r, type: 'event' }))
+    )).filter(r => filter === 'all' || r.status === filter)
+        .sort((a, b) => getDateTimestamp(b.created_at) - getDateTimestamp(a.created_at));
+
+    const formatDate = (dateStr) => {
+        return formatSafeDate(dateStr, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const getBuyerName = (reservation) => {
+        return reservation?.user_name || reservation?.visitor_name || reservation?.participant_name || 'Guest';
+    };
+
+    const getStatusBadge = (status) => {
+        const styles = {
+            pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+            confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+            cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
+            completed: 'bg-sky-50 text-sky-700 border border-sky-200'
+        };
+        return styles[status] || styles.pending;
+    };
+
+    // Prices come from the ticket payment config. These were hardcoded 40/20, so a
+    // price change in settings left the receipt and card totals stale.
+    const ticketPrice = (key, fallback) => {
+        const value = Number(ticketPaymentConfig[key]);
+        return Number.isFinite(value) && value >= 0 ? value : fallback;
+    };
+    const calculateTotal = (r) => Math.round((
+        ((r.adult_quantity || 0) * ticketPrice('adultPrice', 40)) +
+        ((r.child_quantity || 0) * ticketPrice('childPrice', 20)) +
+        ((r.bulusan_resident_quantity || 0) * ticketPrice('residentPrice', 0))
+    ) * 100) / 100;
+    const getEventAmount = (reservation) => {
+        const storedAmount = Number(reservation?.payment_amount || 0);
+        if (storedAmount > 0) return storedAmount;
+        return Number(eventPaymentConfig.amountPerParticipant || 0);
+    };
+
+    // Handles both reservation kinds. `type` decides which backend endpoints are
+    // called and which config gate applies; the flow itself is identical.
+    const handleReservationPayment = async () => {
+        const isTicketPayment = selectedReservation?.type === 'ticket';
+        if (!selectedReservation || paymentLoading) return;
+        if (!paymentConsent) {
+            notify.warning('Please agree to the terms before proceeding with payment.');
+            return;
+        }
+        try {
+            setPaymentLoading(true);
+            appendConsentRecord({
+                type: isTicketPayment ? 'ticket_payment' : 'event_payment',
+                summary: `${isTicketPayment ? 'Ticket' : 'Event'} payment consent for reservation ${selectedReservation.reservation_reference} (${paymentOption === 'now' ? 'PayMongo QR Ph' : 'Pay at Bulusan'})`,
+                data: {
+                    reservationReference: selectedReservation.reservation_reference,
+                    eventName: isTicketPayment ? 'Zoo admission' : (selectedReservation.venue_event_name || selectedReservation.event_title),
+                    paymentMethod: paymentOption === 'now' ? 'paymongo_qr_ph' : 'pay_at_bulusan',
+                    amount: isTicketPayment ? calculateTotal(selectedReservation) : Number(selectedReservation.payment_amount || 0),
+                    consented: true
+                }
+            });
+            if (paymentOption === 'now') {
+                const response = isTicketPayment
+                    ? await reservationAPI.createTicketPaymentCheckout(selectedReservation.id)
+                    : await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
+                if (!response.success || !response.checkoutUrl) {
+                throw new Error(response.message || 'Unable to start QR Ph payment.');
+                }
+                window.location.assign(response.checkoutUrl);
+                return;
+            }
+
+            const response = isTicketPayment
+                    ? await reservationAPI.setTicketPayAtBulusan(selectedReservation.id)
+                    : await reservationAPI.setEventPayAtBulusan(selectedReservation.id);
+            if (!response.success) throw new Error(response.message || 'Unable to select payment method.');
+            notify.success('Payment method saved: Pay at Bulusan.');
+            setShowPaymentDemo(false);
+            await fetchReservations();
+            setSelectedReservation(prev => prev ? { ...prev, payment_method: 'pay_at_bulusan', payment_status: 'unpaid' } : prev);
+        } catch (error) {
+            notify.error(error.message || 'Unable to process payment.');
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
+    const handleRefundRequest = async () => {
+        if (!selectedReservation || refundLoading) return;
+        try {
+            setRefundLoading(true);
+            const response = selectedReservation.type === 'ticket'
+                ? await reservationAPI.requestTicketRefund(selectedReservation.id)
+                : await reservationAPI.requestEventRefund(selectedReservation.id);
+            if (!response.success) throw new Error(response.message || 'Unable to request a refund.');
+            notify.success('Refund request submitted for review.');
+            setSelectedReservation(prev => prev ? { ...prev, refund_status: response.refundStatus || 'requested' } : prev);
+            await fetchReservations();
+        } catch (error) {
+            notify.error(error.message || 'Unable to request a refund.');
+        } finally {
+            setRefundLoading(false);
+        }
+    };
+
+    if (!isMounted) return null;
+
+    return (
+        <>
+            <div
+                 className={`fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-sm transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+                onClick={onClose}
+            />
+            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`} data-lenis-prevent>
+                 <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white gap-4">
+                     <div>
+                         <h2 className="text-xl font-semibold text-slate-800">Reservation History</h2>
+                         <p className="text-sm text-slate-500 mt-1">Review bookings, payment status, and archived reservations.</p>
+                     </div>
+                     <button onClick={onClose} aria-label="Close reservation history" title="Close" className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700">
+                         <Icons.Close />
+                     </button>
+                </div>
+
+                {!isAuthenticated ? (
+                    <div className="flex-1 flex items-center justify-center p-8">
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Icons.Ticket />
+                            </div>
+                            <h3 className="font-semibold text-slate-700 mb-2">Sign in required</h3>
+                            <p className="text-slate-500 text-sm">Please sign in to view your history</p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="p-4 border-b border-slate-200 bg-white space-y-4">
+                            <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                                {[
+                                    { key: 'all', label: 'All', count: combinedReservations.length },
+                                    { key: 'tickets', label: 'Tickets', count: ticketReservations.length },
+                                    { key: 'events', label: 'Events', count: eventReservations.length },
+                                    { key: 'archived', label: 'Archived', count: archivedReservations.length }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => {
+                                            if (tab.key === 'archived') {
+                                                setShowArchived(true);
+                                            } else {
+                                                setActiveTab(tab.key);
+                                                setShowArchived(false);
+                                            }
+                                        }}
+                                        className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg whitespace-nowrap transition ${(tab.key === 'archived' && showArchived) || (!showArchived && activeTab === tab.key)
+                                                ? 'bg-slate-700 text-white shadow-sm'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            }`}
+                                    >
+                                        {tab.label} <span className="ml-1 opacity-70">({tab.count})</span>
+                                    </button>
+                                ))}
+                            </div>
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+
+                            {/* Selection toolbar. The destructive action only appears in the
+                                Archived tab, because an active reservation is not in a state
+                                where it could be permanently deleted. */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => selectAllVisible(filteredReservations)}
+                                    className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition"
+                                >
+                                    {filteredReservations.length > 0
+                                        && filteredReservations.every((r) => selected.has(selectionKey(r)))
+                                        ? 'Clear selection'
+                                        : `Select all (${filteredReservations.length})`}
+                                </button>
+
+                                {selected.size > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                                            {selected.size} selected
+                                        </span>
+                                        {showArchived ? (
+                                            <>
+                                                {/* Restore is the safe, reversible action, so it
+                                                    is the default-looking one. Delete is red and
+                                                    always goes through the password gate. */}
+                                                <button
+                                                    type="button"
+                                                    onClick={restoreSelected}
+                                                    disabled={archiving}
+                                                    className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                                >
+                                                    {archiving ? 'Working...' : 'Restore'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={openPermanentDelete}
+                                                    className="px-4 py-2 rounded-lg bg-red-600 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-red-700 transition shadow-sm"
+                                                >
+                                                    Delete Permanently
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={archiveSelected}
+                                                disabled={archiving}
+                                                className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                            >
+                                                {archiving ? 'Archiving...' : 'Archive'}
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelected(new Map())}
+                                            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-100 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" data-lenis-prevent>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                                </div>
+                            ) : filteredReservations.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="w-12 h-12 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                        <Icons.Calendar />
+                                    </div>
+                                    <p className="font-medium text-slate-600">No reservations found</p>
+                                    <p className="text-sm text-slate-400 mt-1">Try adjusting your filters</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {filteredReservations.map(reservation => (
+                                         <div
+                                             key={`${reservation.type}-${reservation.id}`}
+                                             onClick={() => { setShowQR(false); setSelectedReservation(reservation); }}
+                                             className="relative bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
+                                         >
+                                             <div className="flex items-start gap-4 pr-10">
+                                                {/* Checkbox sits outside the card's click handler so
+                                                    selecting never opens the detail modal. */}
+                                                <label
+                                                    className="flex-shrink-0 pt-2 cursor-pointer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selected.has(selectionKey(reservation))}
+                                                        onChange={() => toggleSelected(reservation)}
+                                                        aria-label={`Select reservation ${reservation.reservation_reference}`}
+                                                        className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-400 cursor-pointer"
+                                                    />
+                                                </label>
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${reservation.type === 'ticket' ? 'bg-indigo-50 text-indigo-500' : 'bg-teal-50 text-teal-500'
+                                                    }`}>
+                                                    {reservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
+                                                </div>
+                                                <div className="flex-1 min-w-0 pt-1">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className="font-semibold text-slate-800 truncate">
+                                                            {reservation.type === 'ticket' ? 'Zoo Visit' : (reservation.venue_event_name || reservation.event_title || 'Venue Booking')}
+                                                        </h4>
+                                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${getStatusBadge(reservation.status)}`}>
+                                                            {reservation.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+                                                        <span>{formatDate(reservation.reservation_date || reservation.venue_event_date || reservation.event_date)}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-3 mt-1">
+                                                        <span className="font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                                                            {reservation.reservation_reference}
+                                                        </span>
+                                                        {reservation.type === 'ticket' && (
+                                                            <span className="font-semibold text-slate-700">
+                                                                {calculateTotal(reservation) === 0 ? 'FREE' : `₱${calculateTotal(reservation)}`}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        showArchived ? handleUnarchive(reservation) : handleArchive(reservation);
+                                                    }}
+                                                    disabled={archiving}
+                                                     className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 sm:opacity-0 sm:group-hover:opacity-100"
+                                                     title={showArchived ? 'Restore' : 'Archive'}
+                                                     aria-label={showArchived ? 'Restore reservation' : 'Archive reservation'}
+                                                >
+                                                    {showArchived ? <Icons.Restore /> : <Icons.Archive />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {selectedReservation && (
+                <div
+                    className="fixed inset-0 bg-slate-900/60 z-[110] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain backdrop-blur-sm"
+                    data-lenis-prevent
+                    onClick={() => setSelectedReservation(null)}
+                >
+                    <div
+                         className="w-full max-w-2xl relative flex flex-col my-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            ref={receiptRef}
+                            className="bg-white rounded-2xl w-full shadow-2xl overflow-hidden relative"
+                        >
+                            <div className="absolute top-[65%] left-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
+                            <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
+
+                            <div className="px-5 sm:px-6 py-6 text-center bg-slate-50 border-b border-slate-100 relative">
+                                <button
+                                    onClick={() => setSelectedReservation(null)}
+                                     aria-label="Close reservation details"
+                                     title="Close"
+                                     className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:bg-slate-200 hover:text-slate-700 transition sm:right-4 sm:top-4"
+                                >
+                                    <Icons.Close />
+                                </button>
+                                <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 ${selectedReservation.type === 'ticket' ? 'bg-indigo-50 text-indigo-500' : 'bg-teal-50 text-teal-500'
+                                    }`}>
+                                    {selectedReservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
+                                </div>
+                                <h3 className="text-base sm:text-lg font-bold text-slate-800 uppercase tracking-wide break-words px-4">
+                                    {selectedReservation.type === 'ticket' ? 'Zoo Visit' : (selectedReservation.venue_event_name || selectedReservation.event_title || 'Venue Booking')}
+                                </h3>
+                                <div className="mt-2 inline-block">
+                                    <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full ${getStatusBadge(selectedReservation.status)}`}>
+                                        {selectedReservation.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-4">
+                                <div className="text-center mb-5 sm:mb-6">
+                                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Reference No.</p>
+                                    <p className="font-mono text-base sm:text-lg font-bold text-slate-700 break-all">{selectedReservation.reservation_reference}</p>
+                                </div>
+
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
+                                        <span className="text-slate-500 flex-shrink-0">Buyer</span>
+                                        <span className="font-semibold text-slate-800 text-right break-words">{getBuyerName(selectedReservation)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                        <span className="text-slate-500">Date</span>
+                                        <span className="font-semibold text-slate-800 text-right">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                        <span className="text-slate-500">Time</span>
+                                        <span className="font-semibold text-slate-800 text-right">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
+                                    </div>
+                                    {selectedReservation.venue_event_end_time && (
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span className="text-slate-500">End Time</span>
+                                            <span className="font-semibold text-slate-800 text-right">{selectedReservation.venue_event_end_time}</span>
+                                        </div>
+                                    )}
+
+                                    {selectedReservation.type === 'ticket' && (
+                                        <>
+                                            {selectedReservation.adult_quantity > 0 && (
+                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                                    <span className="text-slate-500">Adults</span>
+                                                    <span className="font-medium text-slate-700">{selectedReservation.adult_quantity} × ₱40</span>
+                                                </div>
+                                            )}
+                                            {selectedReservation.child_quantity > 0 && (
+                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                                    <span className="text-slate-500">Children</span>
+                                                    <span className="font-medium text-slate-700">{selectedReservation.child_quantity} × ₱20</span>
+                                                </div>
+                                            )}
+                                            {selectedReservation.bulusan_resident_quantity > 0 && (
+                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                                    <span className="text-slate-500">Residents</span>
+                                                    <span className="font-medium text-slate-700">{selectedReservation.bulusan_resident_quantity} (FREE)</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center pt-4 pb-2">
+                                                <span className="font-semibold text-slate-800 uppercase tracking-wide">Total</span>
+                                                <span className="font-bold text-base sm:text-lg text-slate-800">
+                                                    {calculateTotal(selectedReservation) === 0 ? 'FREE' : `₱${calculateTotal(selectedReservation)}`}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                                                          {selectedReservation.type === 'ticket' && (
+                                         <>
+                                            <div className="pt-4">
+                                                <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Ticket Payment</p>
+                                                {selectedReservation.payment_status === 'paid' && (
+                                                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                                        <p className="text-sm font-bold text-emerald-700">Payment successful</p>
+                                                        <p className="mt-1 text-xs text-emerald-600">{selectedReservation.payment_method === 'pay_at_bulusan' ? 'Your Pay at Bulusan payment has been recorded as paid.' : 'Your QR Ph payment has been confirmed and marked as paid.'}</p>
+                                                    </div>
+                                                )}
+                                                <div className="space-y-2 text-sm">
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{calculateTotal(selectedReservation) > 0 ? `${selectedReservation.currency === 'USD' ? '$' : 'P'}${calculateTotal(selectedReservation).toFixed(2)}` : 'Free entry'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                    {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                    {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                </div>
+                                                {selectedReservation.payment_status === 'paid' ? (
+                                                    <div className="mt-4 space-y-2">
+                                                        <button
+                                                            onClick={handleDownloadPaymentReceipt}
+                                                            disabled={downloadingPayment}
+                                                            className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
+                                                        </button>
+                                                        {/* Only a PayMongo charge can be reversed here. "Pay at
+                                                            Bulusan" is settled in cash at the gate, so no refund
+                                                            button is offered - and the reason is spelled out so the
+                                                            single button does not look broken. */}
+                                                        {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
+                                                            <button
+                                                                onClick={handleRefundRequest}
+                                                                disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                                className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                            >
+                                                                {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                            </button>
+                                                        ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : calculateTotal(selectedReservation) > 0 && (
+                                                    <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                                        {ticketPaymentConfig.qrphEnabled && <button
+                                                            onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                            className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        >
+                                                            <Icons.CreditCard />
+                                                            Pay with QR Ph
+                                                        </button>}
+                                                        <button
+                                                            onClick={() => { setPaymentOption('bulusan'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        >
+                                                            <Icons.Cash />
+                                                            Pay at Bulusan
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                     )}
+{selectedReservation.type === 'event' && (
+                                         <>
+                                            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                                <span className="text-slate-500">Participants</span>
+                                                <span className="font-semibold text-slate-800">{selectedReservation.number_of_participants}</span>
+                                            </div>
+                                            <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
+                                                <span className="text-slate-500 flex-shrink-0">Organizer</span>
+                                                <span className="font-semibold text-slate-800 text-right break-words">{selectedReservation.participant_name}</span>
+                                            </div>
+                                              <div className="pt-4">
+                                                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
+                                                  {selectedReservation.payment_status === 'paid' && (
+                                                      <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                                          <p className="text-sm font-bold text-emerald-700">Payment successful</p>
+                                                           <p className="mt-1 text-xs text-emerald-600">{selectedReservation.payment_method === 'pay_at_bulusan' ? 'Your Pay at Bulusan payment has been recorded as paid.' : 'Your QR Ph payment has been confirmed and marked as paid.'}</p>
+                                                      </div>
+                                                  )}
+                                                   <div className="space-y-2 text-sm">
+                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
+                                              <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                       <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                       {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                       {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                  </div>
+                                                   {selectedReservation.payment_status === 'paid' ? (
+                                                           <div className="mt-4 space-y-2">
+                                                                   <button
+                                                                       onClick={handleDownloadPaymentReceipt}
+                                                                       disabled={downloadingPayment}
+                                                                       className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                   >
+                                                                       {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
+                                                                   </button>
+                                                                   {/* Same rule as tickets: only a PayMongo charge can be reversed
+                                                                       online. 'Pay at Bulusan' is settled in cash at the gate. */}
+                                                                   {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
+                                                                       <button
+                                                                           onClick={handleRefundRequest}
+                                                                           disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                                           className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                       >
+                                                                           {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                                       </button>
+                                                                   ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                                       <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                           Paid via {paymentMethodLabel(selectedReservation.payment_method)}, so there is no online charge to refund. Any refund is settled at the gate.
+                                                                       </p>
+                                                                   )}
+                                                           </div>
+                                                    ) : getEventAmount(selectedReservation) > 0 && (
+                                                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                                          {eventPaymentConfig.qrphEnabled && <button
+                                                             onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                             className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                         >
+                                                             <Icons.CreditCard />
+                                                              Pay with QR Ph
+                                                          </button>}
+                                                         <button
+                                                             onClick={() => { setPaymentOption('bulusan'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                             className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                         >
+                                                             <Icons.Cash />
+                                                             Pay at Bulusan
+                                                         </button>
+                                                     </div>
+                                                 )}
+                                             </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                             {selectedReservation.reservation_reference && (
+                                <>
+                                    <div className="w-full border-t-2 border-dashed border-slate-200 relative z-10"></div>
+                                    <div className="p-5 sm:p-8 flex flex-col items-center bg-slate-50">
+                                        <button
+                                            onClick={() => setShowQR(prev => !prev)}
+                                            className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                        >
+                                            <Icons.Ticket />
+                                            {showQR ? 'Hide QR Code' : 'Show QR Code'}
+                                        </button>
+                                        <div className={showQR ? 'mt-5 flex flex-col items-center' : 'hidden'}>
+                                            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                                                 <QRCodeSVG
+                                                     className="receipt-qr-code"
+                                                     value={`${window.location.origin}/verify/${selectedReservation.type}/${encodeURIComponent(selectedReservation.reservation_reference)}`}
+                                                     size={280}
+                                                     level="M"
+                                                     bgColor="#ffffff"
+                                                     fgColor="#0f172a"
+                                                     style={{ display: 'block', width: '280px', height: '280px', maxWidth: '100%' }}
+                                                 />
+                                            </div>
+                                            <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
+                                                Scan at the entrance
+                                            </p>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="w-full mt-4 flex flex-col sm:flex-row gap-3">
+                            {selectedReservation.type === 'event' && selectedReservation.status === 'confirmed' && (
+                                <button
+                                    onClick={() => { setSelectedReservation(null); navigate('/my-events'); }}
+                                    className="flex-1 py-3.5 bg-teal-600 text-white hover:bg-teal-700 font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                >
+                                    Manage Event
+                                </button>
+                            )}
+                            {selectedReservation.status === 'pending' && (
+                                <>
+                                    <button
+                                        onClick={() => openEditModal(selectedReservation)}
+                                        className="flex-1 py-3.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => setCancelModal({ isOpen: true, reservation: selectedReservation })}
+                                        className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={handleDownload}
+                                disabled={downloading}
+                                className="flex-1 py-3.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm font-semibold uppercase tracking-wider text-xs rounded-xl transition disabled:opacity-50"
+                            >
+                                {downloading ? 'Preparing...' : 'Download'}
+                            </button>
+                            <button
+                                onClick={() => selectedReservation.is_archived ? handleUnarchive(selectedReservation) : handleArchive(selectedReservation)}
+                                disabled={archiving}
+                                className={`flex-1 py-3.5 font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2 ${selectedReservation.is_archived
+                                        ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                                        : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
+                                    }`}
+                            >
+                                {selectedReservation.is_archived ? <Icons.Restore /> : <Icons.Archive />}
+                                {archiving ? 'Processing...' : (selectedReservation.is_archived ? 'Restore' : 'Archive')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showPaymentDemo && (
+                <div
+                    className="fixed inset-0 bg-slate-900/60 z-[120] flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain backdrop-blur-sm"
+                    data-lenis-prevent
+                    onClick={() => setShowPaymentDemo(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-sm p-5 sm:p-8 text-center relative shadow-2xl my-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowPaymentDemo(false)}
+                            className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                        >
+                            <Icons.Close />
+                        </button>
+                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 ${paymentOption === 'now' ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white'}`}>
+                            {paymentOption === 'now' ? <Icons.CreditCard /> : <Icons.Cash />}
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+                            {paymentOption === 'now' ? 'Pay Now' : 'Pay at Bulusan'}
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+                            {paymentOption === 'now'
+                                 ? 'Pay securely with QR Ph through PayMongo. The checkout page will display the QR code for scanning.'
+                                : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
+                        </p>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
+                            <div className="flex justify-between items-start gap-3 py-1.5">
+                                <span className="text-xs text-slate-500 flex-shrink-0">{selectedReservation?.type === 'ticket' ? 'Booking' : 'Event'}</span>
+                                <span className="text-xs font-semibold text-slate-800 text-right break-words">{selectedReservation?.type === 'ticket' ? 'Zoo admission' : (selectedReservation?.venue_event_name || selectedReservation?.event_title)}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-1.5">
+                                <span className="text-xs text-slate-500">Reference</span>
+                                <span className="font-mono text-xs font-semibold text-slate-800 break-all text-right">{selectedReservation?.reservation_reference}</span>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex flex-col gap-3">
+                            <label className="flex items-start gap-3 text-left cursor-pointer">
+                                <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={paymentConsent}
+                                        onChange={(e) => setPaymentConsent(e.target.checked)}
+                                        className="peer appearance-none w-4 h-4 border border-slate-300 rounded bg-white checked:bg-slate-800 checked:border-slate-800 transition-all cursor-pointer"
+                                    />
+                                    <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                        <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                    I consent to this payment being processed per the Bulusan Zoo{' '}
+                                    <Link to="/terms" className="text-slate-800 font-semibold hover:underline">Terms of Service</Link>,{' '}
+                                    <Link to="/privacy" className="text-slate-800 font-semibold hover:underline">Privacy Policy</Link>,{' '}
+                                    <Link to="/refund-policy" className="text-slate-800 font-semibold hover:underline">Refund Policy</Link>, and{' '}
+                                    <Link to="/cookies" className="text-slate-800 font-semibold hover:underline">Cookie Policy</Link>.
+                                </p>
+                            </label>
+                            <button
+                                 onClick={handleReservationPayment}
+                                 disabled={paymentLoading}
+                                 className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
+                             >
+                                  {paymentLoading ? 'Processing...' : paymentOption === 'now' ? 'Proceed to QR Ph Payment' : 'Confirm Pay at Bulusan'}
+                            </button>
+                            <button
+                                onClick={() => setShowPaymentDemo(false)}
+                                className="w-full py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-300 mt-4">
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Amend a pending booking */}
+            {editModal.isOpen && (
+                <div className="fixed inset-0 z-[260] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="self-edit-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !selfSaving && setEditModal({ isOpen: false, reservation: null })} />
+                    <div className="relative w-full max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 shrink-0">
+                            <div>
+                                <h3 id="self-edit-title" className="text-lg font-bold text-slate-900">Edit</h3>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    {editModal.reservation?.type === 'event'
+                                        ? 'Update the details of your event booking.'
+                                        : 'Update the details of your visit.'}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setEditModal({ isOpen: false, reservation: null })}
+                                disabled={selfSaving}
+                                aria-label="Close"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                            >
+                                <Icons.Close className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+                        {editError && (
+                            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{editError}</div>
+                        )}
+
+                        {editError && (
+                            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{editError}</div>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+                            {editModal.reservation?.type === 'event' && (
+                                <Field id="self-edit-designation" label="Event Designation" value={editDraft.designation} onChange={(v) => setEditField('designation', v)} placeholder="e.g. Tree Planting Program" />
+                            )}
+
+                            <Field id="self-edit-name" label="Contact Name *" value={editDraft.name} onChange={(v) => setEditField('name', v)} placeholder="e.g. Juan Dela Cruz" />
+                            <Field id="self-edit-email" label="Email Address *" type="email" value={editDraft.email} onChange={(v) => setEditField('email', v)} placeholder="you@example.com" />
+                            <Field id="self-edit-phone" label="Phone (optional)" type="tel" value={editDraft.phone} onChange={(v) => setEditField('phone', v)} placeholder="09XX XXX XXXX" />
+                            <Field id="self-edit-date" label={editModal.reservation?.type === 'event' ? 'Event Date *' : 'Arrival Date *'} type="date" value={editDraft.date} onChange={(v) => setEditField('date', v)} />
+                            <Field id="self-edit-start" label={editModal.reservation?.type === 'event' ? 'Start Time *' : 'Arrival Time *'} type="time" value={editDraft.startTime} onChange={(v) => setEditField('startTime', v)} />
+                            {editModal.reservation?.type === 'event' && (
+                                <Field id="self-edit-end" label="End Time *" type="time" value={editDraft.endTime} onChange={(v) => setEditField('endTime', v)} />
+                            )}
+
+                            {editModal.reservation?.type === 'event' ? (
+                                <div>
+                                    <label htmlFor="self-edit-participants" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Participants *</label>
+                                    <input id="self-edit-participants" type="number" min="1" inputMode="numeric" value={editParticipants}
+                                        onChange={(e) => setEditParticipants(e.target.value)}
+                                        className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                </div>
+                            ) : (
+                                // Bulusan resident is intentionally absent: a resident ticket is
+                                // only valid against the ID captured at booking, so the count
+                                // cannot be changed after the fact.
+                                [['adult', 'Adult', editAdult, setEditAdult],
+                                 ['child', 'Child (4-17)', editChild, setEditChild]].map(([key, label, value, setter]) => (
+                                    <div key={key}>
+                                        <label htmlFor={`self-edit-${key}`} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+                                        <input id={`self-edit-${key}`} type="number" min="0" inputMode="numeric" value={value}
+                                            onChange={(e) => setter(e.target.value)}
+                                            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                    </div>
+                                ))
+                            )}
+
+                            <div className="sm:col-span-2">
+                                {editModal.reservation?.type === 'event' && (
+                                    <div className="mb-4">
+                                        <label htmlFor="self-edit-description" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                                        <textarea id="self-edit-description" rows={2} value={editDraft.description} onChange={(e) => setEditField('description', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                    </div>
+                                )}
+                                <label htmlFor="self-edit-notes" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Notes (optional)</label>
+                                <textarea id="self-edit-notes" rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                            </div>
+                        </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 shrink-0 sm:flex-row-reverse">
+                            <button onClick={submitSelfEdit} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-800 disabled:opacity-50">
+                                {selfSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button onClick={() => setEditModal({ isOpen: false, reservation: null })} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel a pending booking */}
+            {cancelModal.isOpen && (
+                <div className="fixed inset-0 z-[260] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="self-cancel-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !selfSaving && setCancelModal({ isOpen: false, reservation: null })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+                            <Icons.Close className="h-6 w-6 text-rose-600" />
+                        </div>
+                        <h3 id="self-cancel-title" className="text-lg font-bold text-slate-900">Cancel this booking?</h3>
+                        <p className="mt-2 text-sm text-slate-500">
+                            This releases your slot and cannot be undone. You can always make a new booking afterwards.
+                        </p>
+                        <div className="mt-7 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button onClick={submitSelfCancel} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl bg-rose-600 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-rose-700 disabled:opacity-50">
+                                {selfSaving ? 'Cancelling...' : 'Yes, Cancel It'}
+                            </button>
+                            <button onClick={() => setCancelModal({ isOpen: false, reservation: null })} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                Keep Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password confirmation for permanent deletion. This is the last gate before an
+                irreversible action, so it names the consequence plainly. */}
+            {deleteModal.isOpen && !passwordModal.isOpen && (
+                <div className="fixed inset-0 z-[280] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="perm-delete-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !deleting && setDeleteModal({ isOpen: false, keys: [], needsPassword: false })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                            <Icons.Close className="h-6 w-6 text-red-600" />
+                        </div>
+                        <h3 id="perm-delete-title" className="text-center text-lg font-bold text-slate-900">
+                            Delete {deleteModal.keys.length} reservation{deleteModal.keys.length > 1 ? 's' : ''}?
+                        </h3>
+                        <p className="mt-2 text-center text-sm text-slate-500">
+                            This permanently removes your booking history and cannot be undone.
+                        </p>
+
+                        <label htmlFor="perm-delete-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            Your password
+                        </label>
+                        <input
+                            id="perm-delete-password"
+                            type="password"
+                            autoComplete="current-password"
+                            value={deletePassword}
+                            onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') confirmPermanentDelete(); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        {deleteError && (
+                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{deleteError}</p>
+                        )}
+
+                        {/* Signed up with Google and never set a password? Offer the step up
+                            front rather than letting them guess and fail. The server reports
+                            `password_setup_required` independently, so this is a shortcut, not
+                            the gate. */}
+                        <button
+                            type="button"
+                            onClick={() => setPasswordModal({ isOpen: true, pendingKeys: deleteModal.keys })}
+                            className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 underline underline-offset-2 hover:text-slate-800 transition"
+                        >
+                            No password yet? Create one
+                        </button>
+
+                        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button
+                                type="button"
+                                onClick={confirmPermanentDelete}
+                                disabled={deleting || !deletePassword.trim()}
+                                className="min-h-11 flex-1 rounded-xl bg-red-600 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {deleting ? 'Deleting...' : 'Delete Forever'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDeleteModal({ isOpen: false, keys: [] })}
+                                disabled={deleting}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Keep
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Create-a-password step for accounts that signed up with Google. */}
+            {passwordModal.isOpen && (
+                <div className="fixed inset-0 z-[290] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="set-password-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !passwordSaving && setPasswordModal({ isOpen: false, pendingKeys: [] })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+                        <h3 id="set-password-title" className="text-lg font-bold text-slate-900">Create a password</h3>
+                        <p className="mt-2 text-sm text-slate-500">
+                            Needed once to confirm permanent deletion. At least 8 characters, with an
+                            uppercase letter, a number and a special character.
+                        </p>
+
+                        <label htmlFor="new-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            New password
+                        </label>
+                        <input
+                            id="new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        <label htmlFor="confirm-new-password" className="mt-4 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            Confirm password
+                        </label>
+                        <input
+                            id="confirm-new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={confirmPassword}
+                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') submitInitialPassword(); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        {passwordError && (
+                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{passwordError}</p>
+                        )}
+
+                        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button
+                                type="button"
+                                onClick={submitInitialPassword}
+                                disabled={passwordSaving || !newPassword || !confirmPassword}
+                                className="min-h-11 flex-1 rounded-xl bg-slate-800 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-900 disabled:opacity-50"
+                            >
+                                {passwordSaving ? 'Saving...' : 'Create Password'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setPasswordModal({ isOpen: false, pendingKeys: [] });
+                                    setNewPassword('');
+                                    setConfirmPassword('');
+                                    setPasswordError('');
+                                }}
+                                disabled={passwordSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};
+
+export default ReservationHistoryPanel;

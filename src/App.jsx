@@ -1,0 +1,449 @@
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from 'react';
+import { GooeyToaster } from 'goey-toast';
+import 'goey-toast/styles.css';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import PostUploadProvider from './context/PostUploadContext';
+import Home from './pages/user/Home';
+import Animals from './pages/user/Animals';
+import Plants from './pages/user/Plants';
+import { AnimalDetail, PlantDetail } from './pages/user/CollectionDetail';
+import WildlifeOriginDetail from './pages/user/WildlifeOriginDetail';
+import Events from './pages/user/Events';
+import Reservations from './pages/user/Reservations';
+import AboutUs from './pages/user/AboutUs';
+import ArchivedReservations from './pages/user/ArchivedReservations';
+import UserProfile from './pages/user/UserProfile';
+import Settings from './pages/user/Settings';
+import Help from './pages/user/Help';
+import UserMessages from './pages/user/UserMessages';
+import CommunityPage from './pages/user/CommunityPage';
+import PublicUserProfile from './pages/user/PublicUserProfile';
+import MyEvents from './pages/user/MyEvents';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
+import AccessDenied from './pages/auth/AccessDenied';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+import CookiePolicy from './pages/legal/CookiePolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+import CookieConsentBanner from './components/CookieConsentBanner';
+import SessionExpiryListener from './components/auth/SessionExpiryListener';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminEvents from './pages/admin/AdminEvents';
+import Analytics from './pages/admin/Analytics';
+import Reports from './pages/admin/Reports';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminAnimals from './pages/admin/AdminAnimals';
+import AdminPlants from './pages/admin/AdminPlants';
+import AdminReservations from './pages/admin/AdminReservations';
+import AdminTransactions from './pages/admin/AdminTransactions';
+import AdminProfile from './pages/admin/AdminProfile';
+import AdminHelpCenter from './pages/admin/AdminHelpCenter';
+import AdminTickets from './pages/admin/AdminTickets';
+import AdminMessages from './pages/admin/AdminMessages';
+import AdminLogs from './pages/admin/AdminLogs';
+import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminTrash from './pages/admin/AdminTrash';
+import StaffDashboard from './pages/staff/StaffDashboard';
+import QRScanner from './pages/staff/QRScanner';
+import StaffEvents from './pages/staff/StaffEvents';
+import StaffTickets from './pages/staff/StaffTickets';
+import StaffReservations from './pages/staff/StaffReservations';
+import StaffAnimals from './pages/staff/StaffAnimals';
+import StaffPlants from './pages/staff/StaffPlants';
+import StaffHelpCenter from './pages/staff/StaffHelpCenter';
+import StaffMessages from './pages/staff/StaffMessages';
+import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
+import StaffTrash from './pages/staff/StaffTrash';
+import StaffWalkIn from './pages/staff/StaffWalkIn';
+import WalkInRecords from './pages/staff/WalkInRecords';
+import AdminLayout from './components/layout/AdminLayout';
+import StaffLayout from './components/layout/StaffLayout';
+import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
+import './App.css';
+import AIAssist from './pages/AIAssist';
+import { trackVisit } from './services/visitor-tracking';
+
+const MapPage = lazy(() => import('./pages/user/Map'));
+const MapPageFallback = () => (
+    <div className="flex items-center justify-center h-screen bg-[#eef3ed]">
+        <div className="flex flex-col items-center gap-6">
+            <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
+            <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+        </div>
+    </div>
+);
+
+const ProtectedRoute = ({ children, allowedRoles }) => {
+    const { isAuthenticated, user, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ message: 'Please login first.' }} replace />;
+    }
+
+    if (allowedRoles && !allowedRoles.includes(user?.role)) {
+        return <Navigate to="/access-denied" replace />;
+    }
+
+    return children;
+};
+
+const PublicRoute = ({ children }) => {
+    const { isAuthenticated, user } = useAuth();
+
+    if (isAuthenticated && user) {
+        if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+        if (user.role === 'staff') return <Navigate to="/staff/dashboard" replace />;
+        return <Navigate to="/" replace />;
+    }
+
+    return children;
+};
+
+const VisitTracker = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff') || location.pathname.startsWith('/auth/')) return;
+        trackVisit(location.pathname);
+    }, [location.pathname]);
+
+    return null;
+};
+
+function AppRoutes() {
+    return (
+        <Routes>
+            {/* Public Routes - accessible to everyone */}
+            <Route path="/" element={<Home />} />
+            <Route path="/animals" element={<Animals />} />
+            <Route path="/animals/:id" element={<AnimalDetail />} />
+            <Route path="/plants" element={<Plants />} />
+            <Route path="/plants/:id" element={<PlantDetail />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/animaldex" element={<AnimalClassifier />} />
+            <Route path="/map" element={<Suspense fallback={<MapPageFallback />}><MapPage /></Suspense>} />
+            <Route path="/map/animals/:id" element={<WildlifeOriginDetail />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+
+            {/* Auth Routes */}
+            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            <Route path="/signup" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+            <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+            <Route path="/admin" element={<Navigate to="/login" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
+
+            {/* Protected User Routes - requires login */}
+            <Route path="/classifier" element={
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
+                    <AnimalClassifier />
+                </ProtectedRoute>
+            } />
+            <Route path="/reservations" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <Reservations />
+                </ProtectedRoute>
+            } />
+            <Route path="/archived-reservations" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <ArchivedReservations />
+                </ProtectedRoute>
+            } />
+            <Route path="/my-events" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <MyEvents />
+                </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
+                    <UserProfile />
+                </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
+                    <Settings />
+                </ProtectedRoute>
+            } />
+            <Route path="/my-messages" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <UserMessages />
+                </ProtectedRoute>
+            } />
+            <Route path="/help" element={<Help />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/users/:userId" element={
+                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
+                    <PublicUserProfile />
+                </ProtectedRoute>
+            } />
+            <Route path="/mini-zoo-game" element={<Navigate to="/" replace />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminDashboard />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/ai-assist" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AIAssist role="admin" />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/events" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminEvents />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/analytics" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <Analytics />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/admin/reports" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <Reports />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/logs" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminLogs />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminUsers />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/animals" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminAnimals />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/plants" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminPlants />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/reservations" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminReservations />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/transactions" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminTransactions /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/walk-in-records" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><WalkInRecords /></AdminLayout></ProtectedRoute>} />
+
+            <Route path="/admin/profile" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminProfile />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/tickets" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminTickets />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/help" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminHelpCenter />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/messages" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminMessages />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/community-moderation" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminCommunityModeration />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminSettings />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/trash" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminTrash />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+
+            {/* Staff Routes */}
+            <Route path="/staff/dashboard" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffDashboard />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/walk-in" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout><StaffWalkIn /></StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/walk-in-records" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout><WalkInRecords /></StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/ai-assist" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <AIAssist role="staff" />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/qr-scanner" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <QRScanner />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/events" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffEvents />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/tickets" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffTickets />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/animals" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffAnimals />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/plants" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffPlants />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/reservations" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffReservations />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/help" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffHelpCenter />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/messages" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffMessages />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/community-moderation" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffCommunityModeration />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/trash" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffTrash />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            {/* Sits outside the Router so an in-flight community post survives navigation:
+                unmounting a page must not abort an upload the visitor already started. */}
+            <PostUploadProvider>
+                <Router>
+                    <VisitTracker />
+                <SessionExpiryListener />
+                    <AppRoutes />
+                    <CookieConsentBanner />
+                    <GooeyToaster
+                        position="top-right"
+                        duration={3000}
+                        closeButton="top-right"
+                        showTimestamp={false}
+                        visibleToasts={3}
+                        maxQueue={8}
+                        theme="dark"
+                    />
+                </Router>
+            </PostUploadProvider>
+        </AuthProvider>
+    );
+}
+
+export default App;
