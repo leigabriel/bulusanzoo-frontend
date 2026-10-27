@@ -46,7 +46,7 @@ const RoleCompanionFloatingButton = ({ role = 'staff', open, onOpenChange, hideT
                        transition-transform duration-200
                        active:scale-95 hover:scale-110"
                         >
-                            <img
+                            <img loading="lazy" decoding="async"
                                 src={AI_ASSISTANT_ICON}
                                 className="w-full h-full object-contain pointer-events-none"
                                 alt="Open AI Assist"

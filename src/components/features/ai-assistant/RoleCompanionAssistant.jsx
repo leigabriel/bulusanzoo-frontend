@@ -15,7 +15,7 @@ const THEME = {
 
 const AssistantAvatar = ({ role = 'staff' }) => (
     <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: role === 'admin' ? THEME.accentSoft : THEME.surfaceMuted }}>
-        <img src={AI_ASSISTANT_ICON} alt="Companion" className="w-full h-full object-contain p-1.5" />
+        <img loading="lazy" decoding="async" src={AI_ASSISTANT_ICON} alt="Companion" className="w-full h-full object-contain p-1.5" />
     </div>
 );
 
@@ -399,7 +399,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                         </button>
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}>
-                                <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-1.5" />
+                                <img loading="lazy" decoding="async" src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-1.5" />
                             </div>
                             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: THEME.accent, borderColor: THEME.base }} />
                         </div>
@@ -417,7 +417,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                     <div className="min-h-0 flex-1 flex flex-col px-7 py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
                         <div className="flex-1 flex flex-col gap-10">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: THEME.accentSoft }}>
-                                <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-2" />
+                                <img loading="lazy" decoding="async" src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-2" />
                             </div>
 
                             <div className="flex flex-col gap-3">

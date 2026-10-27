@@ -346,7 +346,7 @@ const AdminEvents = () => {
         const isList = arg.view.type === 'listWeek';
         return (
             <div className={isList ? 'flex items-center gap-2 w-full' : 'w-full h-full overflow-hidden'}>
-                <img
+                <img loading="lazy" decoding="async"
                     src={imageUrl}
                     alt={arg.event.title}
                     draggable={false}
@@ -692,7 +692,7 @@ const AdminEvents = () => {
                                 )}
                                 {formData.imageUrl && (
                                     <div className="mt-4 rounded-xl overflow-hidden shadow-md">
-                                        <img src={formData.imageUrl} alt="Event" className="w-full h-64 object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                        <img loading="lazy" decoding="async" src={formData.imageUrl} alt="Event" className="w-full h-64 object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                                     </div>
                                 )}
                                 {formData.description && (
@@ -753,7 +753,7 @@ const AdminEvents = () => {
                                     <input type="file" accept="image/*" onChange={handleImageFileChange} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400 transition" />
                                     {(imagePreview || formData.imageUrl) && (
                                         <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
-                                            <img src={imagePreview || formData.imageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <img loading="lazy" decoding="async" src={imagePreview || formData.imageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                                             {imagePreview && (
                                                 <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-1 right-1 bg-red-500 text-gray-900 rounded-full p-1 hover:bg-red-600 transition">
                                                     <ReiconX className="h-4 w-4" />

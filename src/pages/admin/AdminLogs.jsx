@@ -405,7 +405,7 @@ const AdminLogs = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">
                                                         {log.profile_image ? (
-                                                            <img
+                                                            <img loading="lazy" decoding="async"
                                                                 src={getProfileImageUrl(log.profile_image)}
                                                                 alt={name}
                                                                 className="w-full h-full object-cover"

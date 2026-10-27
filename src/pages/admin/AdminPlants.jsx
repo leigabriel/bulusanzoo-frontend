@@ -487,7 +487,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
                                                     {plant.image_url ? (
-                                                        <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
+                                                        <img loading="lazy" decoding="async" src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         (plant.name || 'P').charAt(0).toUpperCase()
                                                     )}
@@ -658,7 +658,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                     />
                                     {(imagePreview || form.imageUrl) && (
                                         <div className="relative">
-                                            <img
+                                            <img loading="lazy" decoding="async"
                                                 src={imagePreview || form.imageUrl}
                                                 alt="Preview"
                                                 className="w-full h-40 object-cover rounded-xl"

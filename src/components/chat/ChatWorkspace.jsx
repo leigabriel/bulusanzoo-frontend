@@ -27,7 +27,7 @@ const formatListTime = (value) => {
 };
 
 const Avatar = ({ person, admin = false, size = 'h-11 w-11' }) => (
-    <img
+    <img loading="lazy" decoding="async"
         src={admin ? '/bz-url-logo.png' : getProfileImageUrl(person?.profileImage) || defaultAvatar}
         alt=""
         className={`${size} shrink-0 rounded-full border border-emerald-100 bg-emerald-50 object-cover`}

@@ -237,7 +237,7 @@ const ListView = ({ events, onSelect }) => {
                                 >
                                     <div className="w-16 h-16 md:w-24 md:h-24 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                                         {event.imageUrl && (
-                                            <img src={event.imageUrl} alt="" className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async" src={event.imageUrl} alt="" className="w-full h-full object-cover" />
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -275,7 +275,7 @@ const GridView = ({ events, onSelect }) => {
                     <button type="button" onClick={() => onSelect(event)} className="flex flex-col h-full text-left">
                         <div className="relative h-44 md:h-52 overflow-hidden bg-gray-100">
                             {event.imageUrl && (
-                                <img src={event.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                <img loading="lazy" decoding="async" src={event.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             )}
                             <div className="absolute top-3 left-3">
                                 <StatusBadge status={event.status} />

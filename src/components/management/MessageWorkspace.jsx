@@ -60,7 +60,7 @@ const StatusBadge = ({ item, isAppeal }) => {
 };
 
 const Avatar = ({ item, size = 'h-11 w-11' }) => (
-    <img
+    <img loading="lazy" decoding="async"
         src={getProfileImageUrl(item.sender_profile_image) || defaultAvatar}
         alt=""
         className={`${size} shrink-0 rounded-full border border-green-100 bg-green-50 object-cover`}

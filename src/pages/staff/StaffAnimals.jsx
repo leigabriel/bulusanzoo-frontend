@@ -409,7 +409,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
-                                                    {animal.image_url ? (<img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />) : ((animal.name || 'A').charAt(0).toUpperCase())}
+                                                    {animal.image_url ? (<img loading="lazy" decoding="async" src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />) : ((animal.name || 'A').charAt(0).toUpperCase())}
                                                 </div>
                                                 <p className="font-medium text-gray-900">{animal.name}</p>
                                             </div>
@@ -533,7 +533,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
                                 <input type="file" accept="image/*" onChange={handleImageFileChange} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-400/20 file:text-green-800 hover:file:bg-green-400/30" />
                                 {(imagePreview || form.imageUrl) && (
-                                    <div className="mt-3"><img src={imagePreview || form.imageUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-green-200" /></div>
+                                    <div className="mt-3"><img loading="lazy" decoding="async" src={imagePreview || form.imageUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-green-200" /></div>
                                 )}
                             </div>
                             <div className="flex gap-3 pt-4">

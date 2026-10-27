@@ -517,7 +517,7 @@ const StaffTickets = () => {
                                     {selectedTicket.residentIdImage ? (
                                         <div className="space-y-3">
                                             <div className="bg-white rounded-xl p-2 max-h-48 overflow-hidden">
-                                                <img 
+                                                <img loading="lazy" decoding="async" 
                                                     src={getResidentIdImageUrl(selectedTicket.residentIdImage)} 
                                                     alt="Resident ID" 
                                                     className="w-full h-full object-contain rounded-lg cursor-pointer hover:opacity-80"
@@ -710,7 +710,7 @@ const StaffTickets = () => {
                         >
                             <CloseIcon className="w-5 h-5" />
                         </button>
-                        <img 
+                        <img loading="lazy" decoding="async" 
                             src={previewImageUrl} 
                             alt="Resident ID Preview" 
                             className="w-full h-full object-contain rounded-xl"

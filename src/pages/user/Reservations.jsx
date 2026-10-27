@@ -43,7 +43,7 @@ const Reservations = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
-    const [events, setEvents] = useState([]);
+    const [, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [reservationType, setReservationType] = useState('ticket');
@@ -60,9 +60,9 @@ const Reservations = () => {
     // Reservation whose receipt the ledger should open for us (set by "Pay Now").
     const [focusReference, setFocusReference] = useState(null);
     const [paymentReturn, setPaymentReturn] = useState(false);
-    const [ticketAvailability, setTicketAvailability] = useState([]);
-    const [eventAvailability, setEventAvailability] = useState([]);
-    const [loadingSlots, setLoadingSlots] = useState(false);
+    const [, setTicketAvailability] = useState([]);
+    const [, setEventAvailability] = useState([]);
+    const [, setLoadingSlots] = useState(false);
 
     // Confirmation modal states
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -167,7 +167,7 @@ const Reservations = () => {
                             setTicketAvailability([]);
                         }
                     }
-                } catch (err) { }
+                } catch { /* intentionally ignored: non-critical */ }
                 setLoadingSlots(false);
             }
         };
@@ -192,7 +192,7 @@ const Reservations = () => {
                             setEventAvailability([]);
                         }
                     }
-                } catch (err) { }
+                } catch { /* intentionally ignored: non-critical */ }
                 setLoadingSlots(false);
             }
         };

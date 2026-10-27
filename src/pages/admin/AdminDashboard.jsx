@@ -579,7 +579,7 @@ const AdminDashboard = () => {
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
                                             {getProfileImageUrl(u.profileImage) ? (
-                                                <img
+                                                <img loading="lazy" decoding="async"
                                                     src={getProfileImageUrl(u.profileImage)}
                                                     alt={u.fullName || 'User'}
                                                     className="w-10 h-10 rounded-full object-cover"

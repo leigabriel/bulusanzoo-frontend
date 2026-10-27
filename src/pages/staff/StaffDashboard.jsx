@@ -247,7 +247,7 @@ const StaffDashboard = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg bg-green-50 overflow-hidden flex-shrink-0">
                                                         {animal.image_url ? (
-                                                            <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
+                                                            <img loading="lazy" decoding="async" src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center text-gray-500">
                                                                 <PawIcon className="w-6 h-6" />
@@ -314,7 +314,7 @@ const StaffDashboard = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg bg-green-50 overflow-hidden flex-shrink-0">
                                                         {plant.image_url ? (
-                                                            <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
+                                                            <img loading="lazy" decoding="async" src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center text-gray-500">
                                                                 <LeafIcon className="w-6 h-6" />

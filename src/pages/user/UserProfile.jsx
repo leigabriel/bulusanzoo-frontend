@@ -314,7 +314,7 @@ const hasPassword = user?.hasPassword === true;
                              <div className="relative group">
                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
                                     {getProfileImageUrl() && !imageLoadError ? (
-                                        <img 
+                                        <img loading="lazy" decoding="async" 
                                             src={getProfileImageUrl()} 
                                             alt="Profile" 
                                             className="w-full h-full object-cover"

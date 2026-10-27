@@ -27,7 +27,7 @@ const PlantCard = ({ plant }) => {
     return (
         <Link to={`/plants/${plant.id}`} className="plant-card group flex cursor-pointer flex-col" onMouseEnter={() => zoom(1.05)} onMouseLeave={() => zoom(1)}>
             <div className="mb-4 aspect-square w-full overflow-hidden rounded-xl bg-gray-100">
-                {plant.imageUrl ? <img ref={imgRef} src={plant.imageUrl} alt={plant.name} className="h-full w-full origin-center object-cover" /> : <div ref={imgRef} className="flex h-full w-full items-center justify-center bg-gray-100"><span className="text-5xl font-bold uppercase text-gray-300">{plant.name[0]}</span></div>}
+                {plant.imageUrl ? <img loading="lazy" decoding="async" ref={imgRef} src={plant.imageUrl} alt={plant.name} className="h-full w-full origin-center object-cover" /> : <div ref={imgRef} className="flex h-full w-full items-center justify-center bg-gray-100"><span className="text-5xl font-bold uppercase text-gray-300">{plant.name[0]}</span></div>}
             </div>
             <div className="mb-1 flex items-baseline justify-between gap-3">
                 <span className="text-lg font-medium text-black">{plant.name}</span>

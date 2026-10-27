@@ -362,7 +362,7 @@ const processWikipediaResponse = (data, originalQuery) => {
     description = cleanDescription(description);
     
     // Extract scientific name if available
-    const scientificName = extractScientificName(description, data.title);
+    const scientificName = extractScientificName(description);
     
     // Determine category
     const category = determineCategory(description, data.title);
@@ -419,7 +419,7 @@ const cleanDescription = (text) => {
  * @param {string} title - Article title
  * @returns {string|null} Scientific name if found
  */
-const extractScientificName = (text, title) => {
+const extractScientificName = (text) => {
     // Common patterns for scientific names
     const patterns = [
         /\(([A-Z][a-z]+ [a-z]+)\)/,           // (Genus species)

@@ -113,7 +113,7 @@ const AdminProfile = () => {
                         <div className="relative group">
                             <div className="w-28 h-28 rounded-full border-4 border-white bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center overflow-hidden">
                                 {previewImage ? (
-                                    <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                                    <img loading="lazy" decoding="async" src={previewImage} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-4xl font-bold text-gray-900">
                                         {form.firstName?.charAt(0) || 'A'}

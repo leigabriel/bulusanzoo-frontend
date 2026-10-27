@@ -23,7 +23,15 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // `motion.div` style JSX member usage is not tracked without eslint-plugin-react,
+      // so lowercase `motion` is ignored alongside the capitalised/underscore names.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^([A-Z_]|motion$)', caughtErrors: 'none' }],
+      // Fast Refresh hint only; contexts legitimately export hooks next to providers.
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
+  },
+  {
+    files: ['vite.config.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

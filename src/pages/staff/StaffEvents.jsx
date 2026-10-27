@@ -417,7 +417,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 <input type="checkbox" checked={selectedIds.includes(event.id)} onChange={() => toggleSelect(event.id)} className="absolute top-3 left-3 z-10 w-4 h-4 accent-green-500 cursor-pointer" aria-label={`Select ${event.title}`} />
                                 {event.image_url && (
                                     <div className="h-40 bg-white overflow-hidden">
-                                        <img
+                                        <img loading="lazy" decoding="async"
                                             src={event.image_url}
                                             alt={event.title}
                                             className="w-full h-full object-cover"
@@ -601,7 +601,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 />
                                 {(imagePreview || form.imageUrl) && (
                                     <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
-                                        <img
+                                        <img loading="lazy" decoding="async"
                                             src={imagePreview || form.imageUrl}
                                             alt="Preview"
                                             className="w-full h-full object-cover"

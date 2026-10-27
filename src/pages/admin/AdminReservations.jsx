@@ -471,7 +471,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
                                     <div className="col-span-2">
                                         <p className="text-xs text-gray-500 uppercase mb-2">Bulusan Resident ID</p>
                                         <div className="bg-green-50 border border-green-300 rounded-xl p-2">
-                                            <img 
+                                            <img loading="lazy" decoding="async" 
                                                 src={getResidentIdImageUrl(selectedReservation.resident_id_image)} 
                                                 alt="Bulusan Resident ID" 
                                                 className="w-full max-h-48 object-contain rounded-lg cursor-pointer hover:opacity-80 transition-opacity"

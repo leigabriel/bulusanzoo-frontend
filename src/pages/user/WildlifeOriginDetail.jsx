@@ -89,7 +89,7 @@ const WildlifeOriginDetail = () => {
 
             {/* Hero image */}
             <section className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
-                <img src={animal.image} alt={animal.name} className="h-full w-full object-cover" onClick={() => setImageOpen(true)} />
+                <img loading="lazy" decoding="async" src={animal.image} alt={animal.name} className="h-full w-full object-cover" onClick={() => setImageOpen(true)} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1f3328]/70 via-transparent to-[#1f3328]/30" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${regionClass}`}>
@@ -161,7 +161,7 @@ const WildlifeOriginDetail = () => {
                     <button onClick={() => setImageOpen(false)} className="absolute top-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30" aria-label="Close image">
                         <X className="h-6 w-6" />
                     </button>
-                    <img src={animal.image} alt={animal.name} className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl" onClick={e => e.stopPropagation()} />
+                    <img loading="lazy" decoding="async" src={animal.image} alt={animal.name} className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl" onClick={e => e.stopPropagation()} />
                 </div>
             )}
         </div>

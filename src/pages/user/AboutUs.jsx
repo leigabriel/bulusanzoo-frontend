@@ -85,7 +85,7 @@ const PhotoStrip = () => {
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4">
                     {photos.map((photo) => (
                         <figure key={photo.src} className="group aspect-[4/5] overflow-hidden rounded-2xl bg-black/5">
-                            <img
+                            <img decoding="async"
                                 src={photo.src}
                                 alt={photo.alt}
                                 loading="lazy"

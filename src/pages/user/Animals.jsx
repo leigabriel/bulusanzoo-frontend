@@ -43,7 +43,7 @@ const AnimalCard = ({ animal }) => {
         <Link to={`/animals/${animal.id}`} className="animal-card group flex cursor-pointer flex-col" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <div className="mb-4 aspect-square w-full overflow-hidden rounded-xl bg-gray-100">
                 {animal.imageUrl ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                         ref={imgRef}
                         src={animal.imageUrl}
                         alt={animal.name}

@@ -6,8 +6,7 @@ import { ReactLenis } from 'lenis/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { reservationAPI } from '../../services/api-client';
-import { useAuth } from '../../hooks/use-auth';
-import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
@@ -55,7 +54,6 @@ const STATUS_STYLES = {
 
 const MyEvents = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -234,7 +232,7 @@ const MyEvents = () => {
                                     <div key={event.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                                         <div className="p-6 md:p-8 flex flex-col h-full">
                                             <div className="relative -mt-6 -mx-6 md:-mt-8 md:-mx-8 mb-6 h-40 md:h-44 bg-gray-100 overflow-hidden">
-                                                <img
+                                                <img loading="lazy" decoding="async"
                                                     src={isUploadingThis ? photoUpload.preview : (event.event_image_url || '/images/event-img-placeholder.jpg')}
                                                     alt={event.venue_event_name || event.event_title || 'Event'}
                                                     className="w-full h-full object-cover"

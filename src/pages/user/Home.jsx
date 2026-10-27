@@ -568,18 +568,9 @@ const VisitorSection = ({ navigate }) => (
 
 const Home = () => {
     const navigate = useNavigate();
-    const [reduceMotion, setReduceMotion] = useState(false);
     const description = 'Discover Bulusan Park, formally the Calapan City Recreational and Zoological Park in Barangay Bulusan, with its mini-zoo, open spaces, pavilion, and eco-trail access.';
 
     usePageMetadata('Bulusan Zoo | Calapan City', description, 'https://bulusanzoo.com/');
-
-    useEffect(() => {
-        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const update = () => setReduceMotion(media.matches);
-        update();
-        media.addEventListener('change', update);
-        return () => media.removeEventListener('change', update);
-    }, []);
 
     return (
         <ReactLenis root>

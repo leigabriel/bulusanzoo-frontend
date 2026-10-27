@@ -18,7 +18,7 @@ const formatTime = (value) =>
     new Date(value).toLocaleString([], { hour: 'numeric', minute: '2-digit' });
 
 const Avatar = ({ person, className = 'h-12 w-12' }) => (
-    <img
+    <img loading="lazy" decoding="async"
         src={getProfileImageUrl(person?.profileImage) || defaultAvatar}
         alt=""
         onError={(event) => { event.currentTarget.src = defaultAvatar; }}

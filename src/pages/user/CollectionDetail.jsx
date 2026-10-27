@@ -58,7 +58,7 @@ const getStatus = (status) => statusMap[status?.toLowerCase()] || { label: statu
 const ImageFrame = ({ item, className = '' }) => (
     <div className={`overflow-hidden bg-[#e9eee8] ${className}`}>
         {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+            <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
         ) : (
             <div className="flex h-full w-full items-center justify-center bg-[#e9eee8]">
                 <span className="text-6xl font-black uppercase tracking-[-0.08em] text-[#c8d5c6]">{item.name?.[0]}</span>

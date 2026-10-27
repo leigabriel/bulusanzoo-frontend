@@ -59,7 +59,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
         >
             {data.imageUrl && (
                 <div className="relative h-32 w-full overflow-hidden" style={{ borderBottom: `1px dashed ${THEME.border}` }}>
-                    <img src={data.imageUrl} alt={title} className="w-full h-full object-cover" loading="lazy" />
+                    <img decoding="async" src={data.imageUrl} alt={title} className="w-full h-full object-cover" loading="lazy" />
                     <span
                         className="absolute top-2 left-2 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border"
                         style={{ background: 'rgba(255,255,255,0.92)', color: meta.color, borderColor: THEME.border }}

@@ -377,7 +377,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
                                                     {(user.profileImage || user.profile_image) ? (
-                                                        <img
+                                                        <img loading="lazy" decoding="async"
                                                             src={getProfileImageUrl(user.profileImage || user.profile_image)}
                                                             alt={user.firstName || user.first_name}
                                                             className="w-full h-full object-cover"
@@ -616,7 +616,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200 shrink-0">
                                     {(viewUser.profileImage || viewUser.profile_image) ? (
-                                        <img src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)} alt={viewUser.firstName || viewUser.first_name} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async" src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)} alt={viewUser.firstName || viewUser.first_name} className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="text-green-800 font-medium text-xl">
                                             {(viewUser.firstName || viewUser.first_name || 'U').charAt(0).toUpperCase()}{(viewUser.lastName || viewUser.last_name || '').charAt(0).toUpperCase()}
