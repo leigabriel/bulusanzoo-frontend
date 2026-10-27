@@ -50,8 +50,8 @@ const PublicUserProfile = ({ userId, onClose }) => {
             </div>
 
             <div className="px-6 pb-8 flex flex-col items-center text-center relative">
-                <img
-                    src={getProfileImageUrl(profile.profileImage) || 'https://via.placeholder.com/150x150?text=U'}
+                <img loading="lazy" decoding="async"
+                    src={getProfileImageUrl(profile.profileImage) || '/profile-img/default-avatar.svg'}
                     alt="profile"
                     className="w-24 h-24 rounded-none object-cover border-2 border-[#26bc61] outline outline-white bg-[#26bc61] -mt-12 mb-5 grayscale hover:grayscale-0 transition-all duration-300"
                 />

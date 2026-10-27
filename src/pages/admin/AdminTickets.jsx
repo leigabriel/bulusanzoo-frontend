@@ -1,3 +1,4 @@
+import { QRCodeSVG } from 'qrcode.react';
 import { AlertTriangle as ReiconAlertTriangle, Calendar as ReiconCalendar, CheckCircle as ReiconCheckCircle, Clock as ReiconClock, DollarSign as ReiconDollarSign, Download as ReiconDownload, Eye as ReiconEye, Filter as ReiconFilter, Qr as ReiconQr, Refresh as ReiconRefresh, Search as ReiconSearch, Ticket as ReiconTicket, UserId as ReiconUserId, X as ReiconX } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { adminAPI, getResidentIdImageUrl } from '../../services/api-client';
@@ -647,10 +648,11 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             {/* QR Code */}
                             {selectedTicket.qrCode && (
                                 <div className="flex justify-center p-4 bg-white rounded-xl">
-                                    <img
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedTicket.qrCode}`}
-                                        alt="QR Code"
-                                        className="w-32 h-32"
+                                    <QRCodeSVG
+                                        value={String(selectedTicket.qrCode)}
+                                        size={128}
+                                        role="img"
+                                        aria-label="Ticket QR code"
                                     />
                                 </div>
                             )}
@@ -713,7 +715,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     {selectedTicket.residentIdImage ? (
                                         <div className="space-y-3">
                                             <div className="bg-white rounded-xl p-2 max-h-48 overflow-hidden">
-                                                <img 
+                                                <img loading="lazy" decoding="async" 
                                                     src={getResidentIdImageUrl(selectedTicket.residentIdImage)} 
                                                     alt="Resident ID" 
                                                     className="w-full h-full object-contain rounded-lg cursor-pointer hover:opacity-80"
@@ -922,7 +924,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         >
                             <ReiconX className="w-5 h-5" />
                         </button>
-                        <img 
+                        <img loading="lazy" decoding="async" 
                             src={previewImageUrl} 
                             alt="Resident ID Preview" 
                             className="w-full h-full object-contain rounded-xl"

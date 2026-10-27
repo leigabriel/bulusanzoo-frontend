@@ -31,8 +31,8 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
             aria-busy={!done && !failed}
         >
             <div className="flex items-start gap-4 px-4 py-4 sm:px-5 sm:py-5">
-                <img
-                    src={getProfileImageUrl(currentUser?.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
+                <img loading="lazy" decoding="async"
+                    src={getProfileImageUrl(currentUser?.profileImage) || '/profile-img/default-avatar.svg'}
                     alt=""
                     aria-hidden="true"
                     className="h-10 w-10 rounded-full object-cover"
@@ -56,7 +56,7 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
             {item.previewUrls?.length > 0 && (
                 <div className="grid grid-cols-2 gap-1 px-4 pb-1 sm:px-5 sm:grid-cols-3">
                     {item.previewUrls.map((url, index) => (
-                        <img
+                        <img loading="lazy" decoding="async"
                             key={`${url}-${index}`}
                             src={url}
                             alt=""

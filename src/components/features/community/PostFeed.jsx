@@ -20,7 +20,7 @@ const PostCarousel = ({ postId, images }) => {
     if (images.length === 1) {
         return (
             <div className="bg-black/[0.03] flex items-center justify-center overflow-hidden">
-                <img src={images[0]} alt="Post photo" className="w-full h-auto max-h-[600px] object-cover" />
+                <img loading="lazy" decoding="async" src={images[0]} alt="Post photo" className="w-full h-auto max-h-[600px] object-cover" />
             </div>
         );
     }
@@ -43,7 +43,7 @@ const PostCarousel = ({ postId, images }) => {
                 style={{ transform: `translateX(-${index * 100}%)` }}
             >
                 {images.map((src, i) => (
-                    <img
+                    <img loading="lazy" decoding="async"
                         key={`${src}-${i}`}
                         src={src}
                         alt={`Post photo ${i + 1} of ${images.length}`}
@@ -279,8 +279,8 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <img
-                                    src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
+                                <img loading="lazy" decoding="async"
+                                    src={getProfileImageUrl(post.author.profileImage) || '/profile-img/default-avatar.svg'}
                                     alt="author"
                                     className="w-10 h-10 rounded-full object-cover"
                                 />

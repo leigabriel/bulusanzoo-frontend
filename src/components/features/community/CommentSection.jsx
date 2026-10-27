@@ -162,8 +162,8 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
 
         return (
             <div key={comment.id} className={`flex gap-4 py-6 ${depth > 0 ? 'border-l border-[#212631]/15 pl-4 md:pl-6 mt-4' : ''}`}>
-                <img
-                    src={getProfileImageUrl(comment.author.profileImage) || 'https://via.placeholder.com/48x48?text=U'}
+                <img loading="lazy" decoding="async"
+                    src={getProfileImageUrl(comment.author.profileImage) || '/profile-img/default-avatar.svg'}
                     alt="author"
                     className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0"
                 />
@@ -312,8 +312,8 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                 </div>
             ) : (
             <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-gray-600 p-5 bg-white">
-                <img
-                    src={getProfileImageUrl(currentUser?.profileImage || currentUser?.profile_image) || 'https://via.placeholder.com/48x48?text=U'}
+                <img loading="lazy" decoding="async"
+                    src={getProfileImageUrl(currentUser?.profileImage || currentUser?.profile_image) || '/profile-img/default-avatar.svg'}
                     alt="You"
                     className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0 hidden md:block"
                 />

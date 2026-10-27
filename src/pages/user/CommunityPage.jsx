@@ -352,8 +352,8 @@ const CommunityPage = () => {
                                     ) : (
                                         <>
                                     <div className="flex items-center gap-4 mb-8 w-max">
-                                        <img
-                                            src={getProfileImageUrl(selectedPost.author.profileImage) || 'https://via.placeholder.com/64x64?text=U'}
+                                        <img loading="lazy" decoding="async"
+                                            src={getProfileImageUrl(selectedPost.author.profileImage) || '/profile-img/default-avatar.svg'}
                                             alt="author"
                                              className="w-12 h-12 rounded-full object-cover"
                                         />
@@ -373,7 +373,7 @@ const CommunityPage = () => {
 
                                     {selectedPost.imageUrl && (
                                          <div className="w-full overflow-hidden mb-10 bg-black/[0.03] flex justify-center">
-                                            <img src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
+                                            <img loading="lazy" decoding="async" src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
                                         </div>
                                     )}
 

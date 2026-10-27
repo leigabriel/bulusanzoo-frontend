@@ -87,7 +87,7 @@ const TAB_ID_KEY = 'TAB_ID';
 const getTabId = () => {
     try {
         return sessionStorage.getItem(TAB_ID_KEY);
-    } catch (e) {
+    } catch {
         return null;
     }
 };
@@ -150,7 +150,7 @@ const hasStoredToken = () => {
                 if (key && key.startsWith(keys.token)) return true;
             }
         }
-    } catch (e) {
+    } catch {
         return false;
     }
     return false;
@@ -178,7 +178,7 @@ const handleResponse = async (response) => {
     let data;
     try {
         data = JSON.parse(text);
-    } catch (e) {
+    } catch {
         // Response is not JSON
         if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
@@ -684,14 +684,6 @@ export const adminAPI = {
 
     getSuspendedUsers: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/users-suspended`, {
-            headers: getAuthHeaders('admin')
-        });
-        return handleResponse(response);
-    },
-
-    unsuspendUser: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
-            method: 'PUT',
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
@@ -1411,13 +1403,6 @@ export const staffAPI = {
     },
 
     // Dashboard stats
-    getDashboardStats: async () => {
-        const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
     getRecentTickets: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/recent-tickets`, {
             headers: getAuthHeaders('staff')

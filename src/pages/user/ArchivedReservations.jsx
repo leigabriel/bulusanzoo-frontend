@@ -5,7 +5,7 @@ const ArchivedReservations = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        navigate('/reservation-history', { state: { showArchived: true } });
+        navigate('/reservations', { replace: true });
     }, [navigate]);
 
     return (

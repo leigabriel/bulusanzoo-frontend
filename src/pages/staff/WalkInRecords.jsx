@@ -6,6 +6,7 @@ import { webUsbPrintAdapter } from '../../services/printing/web-usb-print-adapte
 import { loadPrinterPreferences } from '../../services/printing/printer-service';
 import { notify } from '../../utils/toast';
 import ThermalReceipt from '../../components/printing/ThermalReceipt';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const money = (cents, currency = 'PHP') => `${currency} ${(Number(cents || 0) / 100).toFixed(2)}`;
 const dateTime = value => value ? new Date(value).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : '-';
@@ -231,6 +232,17 @@ const WalkInRecords = () => {
         </section>
 
         {(selected || detailLoading) && <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true"><button className="absolute inset-0" onClick={closeRecord} aria-label="Close details" />{detailLoading ? <div className="relative rounded-xl bg-white p-8 text-sm font-bold">Loading details...</div> : <div className="relative max-h-[92dvh] w-full max-w-6xl overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-wider text-green-700">{selected.receiptNumber}</p><h2 className="mt-1 text-2xl font-black">Walk-in details</h2><p className="mt-1 text-sm text-gray-500">Sale {selected.saleNumber}</p></div><button onClick={closeRecord} className="h-9 w-9 rounded-lg border border-gray-200 text-xl">&times;</button></div><div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"><div className="space-y-4"><div className="grid grid-cols-2 gap-4 rounded-xl bg-gray-50 p-5 text-sm sm:grid-cols-4"><div><p className="text-xs text-gray-400">Customer name</p><strong>{selected.visitorName || 'Walk-in visitor'}</strong></div><div><p className="text-xs text-gray-400">Contact</p><strong>{selected.visitorPhone || '-'}</strong></div><div><p className="text-xs text-gray-400">Visit date</p><strong>{selected.visitDate}</strong></div><div><p className="text-xs text-gray-400">Cashier</p><strong>{selected.staffName || '-'}</strong></div></div><div className="divide-y divide-gray-100 rounded-xl border border-gray-200">{selected.items.map(item => <div key={item.categoryCode} className="flex justify-between gap-4 p-4 text-sm"><span><strong>{item.quantity} x {item.categoryLabel}</strong><small className="ml-2 text-gray-400">{money(item.unitPriceCents, selected.currency)} each</small></span><strong>{money(item.lineTotalCents, selected.currency)}</strong></div>)}</div><div className="grid grid-cols-2 gap-4 rounded-xl bg-gray-50 p-5 text-sm sm:grid-cols-4"><div><p className="text-xs text-gray-400">Subtotal</p><strong>{money(selected.subtotalCents, selected.currency)}</strong></div><div><p className="text-xs text-gray-400">Discount</p><strong>{money(selected.discountCents, selected.currency)}</strong></div><div><p className="text-xs text-gray-400">Total</p><strong className="text-green-700">{money(selected.totalCents, selected.currency)}</strong></div><div><p className="text-xs text-gray-400">Payment</p><strong className="uppercase">{selected.payment?.method}</strong><p className="text-[10px] uppercase text-gray-400">{selected.payment?.status}</p></div></div>{selected.status === 'voided' && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm"><p className="font-bold text-red-700">Voided{selected.voidedByName ? ` by ${selected.voidedByName}` : ''}{selected.voidedAt ? ` on ${dateTime(selected.voidedAt)}` : ''}</p><p className="mt-1 text-red-600">{selected.voidReason}</p></div>}</div><div className="space-y-4"><div className="rounded-xl border border-gray-200 p-4 text-center"><p className="text-xs text-gray-400">Receipt</p><div className="mt-3 flex flex-col gap-2"><button disabled={printing} onClick={reprint} className="w-full rounded-lg bg-green-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-600 disabled:opacity-50">{printing ? 'Printing...' : 'Reprint Receipt'}</button></div></div></div></div></div>}</div>}
+
+        {trashTarget && (
+            <ConfirmModal
+                title="Move record to trash?"
+                message={`Walk-in ${trashTarget.saleNumber} will be moved to trash. You can restore it from the Trashed view.`}
+                confirmLabel="Move to trash"
+                loading={trashLoading}
+                onCancel={() => setTrashTarget(null)}
+                onConfirm={() => trashRecord(trashTarget.saleNumber)}
+            />
+        )}
     </div>;
 };
 

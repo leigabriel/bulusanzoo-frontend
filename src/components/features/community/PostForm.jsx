@@ -148,7 +148,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {displayUrls.map((url, index) => (
                         <div key={`${url}-${index}`} className="relative overflow-hidden rounded-md border border-gray-600 bg-black/[0.03]">
-                            <img src={url} alt={`Attached photo ${index + 1}`} className="h-28 w-full object-cover" />
+                            <img loading="lazy" decoding="async" src={url} alt={`Attached photo ${index + 1}`} className="h-28 w-full object-cover" />
                             <button
                                 type="button"
                                 onClick={() => removeImageAt(index)}
