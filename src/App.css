@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: 'Mistral';
-    src: url('/mistral/mistral.TTF') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
 body {
     /* font-family: 'Geist', sans-serif; */
     font-family: 'Inter', sans-serif;

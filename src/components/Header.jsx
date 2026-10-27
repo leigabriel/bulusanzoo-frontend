@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
-import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 import MyPostsPanel from './features/MyPostsPanel';
 import Settings from '../pages/user/Settings';
@@ -16,9 +15,11 @@ import {
     Headset, Logout, Information, NoteText
 } from 'reicon-react';
 
-const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
-const MINIZOO_GAME_URL = env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
-const MINIZOO_ADVENTURE_GAME_URL = env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
+// The scanner pulls in TensorFlow.js (~1.8 MB); load it only when the visitor opens it.
+const AnimalClassifier = lazy(() => import('./features/ai-scanner/AnimalClassifier'));
+
+const MINIZOO_GAME_URL = import.meta.env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
+const MINIZOO_ADVENTURE_GAME_URL = import.meta.env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
 
 // Notification types are catalog keys such as 'event.announced' or
 // 'reservation.confirmed' (see backend/services/notification-service.js). Match on the
@@ -66,10 +67,13 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     return (
         <button
+            type="button"
             onClick={onClick}
+            aria-label={alt}
+            title={alt}
             className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
         >
-            {IconComponent && <IconComponent size={18} className="opacity-55" />}
+            {IconComponent && <IconComponent size={18} className="opacity-55" aria-hidden="true" />}
             {badge > 0 && (
                 <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
@@ -139,7 +143,7 @@ const Header = () => {
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
     const [clearingNotifications, setClearingNotifications] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
+    const [, setScrolled] = useState(false);
     const [isNavVisible, setIsNavVisible] = useState(true);
     const [showEmailModal, setShowEmailModal] = useState(false);
     const [emailSubject, setEmailSubject] = useState('');
@@ -147,7 +151,7 @@ const Header = () => {
     const [emailLoading, setEmailLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [, setIsLoggingOut] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -240,8 +244,7 @@ const Header = () => {
                     read: Boolean(notification.read)
                 })));
             }
-        } catch (err) {
-        } finally {
+        } catch { /* intentionally ignored: non-critical */ } finally {
             setNotificationLoading(false);
         }
     }, [user]);
@@ -267,8 +270,7 @@ const Header = () => {
             await userAPI.markNotificationRead(notificationId);
             setNotificationUnreadCount(count => Math.max(0, count - (notifications.find(item => item.id === notificationId)?.read ? 0 : 1)));
             setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, read: true } : n));
-        } catch {
-        }
+        } catch { /* intentionally ignored: non-critical */ }
     };
 
     const markAllNotificationsRead = async () => {
@@ -276,8 +278,7 @@ const Header = () => {
             await userAPI.markAllNotificationsRead();
             setNotificationUnreadCount(0);
             setNotifications(prev => prev.map((n) => ({ ...n, read: true })));
-        } catch {
-        }
+        } catch { /* intentionally ignored: non-critical */ }
     };
 
     const clearAllNotifications = async () => {
@@ -286,8 +287,7 @@ const Header = () => {
             await userAPI.clearNotifications();
             setNotificationUnreadCount(0);
             setNotifications([]);
-        } catch {
-        } finally {
+        } catch { /* intentionally ignored: non-critical */ } finally {
             setClearingNotifications(false);
             setShowClearNotificationsConfirm(false);
             setShowNotificationPanel(false);
@@ -309,8 +309,7 @@ const Header = () => {
             logout();
             setShowLogoutModal(false);
             handleTransitionNavigate(null, '/login');
-        } catch (error) {
-        } finally {
+        } catch { /* intentionally ignored: non-critical */ } finally {
             setIsLoggingOut(false);
         }
     };
@@ -679,7 +678,11 @@ const Header = () => {
                         <CloseBtn onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }} />
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-lenis-prevent>
-                        {showAIScanner && <AnimalClassifier embedded={true} />}
+                        {showAIScanner && (
+                            <Suspense fallback={<div className="flex h-40 items-center justify-center" role="status"><div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-600" /><span className="sr-only">Loading scanner</span></div>}>
+                                <AnimalClassifier embedded={true} />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             </div>

@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
-            tensorflow: ['@tensorflow/tfjs'],
             charts: ['apexcharts', 'react-apexcharts'],
             calendar: ['@fullcalendar/daygrid', '@fullcalendar/react', '@fullcalendar/interaction', '@fullcalendar/list', '@fullcalendar/timegrid']
           }

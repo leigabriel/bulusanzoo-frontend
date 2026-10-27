@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bulusan-static-v2';
+const CACHE_VERSION = 'bulusan-static-v3';
 const STATIC_CACHE = CACHE_VERSION;
 const STATIC_ASSETS = [
     '/',
@@ -9,12 +9,7 @@ const STATIC_ASSETS = [
     '/bz-url-logo.png',
     '/deer.png',
     '/profile-img/default-avatar.svg',
-    '/images/animal.webp',
     '/images/event-img-placeholder.jpg',
-    '/background/1000.webp',
-    '/background/1001.webp',
-    '/background/1002.gif',
-    '/background/1003.webp',
     '/mistral/mistral.TTF'
 ];
 
