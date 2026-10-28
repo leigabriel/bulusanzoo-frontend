@@ -1,8 +1,11 @@
-import { useEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import { ArrowUpRight, Band, Leaf, SectionTitle } from '../../components/common/ParkDecor';
+import { PARK, PHOTOS } from '../../config/park-theme';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
@@ -10,39 +13,9 @@ const HISTORY_SOURCE = 'https://pia4b.wordpress.com/2013/04/02/zoological-park-s
 const TRAVEL_ADVISORY_SOURCE = 'https://www.travelorientalmindoro.ph/page/travel-advisory';
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 
-const usePageMetadata = (title, description, canonical) => {
-    useEffect(() => {
-        const updates = [
-            ['meta[name="title"]', title],
-            ['meta[name="description"]', description],
-            ['meta[property="og:title"]', title],
-            ['meta[property="og:description"]', description],
-            ['meta[property="og:url"]', canonical],
-            ['meta[name="twitter:title"]', title],
-            ['meta[name="twitter:description"]', description],
-        ];
-        const previousTitle = document.title;
-        const previousValues = updates.map(([selector, value]) => {
-            const element = document.querySelector(selector);
-            const previous = element?.getAttribute('content');
-            if (element) element.setAttribute('content', value);
-            return [element, previous];
-        });
-        const canonicalElement = document.querySelector('link[rel="canonical"]');
-        const previousCanonical = canonicalElement?.getAttribute('href');
-
-        document.title = title;
-        if (canonicalElement) canonicalElement.setAttribute('href', canonical);
-
-        return () => {
-            document.title = previousTitle;
-            previousValues.forEach(([element, value]) => {
-                if (element && value !== null && value !== undefined) element.setAttribute('content', value);
-            });
-            if (canonicalElement && previousCanonical) canonicalElement.setAttribute('href', previousCanonical);
-        };
-    }, [canonical, description, title]);
-};
+const cardShadow = 'shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)]';
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1f7a3e]';
+const pillLight = `inline-flex min-h-11 items-center gap-2 rounded-full bg-[#1d4a2e] px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.03] ${focusRing}`;
 
 const facts = [
     { label: 'Formal name', value: 'Calapan City Recreational and Zoological Park' },
@@ -53,13 +26,13 @@ const facts = [
 
 // Only the 4:5 portraits are listed so every tile in the strip keeps the same crop.
 const parkPhotos = [
-    { src: '/bulusanzoo-images/bz1.jpg', alt: 'Brick walkway curving toward the pavilion at Bulusan Park' },
-    { src: '/bulusanzoo-images/bz2.jpg', alt: 'White arched gateway framing a walkway into Bulusan Park' },
-    { src: '/bulusanzoo-images/bz5.jpg', alt: 'Rock-lined waterfall spilling into a pond at Bulusan Park' },
-    { src: '/bulusanzoo-images/bz6.jpg', alt: 'Garden path lined with red and green foliage at Bulusan Park' },
-    { src: '/bulusanzoo-images/bz10.jpg', alt: 'Wall climbing tower rising among the trees at Bulusan Park' },
-    { src: '/bulusanzoo-images/bz11.jpg', alt: 'Century-old trees casting shade across the open lawn at Bulusan Park' },
-    { src: '/bulusanzoo-images/bz12.jpg', alt: 'Wooden footbridge leading to the park gateway' },
+    { src: PHOTOS.walkway, alt: 'Brick walkway curving toward the pavilion at Bulusan Park' },
+    { src: PHOTOS.arch, alt: 'White arched gateway framing a walkway into Bulusan Park' },
+    { src: PHOTOS.pond, alt: 'Rock-lined waterfall spilling into a pond at Bulusan Park' },
+    { src: PHOTOS.garden, alt: 'Garden path lined with red and green foliage at Bulusan Park' },
+    { src: PHOTOS.climb, alt: 'Wall climbing tower rising among the trees at Bulusan Park' },
+    { src: PHOTOS.trees, alt: 'Century-old trees casting shade across the open lawn at Bulusan Park' },
+    { src: PHOTOS.bridge, alt: 'Wooden footbridge leading to the park gateway' },
 ];
 
 const pickRandomPhotos = (count) => {
@@ -71,192 +44,252 @@ const pickRandomPhotos = (count) => {
     return shuffled.slice(0, count);
 };
 
+/* ───────────────────────────── Hero ───────────────────────────── */
+
+const AboutHero = () => (
+    <section aria-labelledby="about-title" className="relative isolate flex min-h-[92svh] flex-col overflow-hidden bg-[#2f7d3a]">
+        <img src={PHOTOS.gateway} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-[3px]" />
+        <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(196,236,124,0.94)_0%,rgba(110,196,80,0.86)_9%,rgba(40,134,56,0.88)_30%,rgba(24,104,50,0.92)_100%)]"
+        />
+
+        <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-10 pt-28 text-center sm:px-6">
+            <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
+                <span className="h-2 w-2 rounded-full bg-[#c6fe69]" aria-hidden="true" />
+                A park of Calapan City
+            </p>
+            <h1
+                id="about-title"
+                className="hero-rise mt-5 font-display text-[clamp(4rem,15vw,9rem)] font-bold uppercase leading-[0.86] tracking-tight text-white [text-shadow:0_6px_0_rgba(16,70,34,0.38)]"
+                style={{ animationDelay: '0.08s' }}
+            >
+                Bulusan<br />Park
+            </h1>
+            <p className="hero-rise mt-6 max-w-2xl text-base font-medium leading-7 text-white [text-shadow:0_1px_8px_rgba(10,60,25,0.6)] sm:text-lg" style={{ animationDelay: '0.2s' }}>
+                Formally the Calapan City Recreational and Zoological Park, Bulusan Park is a City-managed destination for family recreation, environmental education, leisure, and community gatherings.
+            </p>
+        </div>
+
+        <div className="hero-rise relative mx-auto w-full max-w-[1280px] px-4 pb-24 sm:px-6 sm:pb-28 lg:px-10" style={{ animationDelay: '0.32s' }}>
+            <dl className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+                {facts.map((fact) => (
+                    <div key={fact.label} className="rounded-2xl border border-white/30 bg-white/20 p-4 backdrop-blur-md sm:p-5">
+                        <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c6fe69]">{fact.label}</dt>
+                        <dd className="mt-2 text-sm font-semibold leading-6 text-white">{fact.value}</dd>
+                    </div>
+                ))}
+            </dl>
+        </div>
+    </section>
+);
+
+/* ───────────────────────────── Photos ───────────────────────────── */
+
 const PhotoStrip = () => {
     // Picked once per visit so the strip feels fresh without reshuffling on every render.
     const photos = useMemo(() => pickRandomPhotos(4), []);
 
     return (
-        <section className="bg-[#f7f5ef] px-4 pb-20 sm:px-6 sm:pb-28 md:px-10" aria-labelledby="park-photos-title">
-            <div className="mx-auto max-w-[1500px]">
-                <div className="flex flex-col gap-3 pt-10 sm:flex-row sm:items-end sm:justify-between sm:pt-12">
-                    <h2 id="park-photos-title" className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Scenes from the park</h2>
-                    <p className="max-w-md text-sm font-medium leading-6 text-[#212631]/50">Shaded walkways, garden ponds, and the open grounds visitors pass through on the way to the pavilion.</p>
-                </div>
-                <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4">
-                    {photos.map((photo) => (
-                        <figure key={photo.src} className="group aspect-[4/5] overflow-hidden rounded-2xl bg-black/5">
-                            <img decoding="async"
-                                src={photo.src}
-                                alt={photo.alt}
-                                loading="lazy"
-                                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                            />
-                        </figure>
-                    ))}
-                </div>
+        <Band
+            id="park-photos"
+            labelledBy="park-photos-title"
+            bg={PARK.cream}
+            className="z-10"
+            decor={<Leaf className="-left-4 top-12 h-28 w-28 rotate-[-25deg] opacity-80" />}
+        >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <SectionTitle id="park-photos-title" eyebrow="Park gallery" size="lg">Scenes from<br />the park</SectionTitle>
+                <p className="max-w-md text-base font-medium leading-7 text-[#1d4a2e]/75">Shaded walkways, garden ponds, and the open grounds visitors pass through on the way to the pavilion.</p>
             </div>
-        </section>
+            <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+                {photos.map((photo, index) => (
+                    <li key={photo.src} className={`w-[72%] shrink-0 snap-center sm:w-auto ${index % 2 === 1 ? 'lg:translate-y-8' : ''}`}>
+                        <figure className={`group rounded-3xl bg-white p-2.5 ${cardShadow}`}>
+                            <div className="aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-[#dcebd0]">
+                                <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
+                            </div>
+                        </figure>
+                    </li>
+                ))}
+            </ul>
+            <div className="h-8 lg:h-12" aria-hidden="true" />
+        </Band>
     );
 };
+
+/* ───────────────────────────── Story & stewardship ───────────────────────────── */
+
+const StorySection = () => (
+    <Band id="park-story" labelledBy="park-story-title" bg={PARK.peach} waveVariant="b" className="z-20">
+        <div className={`rounded-[2.25rem] bg-white p-6 sm:p-10 lg:grid lg:grid-cols-[0.8fr_1.2fr] lg:gap-14 lg:p-14 ${cardShadow}`}>
+            <SectionTitle id="park-story-title" eyebrow="Park story" size="md">A public park with a documented history.</SectionTitle>
+            <div className="mt-8 lg:mt-0">
+                <p className="text-xl font-semibold leading-8 text-[#1d4a2e] sm:text-2xl sm:leading-9">
+                    A Philippine Information Agency report published on April 2, 2013 described the Calapan Recreational and Zoological Park as newly open to the public in Barangay Bulusan.
+                </p>
+                <p className="mt-5 text-base font-medium leading-7 text-[#1d4a2e]/70">
+                    The report recorded the formal opening by City officials and described the park at that point in time. Its animal and facility details are historical, not a statement of what visitors will find today.
+                </p>
+                <a href={HISTORY_SOURCE} target="_blank" rel="noreferrer" className={`mt-7 ${pillLight}`}>
+                    Read the 2013 PIA report <ArrowUpRight />
+                </a>
+            </div>
+        </div>
+    </Band>
+);
+
+const StewardshipSection = () => (
+    <Band id="stewardship" labelledBy="stewardship-title" bg={PARK.sage} waveVariant="a" className="z-30" decor={<Leaf className="-right-4 top-10 h-32 w-32 rotate-[30deg] opacity-60" fill="#86d99a" />}>
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
+            <SectionTitle id="stewardship-title" eyebrow="City stewardship" size="lg">How the park<br />is managed.</SectionTitle>
+            <div className={`rounded-3xl bg-white p-6 sm:p-8 ${cardShadow}`}>
+                <p className="text-lg font-semibold leading-8 text-[#1d4a2e] sm:text-xl">Bulusan Park is one of Calapan City’s economic enterprises under the direct administration, supervision, maintenance, and control of the City Economic Enterprise Department.</p>
+                <p className="mt-5 text-base font-medium leading-7 text-[#1d4a2e]/70">The City traces this mandate to its Economic Enterprise Code, identifying Resolution No. 724 and City Ordinance No. 19, Article IV, Section 8. This places the park within a broader municipal public-service framework.</p>
+                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className={`mt-7 ${pillLight}`}>
+                    Read the City CEED profile <ArrowUpRight />
+                </a>
+            </div>
+        </div>
+    </Band>
+);
+
+/* ───────────────────────────── Nature ───────────────────────────── */
+
+const natureCards = [
+    { number: '01', title: 'Natural setting', src: PHOTOS.trees, alt: 'Century-old trees shading the open lawn', text: 'The provincial tourism portal documents century-old trees, picnic and camping areas, recreation space, and wall-climbing facilities within the park.' },
+    { number: '02', title: 'Wildlife', src: PHOTOS.lawn, alt: 'Animal grazing on the open lawn inside the park', text: 'The City describes a mini-zoo with various animal species. Because no current official inventory is published, species lists from historical reports are not presented as current.' },
+    { number: '03', title: 'Community space', src: PHOTOS.pavilion, alt: 'Multi-purpose pavilion beside a stone path', text: 'Landscaped open areas support leisure and recreation, while the multi-purpose pavilion serves events and community gatherings.' },
+];
+
+const NatureSection = () => (
+    <Band id="nature" labelledBy="nature-title" bg={PARK.deep} waveVariant="b" className="z-40" decor={<Leaf className="-left-6 bottom-8 h-40 w-40 rotate-[-30deg] opacity-25" fill="#4ade80" />}>
+        <SectionTitle id="nature-title" eyebrow="Nature and recreation" tone="dark-bg" size="xl">Room to learn,<br />gather, and explore.</SectionTitle>
+        <ul className="-mx-4 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+            {natureCards.map((card) => (
+                <li key={card.number} className="w-[82%] shrink-0 snap-start sm:w-auto">
+                    <article className="group h-full rounded-3xl border border-white/10 bg-white/10 p-2.5 backdrop-blur-sm">
+                        <div className="aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-[#12341f]">
+                            <img src={card.src} alt={card.alt} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
+                        </div>
+                        <div className="px-3 pb-4 pt-4">
+                            <span className="inline-flex rounded-full bg-[#c6fe69] px-3 py-1 text-xs font-semibold tracking-[0.14em] text-[#14301f]">{card.number}</span>
+                            <h3 className="mt-3 font-display text-2xl font-semibold text-white">{card.title}</h3>
+                            <p className="mt-2 text-sm font-medium leading-6 text-white/75">{card.text}</p>
+                        </div>
+                    </article>
+                </li>
+            ))}
+        </ul>
+    </Band>
+);
+
+/* ───────────────────────────── Eco-trail ───────────────────────────── */
+
+const EcoTrailSection = () => (
+    <Band id="eco-trail" labelledBy="eco-trail-title" bg={PARK.green} waveVariant="a" className="z-50" decor={<Leaf className="-right-5 bottom-6 h-36 w-36 rotate-[25deg] opacity-35" fill="#ffffff" />}>
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
+            <SectionTitle id="eco-trail-title" eyebrow="Bulusan eco-trail" size="xl">A route from<br />park to shore.</SectionTitle>
+            <div className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-green-900/15 sm:p-8">
+                <p className="text-lg font-semibold leading-8 text-[#14301f] sm:text-xl">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
+                <p className="mt-4 text-sm font-medium leading-6 text-[#1d4a2e]/70">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
+                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className={`mt-6 ${pillLight}`}>
+                    View official tourism information <ArrowUpRight />
+                </a>
+            </div>
+        </div>
+    </Band>
+);
+
+/* ───────────────────────────── Trail readiness ───────────────────────────── */
+
+const readyTips = [
+    { number: '01', title: 'Watch the weather', text: 'Oriental Mindoro’s advisory notes that mountain trails can be slippery in the June-October wet season and recommends flexible plans during typhoon season.' },
+    { number: '02', title: 'Pack for outdoors', text: 'The provincial guidance recommends water, sun protection, insect repellent, personal medication, and a basic first-aid kit.' },
+    { number: '03', title: 'Confirm locally', text: 'These are province-wide recommendations, not park-specific rules. Ask local tourism or park contacts about current trail access and conditions before setting out.', link: true },
+];
+
+const TrailReadySection = () => (
+    <Band id="trail-ready" labelledBy="trail-ready-title" bg={PARK.cream} waveVariant="b" className="z-[60]">
+        <SectionTitle id="trail-ready-title" eyebrow="Provincial travel guidance" size="lg">Go prepared.<br />Leave room to adapt.</SectionTitle>
+        <ul className="mt-12 grid gap-5 md:grid-cols-3">
+            {readyTips.map((tip) => (
+                <li key={tip.number}>
+                    <article className={`flex h-full flex-col rounded-3xl bg-white p-6 sm:p-7 ${cardShadow}`}>
+                        <span className="inline-flex w-fit rounded-full bg-[#e6f1df] px-3 py-1 text-xs font-semibold tracking-[0.14em] text-[#1f7a3e]">{tip.number}</span>
+                        <h3 className="mt-4 font-display text-2xl font-semibold text-[#1d4a2e]">{tip.title}</h3>
+                        <p className="mt-3 flex-1 text-sm font-medium leading-6 text-[#1d4a2e]/70">{tip.text}</p>
+                        {tip.link && (
+                            <a href={TRAVEL_ADVISORY_SOURCE} target="_blank" rel="noreferrer" className={`mt-6 w-fit ${pillLight}`}>
+                                Read the travel advisory <ArrowUpRight />
+                            </a>
+                        )}
+                    </article>
+                </li>
+            ))}
+        </ul>
+    </Band>
+);
+
+/* ───────────────────────────── Visit ───────────────────────────── */
+
+const VisitSection = () => (
+    <Band id="visit" labelledBy="visit-title" bg={PARK.mint} waveVariant="a" dropWave className="z-[70]" decor={<Leaf className="-left-5 bottom-10 h-32 w-32 rotate-[-20deg] opacity-40" />}>
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+            <SectionTitle id="visit-title" eyebrow="Visit information" size="lg">Plan with<br />current information.</SectionTitle>
+            <div>
+                <dl className={`rounded-3xl bg-white p-2 sm:p-3 ${cardShadow}`}>
+                    <div className="grid gap-1 rounded-2xl p-4 sm:grid-cols-[8rem_1fr] sm:p-5"><dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1d4a2e]/55">Location</dt><dd className="font-semibold leading-6 text-[#14301f]">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
+                    <div className="grid gap-1 rounded-2xl bg-[#f1f7ec] p-4 sm:grid-cols-[8rem_1fr] sm:p-5"><dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1d4a2e]/55">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold text-[#14301f] underline decoration-[#1d4a2e]/30 underline-offset-4 hover:decoration-[#1d4a2e]">(043) 288-7291</a><span className="mt-1 block text-sm text-[#1d4a2e]/65">City CEED park contact</span></dd></div>
+                    <div className="grid gap-1 rounded-2xl p-4 sm:grid-cols-[8rem_1fr] sm:p-5"><dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1d4a2e]/55">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold text-[#14301f] underline decoration-[#1d4a2e]/30 underline-offset-4 hover:decoration-[#1d4a2e]">Open Google Maps directions</a></dd></div>
+                </dl>
+                <p className="mt-5 text-sm font-medium leading-6 text-[#1d4a2e]/70">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
+            </div>
+        </div>
+
+        <div className="mt-12 flex flex-col gap-4 border-t border-[#1d4a2e]/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <p className="max-w-xl text-sm font-medium leading-6 text-[#1d4a2e]/70">Current park information and documentary photographs are available through the official source pages.</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className={`inline-flex min-h-12 items-center justify-center rounded-full bg-[#1d4a2e] px-7 py-3 text-center text-sm font-semibold text-white transition-transform hover:scale-[1.03] ${focusRing}`}>City Government source</a>
+                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className={`inline-flex min-h-12 items-center justify-center rounded-full border-2 border-[#1d4a2e] px-7 py-3 text-center text-sm font-semibold text-[#1d4a2e] transition-colors hover:bg-[#1d4a2e] hover:text-white ${focusRing}`}>Tourism source</a>
+            </div>
+        </div>
+    </Band>
+);
+
+/* ───────────────────────────── Page ───────────────────────────── */
 
 const AboutUs = () => {
     const description = 'Learn about Bulusan Park, the Calapan City Recreational and Zoological Park in Barangay Bulusan, its history, natural setting, recreation areas, and community role.';
     usePageMetadata('About Bulusan Park | Calapan City', description, 'https://bulusanzoo.com/about');
 
+    useLayoutEffect(() => {
+        // Page transitions can leave a faded header behind; always start clean.
+        const headerElement = document.querySelector('header');
+        if (headerElement) {
+            headerElement.style.opacity = '1';
+            headerElement.style.pointerEvents = 'auto';
+        }
+    }, []);
+
     return (
         <ReactLenis root>
-            <div className="min-h-screen overflow-x-hidden bg-[#f7f5ef] text-[#212631]">
+            <div className="relative min-h-screen bg-white">
                 <Header />
                 <AIFloatingButton />
 
-                <main>
-                    <section className="mx-auto flex min-h-[92svh] max-w-[1500px] flex-col justify-between px-4 pb-10 pt-28 sm:px-6 md:px-10 md:pb-14 md:pt-32" aria-labelledby="about-title">
-                        <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#212631]/50 sm:text-xs">
-                            <span className="h-2 w-2 rounded-full bg-green-500" />
-                            A park of Calapan City
-                        </div>
-
-                        <div className="py-16 md:py-20">
-                            <h1 id="about-title" className="max-w-6xl text-[clamp(3.4rem,10vw,9rem)] font-medium leading-[0.82] tracking-[-0.06em] text-black">
-                                Bulusan<br />Park
-                            </h1>
-                            <p className="mt-10 max-w-2xl text-base font-medium leading-7 text-[#212631]/65 sm:text-lg sm:leading-8 md:ml-auto md:mt-14">
-                                Formally the Calapan City Recreational and Zoological Park, Bulusan Park is a City-managed destination for family recreation, environmental education, leisure, and community gatherings.
-                            </p>
-                        </div>
-
-                        <div className="grid border-y border-[#212631]/15 sm:grid-cols-2 lg:grid-cols-4">
-                            {facts.map((fact) => (
-                                <div key={fact.label} className="border-b border-[#212631]/15 py-5 sm:px-5 sm:odd:border-r lg:border-b-0 lg:border-r lg:first:pl-0 lg:last:border-r-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">{fact.label}</p>
-                                    <p className="mt-3 text-sm font-semibold leading-6">{fact.value}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
+                <main className="relative w-full overflow-x-clip">
+                    <AboutHero />
                     <PhotoStrip />
-
-                    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="park-story-title">
-                        <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Park story</p>
-                                <h2 id="park-story-title" className="mt-5 text-[clamp(2.7rem,6vw,6rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">A public park with a documented history.</h2>
-                            </div>
-                            <div className="lg:pt-16">
-                                <p className="text-xl font-medium leading-8 text-[#212631] sm:text-2xl sm:leading-9">
-                                    A Philippine Information Agency report published on April 2, 2013 described the Calapan Recreational and Zoological Park as newly open to the public in Barangay Bulusan.
-                                </p>
-                                <p className="mt-7 text-base leading-7 text-[#212631]/60">
-                                    The report recorded the formal opening by City officials and described the park at that point in time. Its animal and facility details are historical, not a statement of what visitors will find today.
-                                </p>
-                                <a href={HISTORY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
-                                    Read the 2013 PIA report
-                                </a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="stewardship-title">
-                        <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
-                                <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">City stewardship</p>
-                                    <h2 id="stewardship-title" className="mt-5 text-[clamp(2.8rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">How the park is managed.</h2>
-                                </div>
-                                <div className="lg:pt-12">
-                                    <p className="text-xl font-medium leading-8 sm:text-2xl sm:leading-9">Bulusan Park is one of Calapan City’s economic enterprises under the direct administration, supervision, maintenance, and control of the City Economic Enterprise Department.</p>
-                                    <p className="mt-7 text-base leading-7 text-[#212631]/60">The City traces this mandate to its Economic Enterprise Code, identifying Resolution No. 724 and City Ordinance No. 19, Article IV, Section 8. This places the park within a broader municipal public-service framework.</p>
-                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">Read the City CEED profile</a>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="bg-[#1a211b] px-4 py-20 text-white sm:px-6 sm:py-28 md:px-10" aria-labelledby="nature-title">
-                        <div className="mx-auto max-w-[1500px]">
-                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-green-300">Nature and recreation</p>
-                            <h2 id="nature-title" className="mt-5 max-w-5xl text-[clamp(3rem,8vw,7.5rem)] font-medium leading-[0.86] tracking-[-0.06em]">Room to learn,<br />gather, and explore.</h2>
-
-                            <div className="mt-16 grid border-t border-white/15 md:grid-cols-3 md:divide-x md:divide-white/15">
-                                <article className="border-b border-white/15 py-8 md:border-b-0 md:pr-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">01</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Natural setting</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">The provincial tourism portal documents century-old trees, picnic and camping areas, recreation space, and wall-climbing facilities within the park.</p>
-                                </article>
-                                <article className="border-b border-white/15 py-8 md:border-b-0 md:px-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">02</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Wildlife</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">The City describes a mini-zoo with various animal species. Because no current official inventory is published, species lists from historical reports are not presented as current.</p>
-                                </article>
-                                <article className="py-8 md:pl-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">03</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Community space</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">Landscaped open areas support leisure and recreation, while the multi-purpose pavilion serves events and community gatherings.</p>
-                                </article>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="bg-green-400 px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="eco-trail-title">
-                        <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-24">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-black/45">Bulusan eco-trail</p>
-                                <h2 id="eco-trail-title" className="mt-5 text-[clamp(3rem,8vw,7rem)] font-medium leading-[0.86] tracking-[-0.06em] text-black">A route from<br />park to shore.</h2>
-                            </div>
-                            <div className="border-l border-black/25 pl-5 sm:pl-8">
-                                <p className="text-xl font-semibold leading-8 text-black/80">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
-                                <p className="mt-5 text-sm font-medium leading-6 text-black/55">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
-                                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">View official tourism information</a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="trail-ready-title">
-                        <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
-                                <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Provincial travel guidance</p>
-                                    <h2 id="trail-ready-title" className="mt-5 text-[clamp(2.8rem,6vw,5.8rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">Go prepared.<br />Leave room to adapt.</h2>
-                                </div>
-                                <div className="grid gap-px overflow-hidden rounded-3xl bg-black/10 sm:grid-cols-2">
-                                    <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">01</span><h3 className="mt-8 text-xl font-semibold">Watch the weather</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">Oriental Mindoro’s advisory notes that mountain trails can be slippery in the June-October wet season and recommends flexible plans during typhoon season.</p></div>
-                                    <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">02</span><h3 className="mt-8 text-xl font-semibold">Pack for outdoors</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">The provincial guidance recommends water, sun protection, insect repellent, personal medication, and a basic first-aid kit.</p></div>
-                                    <div className="bg-[#f7f5ef] p-6 sm:col-span-2 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">03</span><h3 className="mt-8 text-xl font-semibold">Confirm locally</h3><p className="mt-3 max-w-2xl text-sm leading-6 text-[#212631]/55">These are province-wide recommendations, not park-specific rules. Ask local tourism or park contacts about current trail access and conditions before setting out.</p><a href={TRAVEL_ADVISORY_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.18em]">Read the travel advisory</a></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="visit-title">
-                        <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
-                                <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Visit information</p>
-                                    <h2 id="visit-title" className="mt-5 text-[clamp(3rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">Plan with current information.</h2>
-                                </div>
-                                <div>
-                                    <dl className="divide-y divide-[#212631]/15 border-y border-[#212631]/15">
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
-                                    </dl>
-                                    <p className="mt-6 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-16 flex flex-col gap-4 border-t border-[#212631]/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="max-w-xl text-sm font-medium leading-6 text-[#212631]/55">Current park information and documentary photographs are available through the official source pages.</p>
-                                <div className="flex flex-col gap-3 sm:flex-row">
-                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">City Government source</a>
-                                    <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Tourism source</a>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                    <StorySection />
+                    <StewardshipSection />
+                    <NatureSection />
+                    <EcoTrailSection />
+                    <TrailReadySection />
+                    <VisitSection />
                 </main>
 
-                <Footer />
+                <div className="relative z-50 w-full"><Footer /></div>
             </div>
         </ReactLenis>
     );

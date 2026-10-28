@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+    --font-display: 'Fredoka', 'Mistral', ui-rounded, system-ui, sans-serif;
+}
+
 @font-face {
     font-family: 'Mistral';
     src: url('/mistral/mistral.TTF') format('truetype');
@@ -36,4 +40,23 @@
         scroll-behavior: auto !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* Redesigned visitor pages: staged hero entrance and drifting background words. */
+@keyframes park-rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+}
+
+.hero-rise {
+    animation: park-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes park-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+    animation: park-marquee 60s linear infinite;
 }
