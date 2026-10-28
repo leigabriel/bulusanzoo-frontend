@@ -6,7 +6,7 @@
 
 @font-face {
     font-family: 'Mistral';
-    src: url('/mistral/mistral.TTF') format('truetype');
+    src: url('/fonts/mistral.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -14,7 +14,7 @@
 
 @font-face {
     font-family: 'JetBrains';
-    src: url('/font/jetbrains.ttf') format('truetype');
+    src: url('/fonts/jetbrains-mono.woff2') format('woff2');
     font-weight: 200 900;
     font-style: normal;
     font-display: swap;
@@ -22,7 +22,7 @@
 
 @font-face {
     font-family: 'Gravelad';
-    src: url('/font/gravelad.ttf') format('truetype');
+    src: url('/fonts/gravelad.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;

@@ -1,5 +1,5 @@
 export const LOCAL_MODEL_CONFIG = {
-    modelPath: '/model/bulusanzoo_machine_learning/model.json',
+    modelPath: '/models/animal-classifier/model.json',
     inputSize: 224,
     confidenceThreshold: 0.5,
 };

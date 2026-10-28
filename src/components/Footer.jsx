@@ -43,7 +43,7 @@ const GiantTitle = () => {
                 Bulusan Zoo
             </MotionSpan>
             <img loading="lazy" decoding="async"
-                src="/bz-url-logo.png"
+                src="/brand/logo.png"
                 alt="Bulusan Zoo logo"
                 className="w-14 h-14 md:w-20 md:h-20 object-contain select-none flex-shrink-0 mb-2"
             />

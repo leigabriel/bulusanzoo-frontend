@@ -11,16 +11,16 @@ export const PARK = {
 };
 
 export const PHOTOS = {
-    pond: '/bulusanzoo-images/bz5.jpg',
-    arch: '/bulusanzoo-images/bz2.jpg',
-    trees: '/bulusanzoo-images/bz11.jpg',
-    lawn: '/bulusanzoo-images/bz4.jpg',
-    gateway: '/bulusanzoo-images/bz3.jpg',
-    pavilion: '/bulusanzoo-images/bz7.jpg',
-    tower: '/bulusanzoo-images/bz8.jpg',
-    plaza: '/bulusanzoo-images/bz9.jpg',
-    climb: '/bulusanzoo-images/bz10.jpg',
-    bridge: '/bulusanzoo-images/bz12.jpg',
-    garden: '/bulusanzoo-images/bz6.jpg',
-    walkway: '/bulusanzoo-images/bz1.jpg',
+    pond: '/images/park/pond.webp',
+    arch: '/images/park/arch.webp',
+    trees: '/images/park/trees.webp',
+    lawn: '/images/park/lawn.webp',
+    gateway: '/images/park/gateway.webp',
+    pavilion: '/images/park/pavilion.webp',
+    tower: '/images/park/tower.webp',
+    plaza: '/images/park/plaza.webp',
+    climb: '/images/park/climb.webp',
+    bridge: '/images/park/bridge.webp',
+    garden: '/images/park/garden.webp',
+    walkway: '/images/park/walkway.webp',
 };

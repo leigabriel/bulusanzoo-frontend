@@ -24,7 +24,12 @@ npm run dev            # http://localhost:5173
 - `src/pages/{user,admin,staff,auth,legal}` – route-level pages (lazy-loaded except Home)
 - `src/components` – shared UI, layouts, feature components
 - `src/services/api-client.js` – all backend calls; `src/context/AuthContext.jsx` – session handling
-- `public/model` – TensorFlow.js model used by the animal scanner
+- `public/` – static files served as-is:
+  - `brand/` logo · `icons/` favicons and SVG icons · `og-image.jpg` social preview (Home hero with header, 1200×630)
+  - `images/park/` park photos (named by subject) · `images/mascot/` Jiji sprites · `images/event-img-placeholder.jpg` and `profile-img/` are also referenced by the backend / stored URLs, so keep their paths
+  - `video/` hero loop and poster · `fonts/` woff2 fonts · `audio/` toast sounds
+  - `models/animal-classifier/` TensorFlow.js model used by the animal scanner
+  - `apps/` downloadable installers (public URLs, kept unchanged)
 - `vercel.json` – SPA rewrites, caching and security headers
 
 ## Notes

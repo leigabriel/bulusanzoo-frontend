@@ -1,16 +1,15 @@
-const CACHE_VERSION = 'bulusan-static-v3';
+const CACHE_VERSION = 'bulusan-static-v4';
 const STATIC_CACHE = CACHE_VERSION;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/mascots/deer-directions.webp',
-    '/mascots/deer-reactions.webp',
-    '/animal-scan.svg',
-    '/bz-url-logo.png',
-    '/deer.png',
+    '/images/mascot/deer-directions.webp',
+    '/images/mascot/deer-reactions.webp',
+    '/icons/animal-scan.svg',
+    '/brand/logo.png',
     '/profile-img/default-avatar.svg',
     '/images/event-img-placeholder.jpg',
-    '/mistral/mistral.TTF'
+    '/fonts/mistral.woff2'
 ];
 
 self.addEventListener('install', event => {
@@ -53,7 +52,7 @@ self.addEventListener('fetch', event => {
     const isImage = request.destination === 'image';
     const isFont = request.destination === 'font';
     const isStylesheet = request.destination === 'style';
-    const isLocalModelFile = url.origin === self.location.origin && url.pathname.startsWith('/model/');
+    const isLocalModelFile = url.origin === self.location.origin && url.pathname.startsWith('/models/');
 
     if (isNavigation) {
         event.respondWith(

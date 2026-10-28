@@ -30,8 +30,8 @@ const fallbackMessages = {
 };
 
 const soundUrls = {
-    success: '/sound/success-sfx.mp3',
-    error: '/sound/error-sfx.mp3'
+    success: '/audio/success.mp3',
+    error: '/audio/error.mp3'
 };
 const sounds = {};
 

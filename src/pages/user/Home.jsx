@@ -45,11 +45,11 @@ const HeroSection = () => {
     return (
         <section aria-labelledby="hero-title" className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#2f7d3a]">
             {/* Park footage, softened and tinted green so it reads like the painted backdrop of the reference. */}
-            <div aria-hidden="true" className="absolute inset-0 -z-30 scale-110 bg-[url('/bulusanzoo-images/bzv2-poster.jpg')] bg-cover bg-center blur-[3px]" />
+            <div aria-hidden="true" className="absolute inset-0 -z-30 scale-110 bg-[url('/video/hero-poster.webp')] bg-cover bg-center blur-[3px]" />
             <video
                 className="pointer-events-none absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-[3px] motion-reduce:hidden"
-                src="/bulusanzoo-images/bzv2.mp4"
-                poster="/bulusanzoo-images/bzv2-poster.jpg"
+                src="/video/hero.mp4"
+                poster="/video/hero-poster.webp"
                 autoPlay
                 muted
                 loop
