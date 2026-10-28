@@ -71,9 +71,9 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
             onClick={onClick}
             aria-label={alt}
             title={alt}
-            className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
+            className={`relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#1d4a2e]/10 transition-colors flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e] ${className}`}
         >
-            {IconComponent && <IconComponent size={18} className="opacity-55" aria-hidden="true" />}
+            {IconComponent && <IconComponent size={18} className="opacity-70" aria-hidden="true" />}
             {badge > 0 && (
                 <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
@@ -83,36 +83,38 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
     );
 };
 
-const CloseBtn = ({ onClick }) => (
+const CloseBtn = ({ onClick, light = false }) => (
     <button
+        type="button"
         onClick={onClick}
-        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+        aria-label="Close"
+        className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 ${light ? 'text-white hover:bg-white/15 focus-visible:outline-[#c6fe69]' : 'hover:bg-[#1d4a2e]/10 focus-visible:outline-[#1f7a3e]'}`}
     >
-        <CloseCircle size={14} className="opacity-40" />
+        <CloseCircle size={16} className={light ? '' : 'opacity-60'} aria-hidden="true" />
     </button>
 );
 
 const SectionLabel = ({ label }) => (
-    <p className="px-1 pt-5 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.16em]">{label}</p>
+    <p className="px-1 pt-5 pb-2 text-[11px] font-bold text-[#1d4a2e]/60 uppercase tracking-[0.16em]">{label}</p>
 );
 
 const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     const inner = (
-        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-[#ebebeb]'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
-            <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
+        <span className={`flex min-h-12 items-center gap-3 px-4 py-2.5 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-[#e6f1df]'} ${!isLast ? 'border-b border-[#1d4a2e]/5' : ''}`}>
+            <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-[#e6f1df]'}`}>
                 {IconComponent && (
                     <IconComponent
                         size={15}
-                        className={danger ? 'text-red-500' : 'opacity-50'}
+                        className={danger ? 'text-red-500' : 'text-[#1d4a2e] opacity-80'}
                     />
                 )}
             </span>
-            <span className={`text-[13px] font-medium flex-1 text-left leading-none ${danger ? 'text-red-500' : 'text-gray-700'}`}>
+            <span className={`text-[13px] font-medium flex-1 text-left leading-none ${danger ? 'text-red-600' : 'text-[#1d4a2e]'}`}>
                 {label}
             </span>
             {badge && (
-                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0">
+                <span className="px-2 py-0.5 bg-[#1d4a2e] text-white rounded-full text-[10px] font-semibold uppercase tracking-wide flex-shrink-0">
                     {badge}
                 </span>
             )}
@@ -123,7 +125,7 @@ const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast,
             {inner}
         </Link>
     );
-    return <button onClick={onClick} className="w-full">{inner}</button>;
+    return <button type="button" onClick={onClick} className="w-full text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#1f7a3e]">{inner}</button>;
 };
 
 const Header = () => {
@@ -143,7 +145,7 @@ const Header = () => {
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
     const [clearingNotifications, setClearingNotifications] = useState(false);
-    const [, setScrolled] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const [isNavVisible, setIsNavVisible] = useState(true);
     const [showEmailModal, setShowEmailModal] = useState(false);
     const [emailSubject, setEmailSubject] = useState('');
@@ -373,7 +375,7 @@ const Header = () => {
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
+                className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'} ${scrolled || isMenuOpen ? 'bg-[#fbf6e9]/90 shadow-[0_6px_20px_-12px_rgba(29,74,46,0.45)] backdrop-blur-md' : ''}`}
                 style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
@@ -388,15 +390,15 @@ const Header = () => {
                         </div>
 
                         <nav className="hidden lg:flex flex-1 items-center justify-center">
-                            <div className="flex items-center border border-gray-500 shadow-md shadow-gray-400 gap-0.5 bg-green-400 rounded-full px-1.5 py-1.5">
+                            <div className="flex items-center border border-[#1d4a2e]/15 shadow-[0_10px_24px_-14px_rgba(29,74,46,0.6)] gap-0.5 bg-[#c6fe69] rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
                                         key={link.path}
                                         to={link.path}
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
-                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
-                                            ? 'bg-[#000] text-gray-100 shadow-sm'
-                                            : 'text-[#000]/50 hover:text-gray-800'
+                                        className={`px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-150 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e] ${location.pathname === link.path
+                                            ? 'bg-[#1d4a2e] text-white shadow-sm'
+                                            : 'text-[#1d4a2e]/80 hover:bg-white/50 hover:text-[#1d4a2e]'
                                             }`}
                                     >
                                         {link.label}
@@ -407,7 +409,7 @@ const Header = () => {
 
                         <div className="hidden w-[180px] flex-shrink-0 items-center justify-end gap-2 lg:flex xl:w-[260px]">
                             <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}>
-                                <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
+                                <button className="px-4 py-2 rounded-full bg-[#1d4a2e] text-white text-[13px] font-semibold hover:bg-[#1f7a3e] transition-colors whitespace-nowrap">
                                     Reserve
                                 </button>
                             </Link>
@@ -421,22 +423,24 @@ const Header = () => {
                             ) : user ? (
                                 <button
                                     onClick={() => setShowSidePanel(true)}
-                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-green-400 transition-all"
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
+                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-[#1d4a2e]/15 bg-white hover:border-[#1f7a3e] hover:bg-[#e6f1df] transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e]"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
+                                        alt=""
                                         className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
-                                    <span className="hidden max-w-[80px] truncate text-[13px] font-medium text-gray-700 xl:block">
+                                    <span className="hidden max-w-[80px] truncate text-[13px] font-semibold text-[#1d4a2e] xl:block">
                                         {displayName}
                                     </span>
                                 </button>
                             ) : (
                                 <Link to="/login" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}>
-                                    <button className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                                    <button className="px-4 py-1.5 rounded-full text-[13px] font-semibold text-[#1d4a2e] border border-[#1d4a2e]/15 bg-white hover:bg-[#e6f1df] transition-colors">
                                         Login
                                     </button>
                                 </Link>
@@ -450,29 +454,31 @@ const Header = () => {
                             {user && (
                                 <button
                                     onClick={() => setShowSidePanel(true)}
-                                    className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 overflow-hidden"
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
+                                    className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#1d4a2e]/10 transition-colors flex-shrink-0 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e]"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
-                                        className="w-7 h-7 rounded-full object-cover"
+                                        alt=""
+                                        className="w-8 h-8 rounded-full object-cover"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
                                 </button>
                             )}
-                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt={isMenuOpen ? 'Close menu' : 'Open menu'} onClick={() => setIsMenuOpen(!isMenuOpen)} />
                         </div>
                     </div>
                 </div>
 
                 <div
-                    className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+                    className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-[#1d4a2e]/10 bg-[#fbf6e9] shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
                     data-lenis-prevent
                 >
                     <div className="flex flex-col p-4 gap-4">
                         <div>
-                            <div className="rounded-xl overflow-hidden border border-gray-100">
+                            <div className="rounded-2xl overflow-hidden border border-[#1d4a2e]/10 bg-white">
                                 {NAV_LINKS.map((link) => {
                                     const active = location.pathname === link.path;
                                     const LinkIcon = ICON_COMPONENTS[link.iconKey];
@@ -481,15 +487,15 @@ const Header = () => {
                                             key={link.path}
                                             to={link.path}
                                             onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
-                                            className={`flex items-center gap-3 px-4 py-3 transition-colors ${active ? 'bg-[#ebebeb]' : 'hover:bg-gray-50'}`}
+                                            className={`flex min-h-12 items-center gap-3 px-4 py-3 transition-colors ${active ? 'bg-[#c6fe69]' : 'hover:bg-[#e6f1df]'}`}
                                         >
                                             {LinkIcon && (
                                                 <LinkIcon
                                                     size={16}
-                                                    className={`flex-shrink-0 ${active ? 'opacity-100' : 'opacity-45'}`}
+                                                    className={`flex-shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`}
                                                 />
                                             )}
-                                            <span className={`text-[13px] font-medium ${active ? 'text-[#000]' : 'text-gray-600'}`}>
+                                            <span className={`text-sm font-semibold ${active ? 'text-[#1d4a2e]' : 'text-[#1d4a2e]/80'}`}>
                                                 {link.label}
                                             </span>
                                         </Link>
@@ -498,10 +504,10 @@ const Header = () => {
                                 <Link
                                     to="/reservations"
                                     onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/reservations'); }}
-                                    className={`flex items-center gap-3 px-4 py-3 border-t border-gray-100 transition-colors ${location.pathname === '/reservations' ? 'bg-green-400' : 'hover:bg-gray-50'}`}
+                                    className={`flex min-h-12 items-center gap-3 px-4 py-3 border-t border-[#1d4a2e]/10 transition-colors ${location.pathname === '/reservations' ? 'bg-[#c6fe69]' : 'hover:bg-[#e6f1df]'}`}
                                 >
                                     <Ticket size={16} className={`flex-shrink-0 ${location.pathname === '/reservations' ? 'opacity-100' : 'opacity-45'}`} />
-                                    <span className={`text-[13px] font-medium ${location.pathname === '/reservations' ? 'text-[#000]' : 'text-gray-600'}`}>
+                                    <span className={`text-sm font-semibold ${location.pathname === '/reservations' ? 'text-[#1d4a2e]' : 'text-[#1d4a2e]/80'}`}>
                                         Reserve
                                     </span>
                                 </Link>
@@ -514,20 +520,20 @@ const Header = () => {
                             </div>
                         ) : !user ? (
                             <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}>
-                                <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
+                                <button className="w-full min-h-12 rounded-2xl bg-[#1d4a2e] text-white text-sm font-semibold">
                                     Login / Sign Up
                                 </button>
                             </Link>
                         ) : (
                             <button
                                 onClick={() => { setIsMenuOpen(false); setShowLogoutModal(true); }}
-                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
+                                className="flex min-h-12 items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 transition-colors"
                             >
                                 <Logout
                                     size={16}
                                     className="flex-shrink-0 text-red-500 opacity-75"
                                 />
-                                <span className="text-[13px] font-medium">Sign Out</span>
+                                <span className="text-sm font-semibold">Sign Out</span>
                             </button>
                         )}
                     </div>
@@ -541,27 +547,26 @@ const Header = () => {
                 />
                 <div
                     ref={sidePanelRef}
-                    className={`w-full h-full sm:max-w-[360px] bg-[#fbfdfb] shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`w-full h-dvh sm:max-w-[380px] bg-[#fbf6e9] shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
                     role="dialog"
                     aria-modal="true"
                     aria-label="User navigation panel"
                 >
-                    <div className="relative flex-shrink-0 overflow-hidden border-b border-emerald-100 bg-white px-5 pb-5 pt-5">
-                        <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#c6fe69]/40 blur-2xl" />
-                        <div className="relative flex items-center justify-between">
+                    <div className="relative flex-shrink-0 overflow-hidden bg-[#1d4a2e] px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
+                        <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#c6fe69]/30 blur-2xl" />
+                        <div className="relative flex items-center justify-between gap-3">
                             <div>
-                                <p className="text-[24px] font-bold uppercase text-emerald-700">Account Menu</p>
-                                {/* <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Quick access</h2> */}
+                                <p className="font-display text-2xl font-bold uppercase text-white">Account Menu</p>
                             </div>
-                            <CloseBtn onClick={closeSidePanel} />
+                            <CloseBtn light onClick={closeSidePanel} />
                         </div>
                     </div>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6" data-lenis-prevent>
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]" data-lenis-prevent>
                         {quickItems.length > 0 && (
                             <>
                                 <SectionLabel label="Quick Access" />
-                                <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                                <div className="overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white shadow-sm">
                                     {quickItems.map((item, i) => (
                                         <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === quickItems.length - 1} />
                                     ))}
@@ -570,21 +575,21 @@ const Header = () => {
                         )}
 
                         <SectionLabel label="Account" />
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white shadow-sm">
                             {accountItems.map((item, i) => (
                                 <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === accountItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Explore" />
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white shadow-sm">
                             {exploreItems.map((item, i) => (
                                 <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === exploreItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Tools & Preferences" />
-                        <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
+                        <div className="overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white shadow-sm">
                             <MenuItem iconKey="setting" label="Settings" onClick={handleOpenSettings} isLast={false} />
                             <MenuItem
                                 iconKey="camera"
@@ -596,16 +601,16 @@ const Header = () => {
                         </div>
 
                          <SectionLabel label="Support" />
-                         <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
+                         <div className="overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white shadow-sm">
                              <MenuItem iconKey="help" label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                              <MenuItem iconKey="support" label="Contact Support" onClick={openEmailModal} isLast={true} />
                          </div>
-                         <div className="mt-5 space-y-3 border-t border-emerald-100 pt-5">
+                         <div className="mt-5 space-y-3 border-t border-[#1d4a2e]/10 pt-5">
                              {user ? (
                                   <button
                                       type="button"
                                       onClick={handleOpenProfile}
-                                  className="group flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/50 hover:shadow-md hover:shadow-emerald-100/70"
+                                  className="group flex w-full items-center gap-3 rounded-2xl border border-[#1d4a2e]/10 bg-white p-3 text-left transition-all hover:border-[#1f7a3e] hover:bg-[#e6f1df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e]"
                                      aria-label={`Open profile for ${displayName}`}
                                  >
                                      <img
@@ -617,26 +622,26 @@ const Header = () => {
                                      />
                                      <span className="min-w-0 flex-1">
                                          <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
-                                         <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                           <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
+                                         <span className="mt-0.5 block truncate text-xs text-[#1d4a2e]/65">{profileEmail}</span>
+                                           <span className="mt-1 block text-[11px] font-bold uppercase tracking-wider text-[#1f7a3e]">View profile</span>
                                      </span>
-                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
+                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#e6f1df] text-[#1d4a2e] transition-colors" aria-hidden="true">›</span>
                                   </button>
                              ) : (
-                                 <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
+                                 <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#1d4a2e] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-[#1f7a3e]">
                                      Sign in to your account
                                  </Link>
                              )}
                              <button
                                  type="button"
                                  onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
-                                  className="flex w-full items-center gap-3 rounded-xl bg-red-300 px-3 py-2.5 text-red-900 transition-colors hover:bg-red-400"
+                                  className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-red-700 transition-colors hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
                              >
                                  <Logout
                                      size={16}
-                                     className="flex-shrink-0 text-red-900 opacity-75"
+                                     className="flex-shrink-0 text-red-700"
                                  />
-                                 <span className="text-[13px] font-medium">Sign Out</span>
+                                 <span className="text-sm font-semibold">Sign Out</span>
                              </button>
                          </div>
                      </div>
@@ -766,7 +771,10 @@ const Header = () => {
                 />
                 <div
                     ref={notificationPanelRef}
-                    className={`absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showNotificationPanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Notifications"
+                    className={`absolute right-0 top-0 h-dvh w-full max-w-lg bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showNotificationPanel ? 'translate-x-0' : 'translate-x-full'}`}
                 >
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                         <div className="flex items-center gap-3">
@@ -781,7 +789,7 @@ const Header = () => {
                             {unreadCount > 0 && (
                                 <button
                                     onClick={markAllNotificationsRead}
-                                    className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded hover:bg-emerald-50"
+                                    className="text-xs font-semibold text-[#1f7a3e] hover:text-[#1d4a2e] transition-colors px-2.5 py-2 rounded hover:bg-emerald-50"
                                 >
                                     Mark all read
                                 </button>
@@ -789,7 +797,7 @@ const Header = () => {
                             {notifications.length > 0 && (
                                 <button
                                     onClick={() => setShowClearNotificationsConfirm(true)}
-                                    className="text-[11px] font-medium text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50"
+                                    className="text-xs font-semibold text-red-600 hover:text-red-700 transition-colors px-2.5 py-2 rounded hover:bg-red-50"
                                 >
                                     Clear
                                 </button>

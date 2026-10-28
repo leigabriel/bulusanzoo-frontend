@@ -38,13 +38,13 @@ const formatDisplayDate = (dateStr) => {
 };
 
 const StatusBadge = ({ status }) => (
-    <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${status === 'past' ? 'bg-gray-100 text-gray-500' : 'bg-black text-white'}`}>
+    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${status === 'past' ? 'bg-[#e6f1df] text-[#1d4a2e]/70' : 'bg-[#1d4a2e] text-white'}`}>
         {status}
     </span>
 );
 
 const EmptyState = ({ view }) => (
-    <div className="px-6 py-20 text-center text-gray-400 text-xs md:text-sm tracking-widest uppercase">
+    <div className="px-6 py-20 text-center text-base font-semibold text-[#1d4a2e]/60">
         No events to show{view === 'calendar' ? ' for this month' : ''}.
     </div>
 );
@@ -55,7 +55,7 @@ export const ViewToggle = ({ view, onViewChange, count }) => (
     <div
         role="group"
         aria-label="Choose how events are displayed"
-        className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1"
+        className="inline-flex items-center gap-1 rounded-full bg-white p-1 shadow-[0_8px_20px_-14px_rgba(29,74,46,0.6)]"
     >
         {VIEWS.map(({ id, label, icon }) => {
             const active = view === id;
@@ -65,14 +65,14 @@ export const ViewToggle = ({ view, onViewChange, count }) => (
                     type="button"
                     onClick={() => onViewChange(id)}
                     aria-pressed={active}
-                    className={`flex items-center gap-2 rounded-full px-3 md:px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${active ? 'bg-black text-white' : 'text-gray-500 hover:text-black'}`}
+                    className={`flex min-h-10 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e] ${active ? 'bg-[#1d4a2e] text-white' : 'text-[#1d4a2e]/75 hover:bg-[#e6f1df]'}`}
                 >
                     {icon}
                     <span className="hidden sm:inline">{label}</span>
                 </button>
             );
         })}
-        <span className="ml-1 hidden pr-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 md:inline">
+        <span className="ml-1 hidden pr-3 text-sm font-semibold text-[#1d4a2e]/65 md:inline">
             {count} {count === 1 ? 'event' : 'events'}
         </span>
     </div>
@@ -112,34 +112,34 @@ const CalendarView = ({ events, calendarDate, onCalendarDateChange, onSelect }) 
     const monthHasEvents = cells.some((day) => day && (byDate.get(`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`)?.length));
 
     return (
-        <div className="bg-white border border-gray-200 rounded-xl md:rounded-2xl shadow-sm overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-center justify-between p-4 md:p-8 border-b border-gray-200 gap-4">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl text-black">
+        <div className="bg-white rounded-3xl shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)] overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-center justify-between p-4 md:p-8 border-b border-[#1d4a2e]/10 gap-4">
+                <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-[#1d4a2e]">
                     {MONTHS[month]} {year}
                 </h2>
                 <div className="flex items-center gap-2 md:gap-4">
-                    <button type="button" onClick={() => shiftMonth(-1)} aria-label="Previous month" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button type="button" onClick={() => shiftMonth(-1)} aria-label="Previous month" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-[#1d4a2e]/20 text-[#1d4a2e] hover:bg-[#e6f1df] transition-colors">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                     </button>
-                    <button type="button" onClick={() => onCalendarDateChange(new Date())} className="px-4 md:px-6 h-10 md:h-12 rounded-full border border-gray-200 hover:bg-gray-50 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors">
+                    <button type="button" onClick={() => onCalendarDateChange(new Date())} className="px-4 md:px-6 h-10 md:h-12 rounded-full border border-[#1d4a2e]/20 text-[#1d4a2e] hover:bg-[#e6f1df] text-sm font-semibold transition-colors">
                         Today
                     </button>
-                    <button type="button" onClick={() => shiftMonth(1)} aria-label="Next month" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button type="button" onClick={() => shiftMonth(1)} aria-label="Next month" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-[#1d4a2e]/20 text-[#1d4a2e] hover:bg-[#e6f1df] transition-colors">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-7 border-b border-[#1d4a2e]/10 bg-[#e6f1df]">
                 {DAYS_SHORT.map((day) => (
-                    <div key={day} className="py-2 md:py-4 text-center border-r border-gray-200 last:border-r-0">
-                        <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-gray-400">{day}</span>
+                    <div key={day} className="py-2 md:py-4 text-center border-r border-[#1d4a2e]/10 last:border-r-0">
+                        <span className="text-xs font-semibold text-[#1d4a2e]/75">{day}</span>
                     </div>
                 ))}
             </div>
 
             {monthHasEvents ? (
-                <div className="grid grid-cols-7 bg-[#F2F0EB]">
+                <div className="grid grid-cols-7 bg-[#fbf6e9]">
                     <Motion.div
                         key={`${year}-${month}`}
                         className="contents"
@@ -157,11 +157,11 @@ const CalendarView = ({ events, calendarDate, onCalendarDateChange, onSelect }) 
                             return (
                                 <div
                                     key={index}
-                                    className={`min-h-[92px] sm:min-h-[130px] md:min-h-[190px] border-r border-b border-gray-300 p-1.5 md:p-3 ${day ? 'hover:bg-black/5 transition-colors' : 'bg-transparent'}`}
+                                    className={`min-h-[92px] sm:min-h-[130px] md:min-h-[190px] border-r border-b border-[#1d4a2e]/10 p-1.5 md:p-3 ${day ? 'hover:bg-[#e6f1df]/60 transition-colors' : 'bg-transparent'}`}
                                 >
                                     {day && (
                                         <>
-                                            <span className={`inline-flex items-center justify-center h-6 w-6 sm:h-8 sm:w-8 rounded-full text-[10px] sm:text-xs font-bold ${todayCell ? 'bg-black text-white' : 'text-black'}`}>
+                                            <span className={`inline-flex items-center justify-center h-6 w-6 sm:h-8 sm:w-8 rounded-full text-[10px] sm:text-xs font-bold ${todayCell ? 'bg-[#1d4a2e] text-white' : 'text-[#1d4a2e]'}`}>
                                                 {day}
                                             </span>
 
@@ -174,19 +174,19 @@ const CalendarView = ({ events, calendarDate, onCalendarDateChange, onSelect }) 
                                                         <button
                                                             type="button"
                                                             onClick={() => onSelect(event)}
-                                                            className="w-full text-left px-1.5 md:px-2 py-1 rounded bg-white/90 border border-gray-200 hover:border-black transition-colors"
+                                                            className="w-full text-left px-1.5 md:px-2 py-1 rounded-lg bg-[#c6fe69] hover:bg-[#b4ee50] transition-colors focus-visible:outline-2 focus-visible:outline-[#1f7a3e]"
                                                         >
-                                                            <span className="block text-[10px] md:text-xs font-medium text-black leading-tight truncate">
+                                                            <span className="block text-[11px] md:text-xs font-semibold text-[#1d4a2e] leading-tight truncate">
                                                                 {event.title}
                                                             </span>
-                                                            <span className="block text-[9px] md:text-[10px] text-gray-500 uppercase tracking-widest truncate">
+                                                            <span className="block hidden sm:block text-[10px] text-[#1d4a2e]/75 truncate">
                                                                 {formatTime(event.startTime) || '—'}
                                                             </span>
                                                         </button>
                                                     </li>
                                                 ))}
                                                 {dayEvents.length > 3 && (
-                                                    <li className="px-1.5 md:px-2 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                                                    <li className="px-1.5 md:px-2 text-[10px] md:text-xs font-semibold text-[#1d4a2e]/75">
                                                         +{dayEvents.length - 3} more
                                                     </li>
                                                 )}
@@ -218,38 +218,38 @@ const ListView = ({ events, onSelect }) => {
         return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
     }, [events]);
 
-    if (!events.length) return <div className="bg-white border border-gray-200 rounded-xl md:rounded-2xl"><EmptyState view="list" /></div>;
+    if (!events.length) return <div className="bg-white rounded-3xl shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)]"><EmptyState view="list" /></div>;
 
     return (
         <div className="flex flex-col gap-6 md:gap-10">
             {grouped.map(([day, dayEvents]) => (
-                <section key={day} className="bg-white border border-gray-200 rounded-xl md:rounded-2xl shadow-sm overflow-hidden">
-                    <h2 className="px-4 md:px-8 py-3 md:py-4 border-b border-gray-200 bg-gray-50 text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">
+                <section key={day} className="bg-white rounded-3xl shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)] overflow-hidden">
+                    <h2 className="px-4 md:px-8 py-3 md:py-4 border-b border-[#1d4a2e]/10 bg-[#e6f1df] text-sm font-semibold text-[#1d4a2e]">
                         {formatDisplayDate(day)}
                     </h2>
                     <ul>
                         {dayEvents.map((event) => (
-                            <li key={event.id} className="border-b border-gray-100 last:border-b-0">
+                            <li key={event.id} className="border-b border-[#1d4a2e]/10 last:border-b-0">
                                 <button
                                     type="button"
                                     onClick={() => onSelect(event)}
-                                    className="flex w-full items-center gap-4 md:gap-6 px-4 md:px-8 py-4 md:py-5 text-left hover:bg-black/[0.03] transition-colors"
+                                    className="flex w-full items-center gap-4 md:gap-6 px-4 md:px-8 py-4 md:py-5 text-left hover:bg-[#e6f1df]/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#1f7a3e] transition-colors"
                                 >
-                                    <div className="w-16 h-16 md:w-24 md:h-24 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                    <div className="w-16 h-16 md:w-24 md:h-24 flex-shrink-0 overflow-hidden rounded-2xl bg-[#e6f1df]">
                                         {event.imageUrl && (
                                             <img loading="lazy" decoding="async" src={event.imageUrl} alt="" className="w-full h-full object-cover" />
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                            <span className="text-xs font-semibold text-[#1d4a2e]/70">
                                                 {formatTime(event.startTime) || 'Time TBC'}
                                                 {event.endTime ? ` – ${formatTime(event.endTime)}` : ''}
                                             </span>
                                             <StatusBadge status={event.status} />
                                         </div>
-                                        <h3 className="text-base md:text-xl font-bold text-black leading-tight break-words">{event.title}</h3>
-                                        <p className="text-[10px] md:text-xs uppercase tracking-widest text-gray-500 mt-1 truncate">
+                                        <h3 className="font-display text-base md:text-xl font-semibold text-[#1d4a2e] leading-tight break-words">{event.title}</h3>
+                                        <p className="text-xs md:text-sm text-[#1d4a2e]/70 mt-1 truncate">
                                             {event.location}
                                         </p>
                                     </div>
@@ -266,14 +266,14 @@ const ListView = ({ events, onSelect }) => {
 /* ------------------------------------------------------------------ grid view */
 
 const GridView = ({ events, onSelect }) => {
-    if (!events.length) return <div className="bg-white border border-gray-200 rounded-xl md:rounded-2xl"><EmptyState view="grid" /></div>;
+    if (!events.length) return <div className="bg-white rounded-3xl shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)]"><EmptyState view="grid" /></div>;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {events.map((event) => (
-                <article key={event.id} className="group bg-white border border-gray-200 rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                    <button type="button" onClick={() => onSelect(event)} className="flex flex-col h-full text-left">
-                        <div className="relative h-44 md:h-52 overflow-hidden bg-gray-100">
+                <article key={event.id} className="group bg-white rounded-3xl p-2.5 shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)] flex flex-col">
+                    <button type="button" onClick={() => onSelect(event)} className="flex flex-col h-full text-left rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1f7a3e]">
+                        <div className="relative h-44 md:h-52 overflow-hidden rounded-[1.25rem] bg-[#e6f1df]">
                             {event.imageUrl && (
                                 <img loading="lazy" decoding="async" src={event.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             )}
@@ -281,14 +281,14 @@ const GridView = ({ events, onSelect }) => {
                                 <StatusBadge status={event.status} />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-2 p-5 md:p-6 flex-1">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                        <div className="flex flex-col gap-2 px-3 pb-3 pt-4 md:px-4 flex-1">
+                            <span className="text-xs font-semibold text-[#1d4a2e]/70">
                                 {formatDisplayDate(event.eventDate)}
                             </span>
-                            <h3 className="text-lg md:text-xl font-bold text-black leading-tight break-words group-hover:underline transition-colors">
+                            <h3 className="font-display text-lg md:text-xl font-semibold text-[#1d4a2e] leading-tight break-words">
                                 {event.title}
                             </h3>
-                            <p className="text-[10px] md:text-xs uppercase tracking-widest text-gray-500 mt-auto pt-2">
+                            <p className="text-xs md:text-sm text-[#1d4a2e]/70 mt-auto pt-2">
                                 {formatTime(event.startTime) || 'Time TBC'} · {event.location}
                             </p>
                         </div>

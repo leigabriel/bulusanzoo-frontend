@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
+import { PARK, PHOTOS } from '../../config/park-theme';
+import { Band, PageHero } from '../../components/common/ParkDecor';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -40,7 +41,7 @@ const Icons = {
 
 const StatusBadge = ({ status }) => {
     return (
-        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-widest ${status === 'past' ? 'bg-gray-100 text-gray-500' : 'bg-black text-white'}`}>
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${status === 'past' ? 'bg-white text-[#1d4a2e]/70' : 'bg-[#1d4a2e] text-white'}`}>
             {status}
         </span>
     );
@@ -264,22 +265,21 @@ const Events = () => {
 
     return (
         <ReactLenis root>
-            <div ref={containerRef} className={`min-h-screen text-black ${PAGE_BG_GRADIENT}`}>
+            <div ref={containerRef} className="min-h-screen text-[#1d4a2e]" style={{ backgroundColor: PARK.deep }}>
                 <Header />
 
-                <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
-                    <h1 className="w-full max-w-full text-center text-[clamp(3.5rem,12vw,11rem)] font-bold leading-[1.05] tracking-tight text-black">Events</h1>
-                </div>
+                <PageHero id="events-title" photo={PHOTOS.pavilion}>Events</PageHero>
 
-                <div className="max-w-8xl mx-auto px-4 md:px-8 pb-20 md:pb-32">
-                    <div className="flex flex-wrap gap-2 md:gap-4 justify-center mb-10 md:mb-16">
+                <Band bg={PARK.cream} className="z-10" innerClassName="min-h-[40svh]">
+                    <div className="mb-8 flex flex-wrap justify-center gap-2 md:mb-12 md:gap-3">
                         {FILTERS.map(f => {
                             const active = filter === f;
                             return (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`text-xs md:text-xs uppercase tracking-widest px-0.5 py-2 md:px-4 md:py-3 font-bold transition-colors rounded-full border-2 ${active ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'}`}
+                                    aria-pressed={active}
+                                    className={`min-h-11 rounded-full px-5 py-2 text-sm font-semibold capitalize transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f7a3e] ${active ? 'bg-[#1d4a2e] text-white' : 'bg-white text-[#1d4a2e] shadow-[0_8px_20px_-14px_rgba(29,74,46,0.6)] hover:bg-[#e6f1df]'}`}
                                 >
                                     {f === 'all' ? 'All Events' : f}
                                 </button>
@@ -288,12 +288,12 @@ const Events = () => {
                     </div>
 
                     {loading ? (
-                        <div className="flex justify-center py-40">
-                            <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+                        <div className="flex justify-center py-24" role="status" aria-label="Loading">
+                            <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1f7a3e]/20 border-t-[#1f7a3e]" />
                         </div>
                     ) : (
                         <>
-                            <div className="section-anim flex justify-center mb-8 md:mb-12">
+                            <div className="section-anim mb-8 flex justify-center md:mb-10">
                                 <ViewToggle view={view} onViewChange={changeView} count={filteredEvents.length} />
                             </div>
                             <div className="section-anim">
@@ -307,113 +307,113 @@ const Events = () => {
                             </div>
                         </>
                     )}
-                </div>
+                </Band>
 
-                <section className="bg-green-400 py-16 md:py-32 px-4 border-t border-gray-200">
-                    <div className="max-w-4xl mx-auto section-anim">
+                <Band bg={PARK.peach} dropWave className="z-20" innerClassName="!px-4 sm:!px-6">
+                    <div className="section-anim mx-auto max-w-4xl">
                         <div className="text-center mb-10 md:mb-16">
-                            <h2 className="text-3xl md:text-5xl lg:text-6xl text-black mb-4">Plan Your Own Event</h2>
-                            <p className="text-gray-500 text-sm md:text-lg px-4">Book our venue for your private gatherings and educational tours.</p>
+                            <h2 className="mb-4 font-display text-3xl font-bold text-[#1d4a2e] md:text-5xl">Plan Your Own Event</h2>
+                            <p className="px-4 text-sm text-[#1d4a2e]/75 md:text-lg">Book our venue for your private gatherings and educational tours.</p>
                         </div>
 
-                        <form onSubmit={handleSubmitAttempt} className="bg-white p-6 sm:p-8 md:p-12 rounded-xl md:rounded-2xl shadow-sm border border-gray-200">
+                        <form onSubmit={handleSubmitAttempt} className="rounded-3xl bg-white p-5 shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)] sm:p-8 md:p-10">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Event Name *</label>
                                     <input
                                         type="text"
                                         value={eventForm.venueEventName}
                                         onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         placeholder="E.g., Corporate Retreat"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Estimated Attendees *</label>
                                     <input
                                         type="number"
                                         value={eventForm.numberOfParticipants}
                                         onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
                                         min="1" max="500"
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Event Date *</label>
                                     <input
                                         type="date"
                                         value={eventForm.venueEventDate}
                                         onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
                                         min={getMinDate()}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Start Time *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Event Start Time *</label>
                                     <input
                                         type="time"
                                         value={eventForm.venueEventStartTime}
                                         onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event End Time *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Event End Time *</label>
                                     <input
                                         type="time"
                                         value={eventForm.venueEventEndTime}
                                         onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 pt-6 md:pt-8 border-t border-gray-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 pt-6 md:pt-8 border-t border-[#1d4a2e]/10">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Full Name *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Full Name *</label>
                                     <input
                                         type="text"
                                         value={eventForm.participantName}
                                         onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         placeholder="John Doe"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Email Address *</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Email Address *</label>
                                     <input
                                         type="email"
                                         value={eventForm.participantEmail}
                                         onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         placeholder="john@example.com"
                                         required
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2 md:col-span-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</label>
+                                    <label className="text-xs font-semibold text-[#1d4a2e]/80">Phone Number</label>
                                     <input
                                         type="tel"
                                         value={eventForm.participantPhone}
                                         onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        className="min-h-12 rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-2.5 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                         placeholder="+63 900 000 0000"
                                     />
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-2 mb-10 md:mb-12">
-                                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Additional Details & Requirements</label>
+                                <label className="text-xs font-semibold text-[#1d4a2e]/80">Additional Details & Requirements</label>
                                 <textarea
                                     value={eventForm.venueEventDescription}
                                     onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
-                                    className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors min-h-[80px] md:min-h-[100px] resize-y rounded-none"
+                                    className="min-h-28 resize-y rounded-xl border border-[#1d4a2e]/20 bg-[#fbf6e9]/60 px-4 py-3 text-base font-medium text-[#1d4a2e] outline-none transition-colors placeholder:text-[#1d4a2e]/45 focus:border-[#1f7a3e] focus:ring-2 focus:ring-[#1f7a3e]/25"
                                     placeholder="Please describe your event setup, specific requests, or questions..."
                                 />
                             </div>
@@ -421,13 +421,13 @@ const Events = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full py-4 md:py-5 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                                className="min-h-12 w-full rounded-full bg-[#1d4a2e] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#1f7a3e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1f7a3e] disabled:opacity-50"
                             >
                                 {isSubmitting ? 'Processing...' : 'Submit Request'}
                             </button>
                         </form>
                     </div>
-                </section>
+                </Band>
 
                 <AnimatePresence>
                     {selectedEvent && (
@@ -437,7 +437,7 @@ const Events = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8"
+                            className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0f2a1a]/70 backdrop-blur-sm p-4 md:p-8"
                             onClick={(e) => e.target === e.currentTarget && setSelectedEvent(null)}
                         >
                             <Motion.div
@@ -446,9 +446,9 @@ const Events = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 20 }}
                                 transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-                                className="w-full md:max-w-5xl bg-white rounded-xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
+                                className="w-full md:max-w-5xl bg-[#fbf6e9] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90dvh]"
                             >
-                                <div className="w-full md:w-1/2 h-48 sm:h-64 md:h-auto relative bg-gray-100 flex-shrink-0">
+                                <div className="w-full md:w-1/2 h-48 sm:h-64 md:h-auto relative bg-[#e6f1df] flex-shrink-0">
                                     <img loading="lazy" decoding="async" src={selectedEvent.imageUrl} alt={selectedEvent.title} className="absolute inset-0 w-full h-full object-cover" />
                                 </div>
                                 <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col overflow-y-auto overscroll-contain" data-lenis-prevent>
@@ -456,31 +456,32 @@ const Events = () => {
                                         <StatusBadge status={selectedEvent.status} />
                                         <button
                                             onClick={() => setSelectedEvent(null)}
-                                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                                            aria-label="Close"
+                                            className="w-11 h-11 flex items-center justify-center rounded-full bg-white hover:bg-[#e6f1df] transition-colors focus-visible:outline-2 focus-visible:outline-[#1f7a3e]"
                                         >
                                             <Icons.Close />
                                         </button>
                                     </div>
 
-                                    <h2 className="text-3xl sm:text-4xl md:text-5xl text-black leading-none mb-3 md:mb-4 break-words">
+                                    <h2 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-[#1d4a2e] leading-tight mb-3 md:mb-4 break-words">
                                         {selectedEvent.title}
                                     </h2>
-                                    <p className="text-gray-500 uppercase tracking-widest text-xs md:text-sm mb-6 md:mb-8">
+                                    <p className="text-[#1d4a2e]/70 text-sm font-semibold mb-6 md:mb-8">
                                         {formatDisplayDate(selectedEvent.eventDate)}
                                     </p>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-gray-200 pt-6 md:pt-8">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-[#1d4a2e]/10 pt-6 md:pt-8">
                                         <div>
-                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Time</h4>
-                                            <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
+                                            <h4 className="text-xs font-semibold text-[#1d4a2e]/65 mb-2">Time</h4>
+                                            <p className="text-[#1d4a2e] font-semibold text-sm md:text-base flex items-center gap-2">
                                                 <Icons.Clock />
                                                 {formatTime(selectedEvent.startTime) || '—'}
-                                                {selectedEvent.endTime && <span className="text-gray-500">to {formatTime(selectedEvent.endTime)}</span>}
+                                                {selectedEvent.endTime && <span className="text-[#1d4a2e]/65">to {formatTime(selectedEvent.endTime)}</span>}
                                             </p>
                                         </div>
                                         <div>
-                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Location</h4>
-                                            <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
+                                            <h4 className="text-xs font-semibold text-[#1d4a2e]/65 mb-2">Location</h4>
+                                            <p className="text-[#1d4a2e] font-semibold text-sm md:text-base flex items-center gap-2">
                                                 <Icons.Location />
                                                 {selectedEvent.location}
                                             </p>
@@ -488,8 +489,8 @@ const Events = () => {
                                     </div>
 
                                     <div className="mb-6 md:mb-8">
-                                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 md:mb-4">About this Event</h4>
-                                        <p className="text-gray-700 text-sm md:text-base leading-relaxed">
+                                        <h4 className="text-xs font-semibold text-[#1d4a2e]/65 mb-3">About this Event</h4>
+                                        <p className="text-[#1d4a2e]/85 text-sm md:text-base leading-relaxed">
                                             {selectedEvent.description || 'Join us for an immersive wildlife experience. Learn directly from our experts and connect with nature.'}
                                         </p>
                                     </div>
@@ -497,7 +498,7 @@ const Events = () => {
                                     {selectedEvent.tags && selectedEvent.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-auto">
                                             {selectedEvent.tags.map((tag, i) => (
-                                                <span key={i} className="px-3 py-1 md:px-4 md:py-2 bg-gray-100 rounded-full text-[10px] md:text-xs font-medium text-gray-600">
+                                                <span key={i} className="px-3.5 py-1.5 bg-[#e6f1df] rounded-full text-xs font-semibold text-[#1d4a2e]">
                                                     {tag}
                                                 </span>
                                             ))}
@@ -512,41 +513,41 @@ const Events = () => {
                 <AnimatePresence>
                     {showSubmitConfirm && (
                         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#0f2a1a]/70 backdrop-blur-sm" />
                             <Motion.div
                                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white rounded-2xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl p-6 md:p-8 text-center"
+                                className="bg-[#fbf6e9] rounded-3xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl p-6 md:p-8 text-center max-h-[92dvh] overflow-y-auto"
                             >
-                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-black text-white rounded-full flex items-center justify-center mb-4 md:mb-6"><Icons.Check /></div>
-                                <h3 className="text-2xl md:text-3xl mb-2 text-black">Verify Details</h3>
-                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Please ensure the information below is correct.</p>
+                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-[#1d4a2e] text-white rounded-full flex items-center justify-center mb-4 md:mb-6"><Icons.Check /></div>
+                                <h3 className="font-display font-bold text-2xl md:text-3xl mb-2 text-[#1d4a2e]">Verify Details</h3>
+                                <p className="text-[#1d4a2e]/75 text-sm mb-6 md:mb-8">Please ensure the information below is correct.</p>
 
-                                <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 text-left bg-gray-50 p-4 md:p-6 rounded-xl border border-gray-100 text-sm md:text-base">
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Event</span>
-                                        <span className="font-medium text-black truncate max-w-[150px] sm:max-w-[200px]">{eventForm.venueEventName}</span>
+                                <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 text-left bg-white p-4 md:p-6 rounded-2xl text-sm md:text-base">
+                                    <div className="flex justify-between border-b border-[#1d4a2e]/10 pb-2">
+                                        <span className="text-xs font-semibold text-[#1d4a2e]/65">Event</span>
+                                        <span className="font-semibold text-[#1d4a2e] truncate max-w-[150px] sm:max-w-[200px]">{eventForm.venueEventName}</span>
                                     </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Date</span>
-                                        <span className="font-medium text-black">{formatDateFromDB(eventForm.venueEventDate)}</span>
+                                    <div className="flex justify-between border-b border-[#1d4a2e]/10 pb-2">
+                                        <span className="text-xs font-semibold text-[#1d4a2e]/65">Date</span>
+                                        <span className="font-semibold text-[#1d4a2e]">{formatDateFromDB(eventForm.venueEventDate)}</span>
                                     </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Start Time</span>
-                                        <span className="font-medium text-black">{eventForm.venueEventStartTime || '—'}</span>
+                                    <div className="flex justify-between border-b border-[#1d4a2e]/10 pb-2">
+                                        <span className="text-xs font-semibold text-[#1d4a2e]/65">Start Time</span>
+                                        <span className="font-semibold text-[#1d4a2e]">{eventForm.venueEventStartTime || '—'}</span>
                                     </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">End Time</span>
-                                        <span className="font-medium text-black">{eventForm.venueEventEndTime || '—'}</span>
+                                    <div className="flex justify-between border-b border-[#1d4a2e]/10 pb-2">
+                                        <span className="text-xs font-semibold text-[#1d4a2e]/65">End Time</span>
+                                        <span className="font-semibold text-[#1d4a2e]">{eventForm.venueEventEndTime || '—'}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
-                                        <span className="font-medium text-black">{eventForm.numberOfParticipants}</span>
+                                        <span className="text-xs font-semibold text-[#1d4a2e]/65">Attendees</span>
+                                        <span className="font-semibold text-[#1d4a2e]">{eventForm.numberOfParticipants}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-3 md:py-4 rounded-full border border-gray-200 text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">Return</button>
-                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-3 md:py-4 rounded-full bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50">
+                                    <button onClick={() => setShowSubmitConfirm(false)} className="min-h-12 flex-1 rounded-full border border-[#1d4a2e]/20 bg-white text-sm font-semibold text-[#1d4a2e] hover:bg-[#e6f1df]">Return</button>
+                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="min-h-12 flex-1 rounded-full bg-[#1d4a2e] text-white text-sm font-semibold hover:bg-[#1f7a3e] disabled:opacity-50">
                                         {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
@@ -558,25 +559,25 @@ const Events = () => {
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
                         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#0f2a1a]/70 backdrop-blur-sm" />
                             <Motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                                className="bg-white rounded-2xl w-full max-w-md p-8 md:p-10 relative z-10 text-center shadow-2xl"
+                                className="bg-[#fbf6e9] rounded-3xl w-full max-w-md p-8 md:p-10 relative z-10 text-center shadow-2xl max-h-[92dvh] overflow-y-auto"
                             >
-                                <div className="mb-4 md:mb-6 text-green-500 flex justify-center"><Icons.Check /></div>
-                                <h3 className="text-3xl md:text-4xl mb-2 text-black">Confirmed</h3>
-                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Your reservation request has been received.</p>
+                                <div className="mb-4 md:mb-6 text-[#1f7a3e] flex justify-center"><Icons.Check /></div>
+                                <h3 className="font-display font-bold text-3xl md:text-4xl mb-2 text-[#1d4a2e]">Confirmed</h3>
+                                <p className="text-[#1d4a2e]/75 text-sm mb-6 md:mb-8">Your reservation request has been received.</p>
 
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
-                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 block mb-2">Reference ID</span>
-                                    <span className="text-xl md:text-2xl text-black">{confirmationData.reference}</span>
+                                <div className="bg-white rounded-2xl p-4 md:p-6 mb-6 md:mb-8">
+                                    <span className="text-xs font-semibold text-[#1d4a2e]/65 block mb-2">Reference ID</span>
+                                    <span className="text-xl md:text-2xl font-display font-bold text-[#1d4a2e]">{confirmationData.reference}</span>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800">
+                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="min-h-12 w-full bg-[#1d4a2e] text-white rounded-full text-sm font-semibold hover:bg-[#1f7a3e]">
                                         Manage Bookings
                                     </button>
-                                    <button onClick={() => setShowConfirmation(false)} className="w-full py-3 md:py-4 border border-gray-200 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">
+                                    <button onClick={() => setShowConfirmation(false)} className="min-h-12 w-full border border-[#1d4a2e]/20 bg-white rounded-full text-sm font-semibold text-[#1d4a2e] hover:bg-[#e6f1df]">
                                         Dismiss
                                     </button>
                                 </div>
@@ -585,7 +586,7 @@ const Events = () => {
                     )}
                 </AnimatePresence>
 
-                <Footer />
+                <div className="relative z-30"><Footer /></div>
                 <AIFloatingButton />
             </div>
         </ReactLenis>

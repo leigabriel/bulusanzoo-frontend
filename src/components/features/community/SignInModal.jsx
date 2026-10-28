@@ -30,11 +30,11 @@ const SignInModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="community-signin-title">
-            <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+            <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-[#0f2a1a]/70 backdrop-blur-sm" />
 
-            <div className="relative w-full max-w-sm rounded-md border border-gray-600 bg-white p-5 shadow-2xl sm:p-8">
-                <h2 id="community-signin-title" className="text-xl font-black text-black">Sign in to take part</h2>
-                <p className="mt-3 text-sm leading-relaxed text-black/70">
+            <div className="relative w-full max-w-sm rounded-full border border-[#1d4a2e]/20 bg-white p-5 shadow-2xl sm:p-8">
+                <h2 id="community-signin-title" className="text-xl font-semibold text-[#1d4a2e]">Sign in to take part</h2>
+                <p className="mt-3 text-sm leading-relaxed text-[#1d4a2e]/70">
                     You can read everything in the community without an account. To post, comment,
                     like or report, please sign in or create a free account.
                 </p>
@@ -44,21 +44,21 @@ const SignInModal = ({ isOpen, onClose }) => {
                         ref={confirmRef}
                         type="button"
                         onClick={goToLogin}
-                        className="w-full min-h-11 rounded-md bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black/85"
+                        className="w-full min-h-11 rounded-full bg-[#1d4a2e] px-6 py-3 text-xs font-semibold text-white transition-colors hover:bg-[#1f7a3e]"
                     >
                         Sign in
                     </button>
                     <button
                         type="button"
                         onClick={goToLogin}
-                        className="w-full min-h-11 rounded-md border border-gray-600 px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-black transition-colors hover:bg-black/5"
+                        className="w-full min-h-11 rounded-full border border-[#1d4a2e]/20 px-6 py-3 text-xs font-semibold text-[#1d4a2e] transition-colors hover:bg-[#e6f1df]"
                     >
                         Create account
                     </button>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full min-h-11 px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-black/50 transition-colors hover:text-black"
+                        className="w-full min-h-11 px-6 py-3 text-xs font-semibold text-[#1d4a2e]/50 transition-colors hover:text-[#1d4a2e]"
                     >
                         Keep browsing
                     </button>

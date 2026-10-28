@@ -120,15 +120,15 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     };
 
     return (
-        <form onSubmit={submitForm} className="bg-white flex flex-col relative">
+        <form onSubmit={submitForm} className="flex flex-col relative">
             {/* Creating a post no longer blocks: it is handed to the upload queue, which shows
                 the post in the feed immediately with a progress bar, so covering this form
                 would hide the thing the visitor just wrote for no reason. An edit still runs
                 in this page with no progress surface of its own, so it keeps the overlay. */}
             {loading && initialPost && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-md bg-white/90 backdrop-blur-[2px]" role="status" aria-live="polite">
-                    <span aria-hidden="true" className="h-9 w-9 animate-spin rounded-full border-[3px] border-black/20 border-t-black" />
-                    <span className="text-xs font-bold uppercase tracking-[0.15em] text-black">
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-3xl bg-white/90 backdrop-blur-[2px]" role="status" aria-live="polite">
+                    <span aria-hidden="true" className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#1f7a3e]/20 border-t-[#1f7a3e]" />
+                    <span className="text-xs font-semibold text-[#1d4a2e]">
                         {initialPost ? 'Updating...' : 'Publishing...'}
                     </span>
                 </div>
@@ -140,20 +140,20 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
                 placeholder="Share an update..."
-                className="w-full min-h-[140px] bg-white border border-gray-600 p-4 text-sm md:text-base font-medium text-black focus:border-black focus:ring-0 transition-all resize-y outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-black/50"
+                className="w-full min-h-[140px] bg-white rounded-2xl border border-[#1d4a2e]/20 p-4 text-sm md:text-base font-medium text-[#1d4a2e] focus:border-[#1f7a3e] focus:ring-0 transition-all resize-y outline-none placeholder:font-medium placeholder:text-[#1d4a2e]/50"
                 maxLength={3000}
             />
 
             {displayUrls.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {displayUrls.map((url, index) => (
-                        <div key={`${url}-${index}`} className="relative overflow-hidden rounded-md border border-gray-600 bg-black/[0.03]">
+                        <div key={`${url}-${index}`} className="relative overflow-hidden rounded-full border border-[#1d4a2e]/20 bg-[#e6f1df]">
                             <img loading="lazy" decoding="async" src={url} alt={`Attached photo ${index + 1}`} className="h-28 w-full object-cover" />
                             <button
                                 type="button"
                                 onClick={() => removeImageAt(index)}
                                 aria-label={`Remove photo ${index + 1}`}
-                                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md border border-gray-600 bg-white text-black shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
+                                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#1d4a2e]/20 bg-white text-[#1d4a2e] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                                     <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -166,7 +166,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
 
             <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
-                    <label className={`inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max ${fileCount >= MAX_IMAGES ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}>
+                    <label className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 min-h-11 border border-[#1d4a2e]/20 text-[#1d4a2e] transition-colors text-xs font-semibold w-max ${fileCount >= MAX_IMAGES ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-[#e6f1df]'}`}>
                         <input type="file" accept="image/*" multiple={MAX_IMAGES > 1} disabled={fileCount >= MAX_IMAGES} className="hidden" onChange={handleFileChange} />
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2.828 2.828 0 012.828 0L16 16m-2-2l1.586-1.586a2.828 2.828 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -176,10 +176,10 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                             : (fileCount ? 'Add More' : 'Attach Photos')}
                     </label>
                     {fileCount > 0 && (
-                        <button type="button" onClick={clearImages} className="text-[10px] tracking-[0.15em] uppercase font-black text-black/50 hover:text-red-600 transition-colors">Remove</button>
+                        <button type="button" onClick={clearImages} className="text-xs font-semibold text-[#1d4a2e]/50 hover:text-red-600 transition-colors">Remove</button>
                     )}
                     {fileCount > 0 && MAX_IMAGES > 1 && (
-                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold text-black/40">{fileCount} of {MAX_IMAGES}</span>
+                        <span className="text-xs font-semibold text-[#1d4a2e]/40">{fileCount} of {MAX_IMAGES}</span>
                     )}
                 </div>
                 <div className="flex w-full items-center gap-3 sm:w-auto">
@@ -187,7 +187,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         <button
                             type="button"
                             onClick={onCancelEdit}
-                            className="flex-1 rounded-md border border-gray-600 px-5 py-3 min-h-11 text-black text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/5 transition-colors sm:flex-none sm:px-6"
+                            className="flex-1 rounded-full border border-[#1d4a2e]/20 px-5 py-3 min-h-11 text-[#1d4a2e] text-xs font-semibold hover:bg-[#e6f1df] transition-colors sm:flex-none sm:px-6"
                         >
                             Cancel
                         </button>
@@ -196,7 +196,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         type="submit"
                         disabled={loading || !content.trim()}
                         aria-busy={loading}
-                        className="flex-1 rounded-md bg-black px-7 py-3 min-h-11 text-white text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/80 disabled:opacity-50 disabled:pointer-events-none transition-colors sm:flex-none sm:px-8"
+                        className="flex-1 rounded-full bg-[#1d4a2e] px-7 py-3 min-h-11 text-white text-xs font-semibold hover:bg-[#1f7a3e] disabled:opacity-50 disabled:pointer-events-none transition-colors sm:flex-none sm:px-8"
                     >
                         {loading ? (
                             <span className="inline-flex items-center gap-2">

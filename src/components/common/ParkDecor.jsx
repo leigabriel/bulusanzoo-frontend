@@ -93,3 +93,23 @@ export const Marquee = ({ words }) => (
         </div>
     </div>
 );
+
+// Compact hero shared by the listing pages: the same painted-green wash over a blurred photo as
+// Home/About, so the transparent Header stays readable on the light top edge.
+export const PageHero = ({ id, photo, children, className = '' }) => (
+    <section aria-labelledby={id} className={`relative isolate flex min-h-[46svh] flex-col overflow-hidden bg-[#2f7d3a] sm:min-h-[52svh] ${className}`}>
+        <img src={photo} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-[3px]" />
+        <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(196,236,124,0.94)_0%,rgba(110,196,80,0.86)_9%,rgba(40,134,56,0.88)_30%,rgba(24,104,50,0.92)_100%)]"
+        />
+        <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 items-center justify-center px-4 pb-24 pt-28 text-center sm:px-6">
+            <h1
+                id={id}
+                className="hero-rise font-display text-[clamp(2.75rem,10vw,7rem)] font-bold uppercase leading-[0.9] tracking-tight text-white [text-shadow:0_6px_0_rgba(16,70,34,0.38)]"
+            >
+                {children}
+            </h1>
+        </div>
+    </section>
+);

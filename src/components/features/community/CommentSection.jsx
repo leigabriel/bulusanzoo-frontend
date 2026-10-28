@@ -161,24 +161,24 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
         const clampedDepth = Math.min(depth, maxIndentLevel);
 
         return (
-            <div key={comment.id} className={`flex gap-4 py-6 ${depth > 0 ? 'border-l border-[#212631]/15 pl-4 md:pl-6 mt-4' : ''}`}>
+            <div key={comment.id} className={`flex gap-4 py-6 ${depth > 0 ? 'border-l border-[#1d4a2e]/15 pl-4 md:pl-6 mt-4' : ''}`}>
                 <img loading="lazy" decoding="async"
                     src={getProfileImageUrl(comment.author.profileImage) || '/profile-img/default-avatar.svg'}
                     alt="author"
-                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0"
+                    className="w-10 h-10 rounded-full object-cover border border-[#1d4a2e]/20 shrink-0"
                 />
                 <div className="flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-black uppercase tracking-tight text-[#212631]">
+                            <span className="text-xs font-semibold text-[#1d4a2e]">
                                 {comment.author.firstName} {comment.author.lastName}
                             </span>
-                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/65">
+                            <span className="text-xs font-semibold text-[#1d4a2e]/65">
                                 {new Date(comment.createdAt).toLocaleDateString()}
                             </span>
                         </div>
                         {!isOwner && (
-                            <button onClick={() => handleReport(comment)} className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/55 hover:text-red-700 transition-colors">
+                            <button onClick={() => handleReport(comment)} className="text-xs font-semibold text-[#1d4a2e]/55 hover:text-red-700 transition-colors">
                                 Report
                             </button>
                         )}
@@ -189,17 +189,17 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                             <textarea
                                 value={editingText}
                                 onChange={(event) => setEditingText(event.target.value)}
-                                className="w-full rounded-xl bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
+                                className="w-full rounded-xl bg-transparent border border-[#1d4a2e]/25 p-3 text-sm font-medium text-[#1d4a2e] outline-none focus:border-[#1d4a2e]"
                                 rows={3}
                                 maxLength={1200}
                             />
                             <div className="flex gap-3">
-                                <button onClick={saveEdit} className="px-5 py-2 border border-[#212631] bg-[#212631] text-[#ebebeb] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors">Save</button>
-                                <button onClick={() => setEditingId(null)} className="px-5 py-2 border border-[#212631]/25 text-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-[#212631]/10 transition-colors">Cancel</button>
+                                <button onClick={saveEdit} className="px-5 py-2 border border-[#1d4a2e] bg-[#1d4a2e] text-white text-xs font-semibold hover:bg-transparent hover:text-[#1d4a2e] transition-colors">Save</button>
+                                <button onClick={() => setEditingId(null)} className="px-5 py-2 border border-[#1d4a2e]/25 text-[#1d4a2e] text-xs font-semibold hover:bg-[#1d4a2e]/10 transition-colors">Cancel</button>
                             </div>
                         </div>
                     ) : (
-                        <p className="text-sm md:text-base text-[#212631] font-medium whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm md:text-base text-[#1d4a2e] font-medium whitespace-pre-wrap leading-relaxed">
                             {comment.commentText}
                         </p>
                     )}
@@ -207,7 +207,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                     <div className="flex items-center gap-6 mt-4 flex-wrap">
                         <button
                             onClick={() => toggleHeart(comment.id)}
-                            className={`text-[10px] tracking-widest uppercase font-black transition-colors flex items-center gap-1.5 ${comment.heartedByViewer || comment.isHearted ? 'text-red-600' : 'text-[#212631]/60 hover:text-[#212631]'}`}
+                            className={`text-xs font-semibold transition-colors flex items-center gap-1.5 ${comment.heartedByViewer || comment.isHearted ? 'text-red-600' : 'text-[#1d4a2e]/60 hover:text-[#1d4a2e]'}`}
                         >
                             <svg className={`w-4 h-4 ${comment.heartedByViewer || comment.isHearted ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -221,7 +221,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                                     setReplyingToId(comment.id);
                                     setReplyText('');
                                 }}
-                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/65 hover:text-[#212631] transition-colors"
+                                className="text-xs font-semibold text-[#1d4a2e]/65 hover:text-[#1d4a2e] transition-colors"
                             >
                                 Reply
                             </button>
@@ -234,13 +234,13 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                                         setEditingId(comment.id);
                                         setEditingText(comment.commentText || '');
                                     }}
-                                    className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/60 hover:text-[#212631] transition-colors"
+                                    className="text-xs font-semibold text-[#1d4a2e]/60 hover:text-[#1d4a2e] transition-colors"
                                 >
                                     Edit
                                 </button>
                                 <button
                                     onClick={() => removeComment(comment.id)}
-                                    className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/60 hover:text-red-700 transition-colors"
+                                    className="text-xs font-semibold text-[#1d4a2e]/60 hover:text-red-700 transition-colors"
                                 >
                                     Delete
                                 </button>
@@ -249,11 +249,11 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                     </div>
 
                     {replyingToId === comment.id && (
-                        <div className="mt-4 rounded-2xl border border-[#212631]/15 p-4 bg-[#212631]/5">
+                        <div className="mt-4 rounded-2xl border border-[#1d4a2e]/15 p-4 bg-[#1d4a2e]/5">
                             <textarea
                                 value={replyText}
                                 onChange={(event) => setReplyText(event.target.value)}
-                                className="w-full rounded-xl bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
+                                className="w-full rounded-xl bg-transparent border border-[#1d4a2e]/25 p-3 text-sm font-medium text-[#1d4a2e] outline-none focus:border-[#1d4a2e]"
                                 placeholder="Write your reply..."
                                 rows={3}
                                 maxLength={1200}
@@ -264,14 +264,14 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                                         setReplyingToId(null);
                                         setReplyText('');
                                     }}
-                                    className="px-4 py-2 border border-[#212631]/25 text-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-[#212631]/10 transition-colors"
+                                    className="px-4 py-2 border border-[#1d4a2e]/25 text-[#1d4a2e] text-xs font-semibold hover:bg-[#1d4a2e]/10 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => submitReply(comment.id)}
                                     disabled={!replyText.trim()}
-                                    className="px-4 py-2 border border-[#212631] bg-[#212631] text-[#ebebeb] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                                    className="px-4 py-2 border border-[#1d4a2e] bg-[#1d4a2e] text-white text-xs font-semibold hover:bg-transparent hover:text-[#1d4a2e] disabled:opacity-50 disabled:pointer-events-none transition-colors"
                                 >
                                     Reply
                                 </button>
@@ -292,7 +292,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="w-4 h-4 rounded-full border-[1.5px] border-[#212631]/30 border-t-[#212631] animate-spin" />
+                <div className="w-4 h-4 rounded-full border-[1.5px] border-[#1d4a2e]/30 border-t-[#1d4a2e] animate-spin" />
             </div>
         );
     }
@@ -300,28 +300,28 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
     return (
             <div className="flex flex-col gap-8">
             {isGuest ? (
-                <div className="flex flex-col items-center gap-4 rounded-2xl border border-gray-600 p-6 text-center">
-                    <p className="text-sm font-medium text-black/70">Sign in to join the discussion.</p>
+                <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#1d4a2e]/20 p-6 text-center">
+                    <p className="text-sm font-medium text-[#1d4a2e]/70">Sign in to join the discussion.</p>
                     <button
                         type="button"
                         onClick={() => onRequireAuth?.()}
-                        className="min-h-11 px-6 py-3 bg-black text-white text-[9px] tracking-[0.18em] uppercase font-black hover:bg-black/80 transition-colors"
+                        className="min-h-11 px-6 py-3 bg-[#1d4a2e] text-white text-xs font-semibold hover:bg-[#1f7a3e] transition-colors"
                     >
                         Sign in to comment
                     </button>
                 </div>
             ) : (
-            <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-gray-600 p-5 bg-white">
+            <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-[#1d4a2e]/20 p-5 bg-white">
                 <img loading="lazy" decoding="async"
                     src={getProfileImageUrl(currentUser?.profileImage || currentUser?.profile_image) || '/profile-img/default-avatar.svg'}
                     alt="You"
-                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0 hidden md:block"
+                    className="w-10 h-10 rounded-full object-cover border border-[#1d4a2e]/20 shrink-0 hidden md:block"
                 />
                 <div className="flex-1 flex flex-col gap-4 w-full">
                     <textarea
                         value={commentText}
                         onChange={(event) => setCommentText(event.target.value)}
-                        className="w-full bg-transparent border-b border-[#212631]/25 p-2 text-sm md:text-base font-medium text-[#212631] focus:border-[#212631] transition-all resize-none h-20 outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-[#212631]/50"
+                        className="w-full bg-transparent border-b border-[#1d4a2e]/25 p-2 text-sm md:text-base font-medium text-[#1d4a2e] focus:border-[#1d4a2e] transition-all resize-none h-20 outline-none placeholder:font-medium placeholder:text-[#1d4a2e]/50"
                         placeholder="Write a reply..."
                         maxLength={1200}
                     />
@@ -329,7 +329,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                         <button
                             onClick={submitComment}
                             disabled={!commentText.trim()}
-                            className="px-6 py-2 border border-[#212631] bg-[#212631] text-[#ebebeb] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            className="px-6 py-2 border border-[#1d4a2e] bg-[#1d4a2e] text-white text-xs font-semibold hover:bg-transparent hover:text-[#1d4a2e] disabled:opacity-50 disabled:pointer-events-none transition-colors"
                         >
                             Reply
                         </button>
@@ -342,7 +342,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                 {commentTree.map((comment) => renderComment(comment))}
 
                 {comments.length === 0 && (
-                    <div className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 text-center py-8">
+                    <div className="text-xs font-semibold text-[#1d4a2e]/60 text-center py-8">
                         No comments yet
                     </div>
                 )}

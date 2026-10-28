@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
+import { PARK, PHOTOS } from '../../config/park-theme';
+import { Band } from '../../components/common/ParkDecor';
 import { ReactLenis } from 'lenis/react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
@@ -213,22 +214,29 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className={`text-black relative min-h-screen ${PAGE_BG_GRADIENT}`}>
+            <div className="relative min-h-screen text-[#1d4a2e]" style={{ backgroundColor: PARK.deep }}>
                 <Header />
 
                 {/* Intro Section */}
-                <div className="w-full min-h-[42vh] md:min-h-[54vh] flex flex-col items-center justify-center px-4 pt-20">
-                    <p className="mb-6 text-xs font-bold uppercase tracking-[0.3em] text-black/50">Share the wild with us</p>
-                    <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
-                        Community
-                    </h1>
-                </div>
+                <section aria-labelledby="community-title" className="relative isolate flex min-h-[46svh] flex-col overflow-hidden bg-[#2f7d3a] sm:min-h-[52svh]">
+                    <img src={PHOTOS.trees} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-[3px]" />
+                    <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(196,236,124,0.94)_0%,rgba(110,196,80,0.86)_9%,rgba(40,134,56,0.88)_30%,rgba(24,104,50,0.92)_100%)]" />
+                    <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-24 pt-28 text-center sm:px-6">
+                        <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
+                            <span className="h-2 w-2 rounded-full bg-[#c6fe69]" aria-hidden="true" />
+                            Share the wild with us
+                        </p>
+                        <h1 id="community-title" className="hero-rise mt-5 w-full break-words font-display text-[clamp(2.75rem,12vw,7rem)] font-bold uppercase leading-[0.9] tracking-tight text-white [text-shadow:0_6px_0_rgba(16,70,34,0.38)]" style={{ animationDelay: '0.08s' }}>
+                            Community
+                        </h1>
+                    </div>
+                </section>
 
                 {/* Main Feed Section */}
-                <main id="community-feed" className="relative z-10 w-full">
-                    <div className="max-w-[820px] mx-auto min-h-screen">
-                         <div className="min-h-screen">
-                             <div className="p-4 sm:p-6 md:p-8">
+                <Band bg={PARK.cream} dropWave className="z-10" innerClassName="!px-4 sm:!px-6 !py-12 sm:!py-16 min-h-[50svh]">
+                    <main id="community-feed" className="relative mx-auto w-full max-w-[820px]">
+                        <div>
+                            <div>
                                 {/* In-flight posts sit above the feed so they read as newest,
                                     matching the order the server will return them in once
                                     they land. */}
@@ -248,7 +256,7 @@ const CommunityPage = () => {
                                 {loadingPosts ? (
                                     <div className="flex items-center justify-center py-32">
                                         <Motion.div
-                                            className="w-5 h-5 rounded-full border-[1.5px] border-black/25 border-t-black"
+                                            className="h-9 w-9 rounded-full border-[3px] border-[#1f7a3e]/20 border-t-[#1f7a3e]"
                                             animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
                                         />
@@ -269,29 +277,28 @@ const CommunityPage = () => {
                                 )}
                             </div>
                         </div>
-
-                    </div>
-                </main>
+                    </main>
+                </Band>
 
                 <button
                     type="button"
                     onClick={openPostComposer}
-                    className="fixed left-3 top-[76px] z-[80] flex h-12 w-12 items-center justify-center rounded-md border border-gray-600 bg-black p-1.5 text-sm font-black text-white transition-colors hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black sm:left-6 sm:top-[96px] sm:h-auto sm:w-auto sm:justify-start sm:gap-3 sm:pr-5"
+                    className="fixed bottom-5 left-4 z-[80] flex h-14 w-14 items-center justify-center rounded-full bg-[#1d4a2e] text-sm font-semibold text-white shadow-[0_14px_30px_-10px_rgba(29,74,46,0.8)] transition-colors hover:bg-[#1f7a3e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1f7a3e] sm:bottom-6 sm:left-6 sm:h-14 sm:w-auto sm:gap-2 sm:pl-4 sm:pr-6"
                     aria-label={isGuest ? 'Sign in to post' : 'Create post'}
                 >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center">
                     <Plus className="h-6 w-6 text-white" aria-hidden="true" />
                     </span>
-                    <span className="hidden whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-white sm:inline">{isGuest ? 'Sign in to post' : 'Create post'}</span>
+                    <span className="hidden whitespace-nowrap text-sm font-semibold text-white sm:inline">{isGuest ? 'Sign in to post' : 'Create post'}</span>
                 </button>
 
                 <AnimatePresence>
                     {postModalOpen && (
                         <div className="fixed inset-0 z-[150] flex items-center justify-center overscroll-contain p-4" role="dialog" aria-modal="true" aria-labelledby="community-post-form-title">
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
-                            <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-md bg-white p-4 shadow-2xl sm:max-w-xl sm:rounded-md sm:border sm:border-gray-600 sm:p-8">
-                                <div className="mb-6 flex items-center justify-between gap-4 border-b border-gray-600 pb-4">
-                                    <h2 id="community-post-form-title" className="text-lg font-black uppercase tracking-tight text-black sm:text-xl">
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#0f2a1a]/70 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
+                            <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-[#fbf6e9] p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
+                                <div className="mb-6 flex items-center justify-between gap-4 border-b border-[#1d4a2e]/10 pb-4">
+                                    <h2 id="community-post-form-title" className="font-display text-xl font-bold text-[#1d4a2e] sm:text-2xl">
                                         {editingPost ? 'Edit post' : 'Create post'}
                                     </h2>
                                     <button
@@ -299,7 +306,7 @@ const CommunityPage = () => {
                                         data-community-modal-close
                                         onClick={() => !savingPost && setPostModalOpen(false)}
                                         aria-label="Close post composer"
-                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                                        className="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-[#1d4a2e] transition-colors hover:bg-[#e6f1df] focus-visible:outline-2 focus-visible:outline-[#1f7a3e]"
                                     >
                                         Close
                                         <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -318,7 +325,7 @@ const CommunityPage = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                                className="absolute inset-0 bg-[#0f2a1a]/70 backdrop-blur-md"
                                 onClick={() => setSelectedPost(null)}
                             />
                              <Motion.div
@@ -326,18 +333,18 @@ const CommunityPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 12 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                  className="relative z-10 flex flex-col bg-white w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden overscroll-contain md:rounded-md md:border md:border-gray-600"
+                                  className="relative z-10 flex flex-col bg-[#fbf6e9] w-full h-dvh md:h-auto md:max-w-4xl md:max-h-[85dvh] overflow-hidden overscroll-contain md:rounded-3xl"
                             >
-                                <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-600 shrink-0 bg-white">
-                                    <span id="community-post-dialog-title" className="text-[10px] tracking-[0.18em] uppercase font-bold text-black/70">
+                                <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-[#1d4a2e]/10 shrink-0 bg-[#fbf6e9]">
+                                    <span id="community-post-dialog-title" className="text-sm font-semibold text-[#1d4a2e]">
                                         {commentOnly ? 'Comments' : 'Post Details'}
                                     </span>
                                     <button
                                         data-community-modal-close
                                         onClick={() => setSelectedPost(null)}
-                                        className="text-black opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
+                                        className="flex min-h-11 items-center gap-2 rounded-full px-4 text-[#1d4a2e] transition-colors hover:bg-[#e6f1df] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#1f7a3e]"
                                     >
-                                        <span className="text-[10px] tracking-widest uppercase font-bold">Close</span>
+                                        <span className="text-sm font-semibold">Close</span>
                                         <X className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
@@ -345,8 +352,8 @@ const CommunityPage = () => {
                                 <div data-lenis-prevent className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 md:p-10">
                                     {commentOnly ? (
                                         <div>
-                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/50">Community discussion</p>
-                                            <h2 className="mt-2 mb-8 text-3xl font-black tracking-tight">Comments</h2>
+                                            <p className="text-sm font-semibold text-[#1d4a2e]/70">Community discussion</p>
+                                            <h2 className="mt-2 mb-8 font-display text-3xl font-bold text-[#1d4a2e]">Comments</h2>
                                             <CommentSection postId={selectedPost.id} currentUser={user} isGuest={isGuest} onRequireAuth={requireAuth} refreshTrigger={0} onRequireConfirmation={confirmCommentAction} />
                                         </div>
                                     ) : (
@@ -358,27 +365,27 @@ const CommunityPage = () => {
                                              className="w-12 h-12 rounded-full object-cover"
                                         />
                                         <div className="flex flex-col">
-                                            <span className="font-black uppercase text-black tracking-tight text-lg">
+                                            <span className="font-display font-semibold text-[#1d4a2e] text-lg">
                                                 {selectedPost.author.firstName} {selectedPost.author.lastName}
                                             </span>
-                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-black/60">
+                                            <span className="text-xs font-medium text-[#1d4a2e]/70">
                                                 {new Date(selectedPost.createdAt).toLocaleString()}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <p className="text-xl md:text-3xl font-medium leading-[1.3] text-black whitespace-pre-wrap mb-10 tracking-tight">
+                                    <p className="text-lg md:text-2xl font-medium leading-snug text-[#1d4a2e] whitespace-pre-wrap mb-8">
                                         {selectedPost.content}
                                     </p>
 
                                     {selectedPost.imageUrl && (
-                                         <div className="w-full overflow-hidden mb-10 bg-black/[0.03] flex justify-center">
+                                         <div className="w-full overflow-hidden rounded-2xl mb-8 bg-[#e6f1df] flex justify-center">
                                             <img loading="lazy" decoding="async" src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
                                         </div>
                                     )}
 
-                                    <div className="pt-10 border-t border-black/10">
-                                        <h3 className="font-black uppercase text-black tracking-tighter text-2xl mb-8">Discussion</h3>
+                                    <div className="pt-8 border-t border-[#1d4a2e]/10">
+                                        <h3 className="font-display font-bold text-[#1d4a2e] text-2xl mb-6">Discussion</h3>
                                         <CommentSection
                                             postId={selectedPost.id}
                                             currentUser={user}
@@ -398,7 +405,7 @@ const CommunityPage = () => {
 
                 <SignInModal isOpen={signInOpen} onClose={() => setSignInOpen(false)} />
 
-                <Footer />
+                <div className="relative z-20"><Footer /></div>
 
                 <ConfirmationModal
                     isOpen={confirmState.isOpen}

@@ -255,7 +255,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                 return (
                     <article
                         key={post.id}
-                        className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col relative rounded-md border border-gray-600"
+                        className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col relative rounded-3xl shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)]"
                         onClick={(e) => handleCardTap(post, e)}
                     >
                         {/* Heart burst sits above the card content and is purely decorative:
@@ -285,10 +285,10 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                     className="w-10 h-10 rounded-full object-cover"
                                 />
                                 <div className="flex flex-col">
-                                    <p className="text-sm font-black uppercase text-black tracking-tight">
+                                    <p className="font-display text-base font-semibold text-[#1d4a2e]">
                                         {post.author.firstName} {post.author.lastName}
                                     </p>
-                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-black/60">
+                                    <p className="text-xs font-medium text-[#1d4a2e]/70">
                                         {new Date(post.createdAt).toLocaleString()}
                                     </p>
                                 </div>
@@ -311,7 +311,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                             e.stopPropagation();
                                             setOpenMenuId(openMenuId === post.id ? null : post.id);
                                         }}
-                                        className="flex h-8 w-8 items-center justify-center rounded-full text-[#212631]/55 transition-colors hover:bg-[#212631]/5 hover:text-[#212631]"
+                                        className="flex h-11 w-11 items-center justify-center rounded-full text-[#1d4a2e]/70 transition-colors hover:bg-[#e6f1df] hover:text-[#1d4a2e]"
                                     >
                                         <span aria-hidden="true" className="text-lg leading-none">&#8942;</span>
                                     </button>
@@ -320,7 +320,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                         <div
                                             role="menu"
                                             onClick={(e) => e.stopPropagation()}
-                                            className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-gray-600 bg-white py-1 shadow-lg"
+                                            className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-2xl border border-[#1d4a2e]/10 bg-white py-1 shadow-lg"
                                         >
                                             <button
                                                 type="button"
@@ -329,7 +329,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                                     setOpenMenuId(null);
                                                     setReportTarget(post);
                                                 }}
-                                                className="block w-full px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50"
+                                                className="block w-full px-4 py-3 text-left text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
                                             >
                                                 Report post
                                             </button>
@@ -341,7 +341,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                         </div>
 
                         <div className="px-4 py-2 sm:px-5 sm:py-3">
-                            <p className="text-lg md:text-xl text-black font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
+                            <p className="text-base md:text-lg text-[#1d4a2e] font-medium leading-relaxed whitespace-pre-wrap">
                                 {post.content}
                             </p>
                         </div>
@@ -355,7 +355,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                 <button
                                     disabled={!onCommentClick}
                                     title={onCommentClick ? 'View comments' : 'Comments unavailable here'}
-                                    className="flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black transition-colors disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
+                                    className="flex min-h-11 min-w-11 items-center gap-2 rounded-full px-3 text-base font-semibold text-[#1d4a2e]/80 hover:bg-[#e6f1df] hover:text-[#1d4a2e] transition-colors disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (onCommentClick) onCommentClick(post);
@@ -369,14 +369,14 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
 
                                 <button
                                     onClick={(e) => togglePostLike(post.id, e)}
-                                    className={`flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-black/70 hover:bg-red-50 hover:text-red-600'}`}
+                                    className={`flex min-h-11 min-w-11 items-center gap-2 rounded-full px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#1d4a2e]/80 hover:bg-red-50 hover:text-red-600'}`}
                                 >
                                      <svg className={`h-7 w-7 sm:h-8 sm:w-8 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                     </svg>
                                      {post.likeCount || 0}
                                  </button>
-                                  <button onClick={(e) => sharePost(post, e)} className="flex min-h-11 min-w-11 items-center justify-center text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black" aria-label="Share post">
+                                  <button onClick={(e) => sharePost(post, e)} className="flex min-h-11 min-w-11 items-center justify-center text-base font-semibold text-[#1d4a2e]/80 hover:bg-[#e6f1df] hover:text-[#1d4a2e]" aria-label="Share post">
                                      <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 17 17 7m0 0H9m8 0v8" /></svg>
                                  </button>
                             </div>
@@ -385,13 +385,13 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                 <div className="flex gap-4">
                                     <button
                                         onClick={(e) => handleEditClick(post, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-black/70 hover:text-black transition-colors"
+                                        className="min-h-11 px-2 text-sm font-semibold text-[#1d4a2e]/80 hover:text-[#1d4a2e] transition-colors"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={(e) => deletePost(post.id, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-600 hover:text-red-700 transition-colors"
+                                        className="min-h-11 px-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
                                     >
                                         Delete
                                     </button>
@@ -403,9 +403,9 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
             })}
 
             {posts.length === 0 && (
-                <div className="rounded-md border border-gray-600 p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-white">
-                    <p className="text-2xl font-black uppercase tracking-tighter text-black/60 mb-2">No Posts Yet</p>
-                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-black/60">Be the first to share something.</p>
+                <div className="rounded-3xl p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-white shadow-[0_14px_34px_-16px_rgba(29,74,46,0.45)]">
+                    <p className="font-display text-2xl font-bold text-[#1d4a2e] mb-2">No Posts Yet</p>
+                    <p className="text-sm font-medium text-[#1d4a2e]/70">Be the first to share something.</p>
                 </div>
             )}
 

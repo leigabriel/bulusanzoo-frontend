@@ -47,17 +47,17 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                 type="button"
                 aria-label="Close"
                 onClick={loading ? undefined : onClose}
-                className="absolute inset-0 backdrop-blur-sm bg-black/55"
+                className="absolute inset-0 backdrop-blur-sm bg-[#0f2a1a]/70"
             />
 
-            <div className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto overscroll-contain rounded-md shadow-2xl p-5 sm:p-6 bg-white border border-gray-600">
-                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Report This Post</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">
+            <div className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl shadow-2xl p-6 bg-[#fbf6e9]">
+                <h3 className="text-lg font-semibold text-[#1d4a2e]">Report This Post</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#1d4a2e]/75">
                     Your report will be sent to admin/staff for moderation review.
                 </p>
 
                 <div className="mt-4">
-                    <label htmlFor="post-report-reason" className="block text-[11px] uppercase tracking-[0.15em] font-bold mb-2 text-gray-500">
+                    <label htmlFor="post-report-reason" className="block text-xs font-semibold mb-2 text-[#1d4a2e]/70">
                         Why are you reporting this?
                     </label>
                     <select
@@ -65,7 +65,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         ref={selectRef}
                         value={reason}
                         onChange={(event) => setReason(event.target.value)}
-                        className="w-full px-3 py-2 text-sm outline-none rounded-md transition-colors border border-gray-600 bg-white text-gray-900 focus:border-gray-900"
+                        className="w-full px-3 py-2 text-sm outline-none rounded-xl transition-colors border border-[#1d4a2e]/20 bg-white text-[#1d4a2e] focus:border-[#1f7a3e]"
                     >
                         <option value="">Select a reason</option>
                         {POST_REPORT_REASONS.map((option) => (
@@ -75,7 +75,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                 </div>
 
                 <div className="mt-4">
-                    <label htmlFor="post-report-detail" className="block text-[11px] uppercase tracking-[0.15em] font-bold mb-2 text-gray-500">
+                    <label htmlFor="post-report-detail" className="block text-xs font-semibold mb-2 text-[#1d4a2e]/70">
                         Tell us more {needsDetail && <span className="text-red-600">*</span>}
                     </label>
                     <textarea
@@ -86,9 +86,9 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         maxLength={DETAIL_MAX}
                         required={needsDetail}
                         placeholder={needsDetail ? 'Briefly describe the problem' : 'Optional — add anything that helps us understand'}
-                        className="w-full px-3 py-2 text-sm outline-none rounded-md transition-colors border border-gray-600 bg-white text-gray-900 placeholder:text-gray-400 focus:border-gray-900"
+                        className="w-full px-3 py-2 text-sm outline-none rounded-xl transition-colors border border-[#1d4a2e]/20 bg-white text-[#1d4a2e] placeholder:text-[#1d4a2e]/60 focus:border-[#1f7a3e]"
                     />
-                    <p className="mt-1 text-right text-[10px] uppercase tracking-[0.15em] font-bold text-gray-400">
+                    <p className="mt-1 text-right text-xs font-semibold text-[#1d4a2e]/60">
                         {detail.length}/{DETAIL_MAX}
                     </p>
                 </div>
@@ -98,7 +98,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         type="button"
                         onClick={onClose}
                         disabled={loading}
-                        className="px-4 py-2 min-h-11 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-md border-gray-600 text-gray-700 hover:bg-black/5"
+                        className="px-4 py-2 min-h-11 border text-xs font-semibold transition-colors disabled:opacity-50 rounded-xl border-[#1d4a2e]/20 text-[#1d4a2e] hover:bg-[#e6f1df]"
                     >
                         Cancel
                     </button>
@@ -106,7 +106,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         type="button"
                         onClick={handleConfirm}
                         disabled={loading || !canSubmit}
-                        className="px-4 py-2 min-h-11 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-md bg-black border-black text-white hover:bg-black/85"
+                        className="px-4 py-2 min-h-11 border text-xs font-semibold transition-colors disabled:opacity-50 rounded-full bg-[#1d4a2e] border-black text-white hover:bg-[#1f7a3e]"
                     >
                         {loading ? 'Processing...' : 'Submit Report'}
                     </button>

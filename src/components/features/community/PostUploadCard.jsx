@@ -27,7 +27,7 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
 
     return (
         <article
-            className="min-w-0 overflow-hidden rounded-md border border-gray-600 bg-white"
+            className="min-w-0 overflow-hidden rounded-full border border-[#1d4a2e]/20 bg-white"
             aria-busy={!done && !failed}
         >
             <div className="flex items-start gap-4 px-4 py-4 sm:px-5 sm:py-5">
@@ -38,17 +38,17 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
                     className="h-10 w-10 rounded-full object-cover"
                 />
                 <div className="flex flex-col">
-                    <p className="text-sm font-black uppercase tracking-tight text-black">
+                    <p className="text-sm font-semibold text-[#1d4a2e]">
                         {currentUser?.firstName} {currentUser?.lastName}
                     </p>
-                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-black/50">
+                    <p className="text-xs font-semibold text-[#1d4a2e]/50">
                         {failed ? 'Upload failed' : done ? 'Just now' : 'Uploading now'}
                     </p>
                 </div>
             </div>
 
             <div className="px-4 py-2 sm:px-5 sm:py-3">
-                <p className="whitespace-pre-wrap text-lg font-medium leading-relaxed tracking-tight text-black md:text-xl">
+                <p className="whitespace-pre-wrap text-lg font-medium leading-relaxed text-[#1d4a2e] md:text-xl">
                     {item.content}
                 </p>
             </div>
@@ -79,29 +79,29 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
 
                 {failed ? (
                     <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-[11px] leading-relaxed text-red-600 sm:shrink-0">
-                            <span className="font-black uppercase tracking-[0.18em]">{statusLabel}.</span>{' '}
+                        <p className="text-xs leading-relaxed text-red-600 sm:shrink-0">
+                            <span className="font-semibold">{statusLabel}.</span>{' '}
                             {errorDetail}
                         </p>
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={() => onRetry?.(item.id)}
-                                className="min-h-9 rounded-md bg-black px-4 text-[10px] font-black uppercase tracking-[0.15em] text-white transition-colors hover:bg-black/80"
+                                className="min-h-9 rounded-full bg-[#1d4a2e] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#1f7a3e]"
                             >
                                 Retry
                             </button>
                             <button
                                 type="button"
                                 onClick={() => onDiscard?.(item.id)}
-                                className="min-h-9 rounded-md border border-gray-600 px-4 text-[10px] font-black uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                                className="min-h-9 rounded-full border border-[#1d4a2e]/20 px-4 text-xs font-semibold text-[#1d4a2e]/60 transition-colors hover:bg-[#e6f1df] hover:text-[#1d4a2e]"
                             >
                                 Discard
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-black/50">
+                    <p className="mt-2 text-xs font-semibold text-[#1d4a2e]/50">
                         {statusLabel}
                     </p>
                 )}
