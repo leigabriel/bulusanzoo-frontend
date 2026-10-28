@@ -23,12 +23,6 @@ const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-4 focus-
 
 /* ───────────────────────────── Hero ───────────────────────────── */
 
-const heroCards = [
-    { to: '/animals', label: 'Animals', src: PHOTOS.lawn, alt: 'Open lawn with an animal grazing beneath tall trees at Bulusan Park' },
-    { to: '/plants', label: 'Plants', src: PHOTOS.garden, alt: 'Brick garden path lined with red and green foliage at Bulusan Park' },
-    { to: '/events', label: 'Events', src: PHOTOS.pavilion, alt: 'Multi-purpose pavilion among the trees at Bulusan Park' },
-];
-
 const HeroSection = () => {
     const navigate = useNavigate();
 
@@ -63,7 +57,7 @@ const HeroSection = () => {
                 className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(196,236,124,0.94)_0%,rgba(110,196,80,0.86)_9%,rgba(40,134,56,0.88)_30%,rgba(24,104,50,0.92)_100%)]"
             />
 
-            <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-8 pt-28 text-center sm:px-6">
+            <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-44 pt-28 text-center sm:px-6 sm:pb-40">
                 <p className="hero-rise font-display text-lg font-semibold uppercase tracking-[0.24em] text-white [text-shadow:0_2px_0_rgba(16,70,34,0.35)] sm:text-2xl">
                     Welcome to
                 </p>
@@ -98,28 +92,14 @@ const HeroSection = () => {
                 </div>
             </div>
 
-            <div className="hero-rise relative mx-auto w-full max-w-[1280px] px-4 pb-24 sm:px-6 sm:pb-28 lg:px-10" style={{ animationDelay: '0.45s' }}>
-                <div className="mb-3 flex items-end justify-between gap-4">
-                    <h2 className="font-display text-xl font-bold uppercase tracking-wide text-white [text-shadow:0_2px_0_rgba(16,70,34,0.35)] sm:text-2xl">Discover</h2>
-                    <Link to="/animals" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                        Browse animals <Chevron />
-                    </Link>
-                </div>
-                <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
-                    {heroCards.map((card) => (
-                        <li key={card.to} className="w-[72%] shrink-0 snap-start sm:w-auto">
-                            <Link to={card.to} className="group relative block aspect-[16/9] overflow-hidden rounded-2xl bg-[#1d4a2e] shadow-xl shadow-black/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:aspect-[2/1] lg:aspect-[16/7]">
-                                <img src={card.src} alt={card.alt} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
-                                <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" aria-hidden="true" />
-                                <span className="absolute bottom-3 left-3 inline-flex items-center gap-2 text-sm font-semibold text-white">
-                                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#14301f] transition-transform group-hover:scale-110"><Chevron className="h-4 w-4" /></span>
-                                    {card.label}
-                                </span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <img
+                src="/deer.png"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                className="hero-rise pointer-events-none absolute -left-4 -bottom-2 z-0 w-[42vw] max-w-[24rem] select-none object-contain object-bottom drop-shadow-[0_18px_24px_rgba(10,60,25,0.45)] sm:left-2 sm:w-[30vw] lg:left-10 lg:w-[26vw]"
+                style={{ animationDelay: '0.45s' }}
+            />
         </section>
     );
 };
