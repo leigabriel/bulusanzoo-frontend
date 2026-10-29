@@ -63,6 +63,15 @@ const NAV_LINKS = [
     { path: '/about', label: 'About', iconKey: 'about' },
 ];
 
+// Backends hand back either a ready-made label or an ISO timestamp; only the latter needs formatting.
+const formatNotificationTime = (value) => {
+    if (!value) return null;
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(String(value))) return value;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
+
 const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     return (
@@ -75,7 +84,7 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
         >
             {IconComponent && <IconComponent size={18} className="opacity-70" aria-hidden="true" />}
             {badge > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
+                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
                 </span>
             )}
@@ -95,7 +104,7 @@ const CloseBtn = ({ onClick, light = false }) => (
 );
 
 const SectionLabel = ({ label }) => (
-    <p className="px-1 pt-5 pb-2 text-[11px] font-bold text-[#1d4a2e]/60 uppercase tracking-[0.16em]">{label}</p>
+    <p className="px-1 pt-5 pb-2 text-xs font-bold text-[#1d4a2e]/60 uppercase tracking-[0.16em]">{label}</p>
 );
 
 const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
@@ -114,7 +123,7 @@ const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast,
                 {label}
             </span>
             {badge && (
-                <span className="px-2 py-0.5 bg-[#1d4a2e] text-white rounded-full text-[10px] font-semibold uppercase tracking-wide flex-shrink-0">
+                <span className="px-2 py-0.5 bg-[#1d4a2e] text-white rounded-full text-xs font-semibold uppercase tracking-wide flex-shrink-0">
                     {badge}
                 </span>
             )}
@@ -241,7 +250,7 @@ const Header = () => {
                     type: notification.type || 'message',
                     title: notification.title || 'Notification',
                     message: notification.message,
-                    time: notification.time || notification.createdAt || null,
+                    time: formatNotificationTime(notification.time || notification.createdAt),
                     path: notification.link || null,
                     read: Boolean(notification.read)
                 })));
@@ -623,7 +632,7 @@ const Header = () => {
                                      <span className="min-w-0 flex-1">
                                          <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
                                          <span className="mt-0.5 block truncate text-xs text-[#1d4a2e]/65">{profileEmail}</span>
-                                           <span className="mt-1 block text-[11px] font-bold uppercase tracking-wider text-[#1f7a3e]">View profile</span>
+                                           <span className="mt-1 block text-xs font-bold uppercase tracking-wider text-[#1f7a3e]">View profile</span>
                                      </span>
                                      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#e6f1df] text-[#1d4a2e] transition-colors" aria-hidden="true">›</span>
                                   </button>
@@ -678,7 +687,7 @@ const Header = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-900">AI Animal Scanner</p>
-                            <p className="text-[11px] text-slate-500">Identify animals from a photo</p>
+                            <p className="text-xs text-slate-500">Identify animals from a photo</p>
                         </div>
                         <CloseBtn onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }} />
                     </div>
@@ -697,9 +706,9 @@ const Header = () => {
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showEmailModal ? 'opacity-100' : 'opacity-0'}`}
                     onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }}
                 />
-                <div className={`max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-white rounded-2xl shadow-xl w-full max-w-sm relative transform transition-all duration-300 ${showEmailModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'}`} data-lenis-prevent>
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <span className="text-[13px] font-semibold text-gray-900">Contact Support</span>
+                <div className={`max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-[#fbf6e9] rounded-3xl shadow-xl w-full max-w-sm relative transform transition-all duration-300 ${showEmailModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'}`} data-lenis-prevent>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-[#1d4a2e]/10">
+                        <span className="text-sm font-semibold text-[#1d4a2e]">Contact Support</span>
                         <CloseBtn onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }} />
                     </div>
                     <div className="p-5">
@@ -709,12 +718,12 @@ const Header = () => {
                                     <span className="text-emerald-600 text-base font-bold">✓</span>
                                 </div>
                                 <div>
-                                    <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
+                                    <p className="text-sm font-semibold text-[#1d4a2e]">Message Sent</p>
+                                    <p className="text-xs text-[#1d4a2e]/65 mt-0.5">We'll respond as soon as possible.</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
-                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 transition-colors mt-2"
+                                    className="w-full min-h-11 py-2.5 bg-[#1d4a2e] text-white text-sm font-semibold rounded-full hover:bg-[#1f7a3e] transition-colors mt-2"
                                 >
                                     Close
                                 </button>
@@ -722,14 +731,14 @@ const Header = () => {
                         ) : (
                             <div className="flex flex-col gap-4">
                                 {emailError && (
-                                    <p className="text-[11px] text-red-500 bg-red-50 px-3 py-2 rounded-lg">{emailError}</p>
+                                    <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{emailError}</p>
                                 )}
                                 <div>
-                                    <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Subject</label>
+                                    <label className="block text-xs font-semibold text-[#1d4a2e]/80 mb-1.5">Subject</label>
                                     <select
                                         value={emailSubject}
                                         onChange={(e) => setEmailSubject(e.target.value)}
-                                        className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all"
+                                        className="w-full px-3 py-2.5 min-h-11 text-base sm:text-sm border border-[#1d4a2e]/20 rounded-xl focus:ring-2 focus:ring-[#1f7a3e]/25 focus:border-[#1f7a3e] outline-none transition-all"
                                     >
                                         <option value="">Select a subject</option>
                                         <option value="General inquiry">General inquiry</option>
@@ -742,19 +751,19 @@ const Header = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Message</label>
+                                    <label className="block text-xs font-semibold text-[#1d4a2e]/80 mb-1.5">Message</label>
                                     <textarea
                                         value={emailMessage}
                                         onChange={(e) => setEmailMessage(e.target.value)}
                                         placeholder="Describe your issue..."
                                         rows={4}
-                                        className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none resize-none transition-all"
+                                        className="w-full px-3 py-2.5 min-h-11 text-base sm:text-sm border border-[#1d4a2e]/20 rounded-xl focus:ring-2 focus:ring-[#1f7a3e]/25 focus:border-[#1f7a3e] outline-none resize-none transition-all"
                                     />
                                 </div>
                                 <button
                                     onClick={handleSendEmail}
                                     disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full min-h-11 py-2.5 bg-[#1d4a2e] text-white text-sm font-semibold rounded-full hover:bg-[#1f7a3e] disabled:bg-[#e6f1df] disabled:text-[#1d4a2e]/50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {emailLoading ? 'Sending…' : 'Send Message'}
                                 </button>
@@ -780,7 +789,7 @@ const Header = () => {
                         <div className="flex items-center gap-3">
                             <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
                             {unreadCount > 0 && (
-                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {unreadCount}
                                 </span>
                             )}
@@ -808,15 +817,15 @@ const Header = () => {
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4" data-lenis-prevent>
                         {notificationLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <span className="text-[13px] text-gray-400">Loading…</span>
+                                <span className="text-[13px] text-[#1d4a2e]/60">Loading…</span>
                             </div>
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-2">
                                 <div className="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
                                     <Bell size={20} className="opacity-25" />
                                 </div>
-                                <p className="text-[13px] font-medium text-gray-500">No notifications</p>
-                                <p className="text-[11px] text-gray-400">You're all caught up!</p>
+                                <p className="text-[13px] font-medium text-[#1d4a2e]/70">No notifications</p>
+                                <p className="text-xs text-[#1d4a2e]/60">You're all caught up!</p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
@@ -846,9 +855,9 @@ const Header = () => {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
-                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
-                                                <p className="text-[10px] text-gray-300 mt-1.5">
+                                                <p className={`text-[13px] font-medium truncate ${isRead ? 'text-[#1d4a2e]/70' : 'text-gray-800'}`}>{notif.title}</p>
+                                                <p className={`text-xs mt-0.5 leading-relaxed ${isRead ? 'text-[#1d4a2e]/60' : 'text-[#1d4a2e]/70'}`}>{notif.message}</p>
+                                                <p className="text-xs text-gray-300 mt-1.5">
                                                     {notif.time || 'Recently'}
                                                 </p>
                                             </div>
@@ -922,7 +931,7 @@ const Header = () => {
                                 </button>
                                 <button
                                     onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
-                                    className="w-full min-h-11 py-3 px-4 font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                                    className="w-full min-h-11 py-3 px-4 font-medium text-[#1d4a2e]/70 hover:text-gray-700 transition-colors"
                                 >
                                     Cancel
                                 </button>

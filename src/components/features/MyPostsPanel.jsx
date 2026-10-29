@@ -131,16 +131,16 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
                 onClick={onClose}
             />
             <div
-                className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-[#f4f8ef] shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 data-lenis-prevent
                 role="dialog"
                 aria-modal="true"
                 aria-label="My posts"
             >
-                <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white gap-4">
+                <div className="p-5 sm:p-6 border-b border-[#1d4a2e]/15 flex items-center justify-between bg-white gap-4">
                     <div>
-                        <h2 className="text-xl font-semibold text-slate-800">My Posts</h2>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <h2 className="text-xl font-semibold text-[#1d4a2e]">My Posts</h2>
+                        <p className="text-sm text-[#1d4a2e]/70 mt-1">
                             {loading
                                 ? 'Loading your posts...'
                                 : `${myPosts.length} ${myPosts.length === 1 ? 'post' : 'posts'}`}
@@ -151,7 +151,7 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
                         onClick={onClose}
                         aria-label="Close my posts"
                         title="Close"
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700"
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#1d4a2e]/15 bg-white text-[#1d4a2e]/65 transition hover:border-[#1d4a2e]/15 hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
                             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -162,20 +162,20 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
                 {!isAuthenticated ? (
                     <div className="flex-1 flex items-center justify-center p-8">
                         <div className="text-center">
-                            <h3 className="font-semibold text-slate-700 mb-2">Sign in required</h3>
-                            <p className="text-slate-500 text-sm">Please sign in to view your posts</p>
+                            <h3 className="font-semibold text-[#1d4a2e]/80 mb-2">Sign in required</h3>
+                            <p className="text-[#1d4a2e]/70 text-sm">Please sign in to view your posts</p>
                         </div>
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
                         {loading && myPosts.length === 0 ? (
                             <div className="flex items-center justify-center py-24">
-                                <div className="w-5 h-5 rounded-full border-[1.5px] border-slate-300 border-t-slate-600 animate-spin" />
+                                <div className="w-5 h-5 rounded-full border-[1.5px] border-[#1d4a2e]/15 border-t-slate-600 animate-spin" />
                             </div>
                         ) : myPosts.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-                                <h3 className="text-base font-semibold text-slate-700">You have not posted yet</h3>
-                                <p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">
+                            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#1d4a2e]/15 bg-white px-6 py-16 text-center">
+                                <h3 className="text-base font-semibold text-[#1d4a2e]/80">You have not posted yet</h3>
+                                <p className="mt-2 max-w-xs text-sm leading-6 text-[#1d4a2e]/70">
                                     Posts you write in the Community will appear here, where you can edit or delete them.
                                 </p>
                             </div>
@@ -226,9 +226,9 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
                             initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: 30, opacity: 0 }}
-                            className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-md bg-white p-4 shadow-2xl sm:max-w-xl sm:rounded-md sm:border sm:border-gray-600 sm:p-8"
+                            className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-md bg-white p-4 shadow-2xl sm:max-w-xl sm:rounded-md sm:border sm:border-[#1d4a2e]/20 sm:p-8"
                         >
-                            <div className="mb-6 flex items-center justify-between gap-4 border-b border-gray-600 pb-4">
+                            <div className="mb-6 flex items-center justify-between gap-4 border-b border-[#1d4a2e]/20 pb-4">
                                 <h2 id="my-posts-editor-title" className="text-lg font-black uppercase tracking-tight text-black sm:text-xl">
                                     Edit post
                                 </h2>
@@ -236,7 +236,7 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
                                     type="button"
                                     onClick={() => !savingPost && setEditorOpen(false)}
                                     aria-label="Close post editor"
-                                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
                                 >
                                     Close
                                     <X className="h-3.5 w-3.5" aria-hidden="true" />

@@ -61,7 +61,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
                 <div className="relative h-32 w-full overflow-hidden" style={{ borderBottom: `1px dashed ${THEME.border}` }}>
                     <img decoding="async" src={data.imageUrl} alt={title} className="w-full h-full object-cover" loading="lazy" />
                     <span
-                        className="absolute top-2 left-2 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border"
+                        className="absolute top-2 left-2 text-xs uppercase font-bold px-2.5 py-1 rounded-full border"
                         style={{ background: 'rgba(255,255,255,0.92)', color: meta.color, borderColor: THEME.border }}
                     >
                         {meta.label}
@@ -82,13 +82,13 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-bold truncate leading-tight" style={{ color: THEME.text }}>{title}</p>
-                        <p className="text-[11px] leading-tight mt-0.5 capitalize truncate" style={{ color: THEME.textMuted }}>
+                        <p className="text-xs leading-tight mt-0.5 capitalize truncate" style={{ color: THEME.textMuted }}>
                             {subtitle || meta.label}
                         </p>
                     </div>
                 </div>
                 {!isPlant && (
-                    <span className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusClass}`}>
+                    <span className={`text-xs uppercase font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusClass}`}>
                         {status}
                     </span>
                 )}

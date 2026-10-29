@@ -69,7 +69,7 @@ const ImageFrame = ({ item, className = '' }) => (
 
 const DetailStat = ({ label, value }) => value ? (
     <div className="border-t border-black/15 pt-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/50">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-black/50">{label}</p>
         <p className="mt-1 text-sm font-semibold text-black">{value}</p>
     </div>
 ) : null;
@@ -176,7 +176,7 @@ const CollectionDetail = ({ type }) => {
                                             <p className="mt-6 max-w-lg text-base leading-7 text-black/75">{item.description || `Learn more about this ${config.singular} in the Bulusan Zoo collection.`}</p>
                                         </div>
                                         <div className="mt-9 border-t border-black/15 pt-4">
-                                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/50">Collection location</p>
+                                            <p className="text-xs font-bold uppercase tracking-[0.18em] text-black/50">Collection location</p>
                                             <p className="mt-1 text-sm font-semibold">{item.location}</p>
                                         </div>
                                     </div>

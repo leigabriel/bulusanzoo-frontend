@@ -56,14 +56,14 @@ const Icons = { Ticket, Calendar, Close: X, Archive, Restore: RotateLeft, Credit
 // the app's forms: white surface, 16px text (no iOS zoom on focus), 52px minimum height.
 const Field = ({ id, label, value, onChange, type = 'text', placeholder }) => (
     <div>
-        <label htmlFor={id} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+        <label htmlFor={id} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/80">{label}</label>
         <input
             id={id}
             type={type}
             value={value || ''}
             placeholder={placeholder}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15"
+            className="w-full min-h-[52px] rounded-xl border border-[#1d4a2e]/15 bg-white px-4 py-3 text-base text-[#1d4a2e] placeholder:text-[#1d4a2e]/65 outline-none transition focus:border-[#1d4a2e] focus:ring-2 focus:ring-slate-900/15"
         />
     </div>
 );
@@ -833,13 +833,13 @@ const explainFailure = (error, fallback) => {
                  className={`fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-sm transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                 onClick={onClose}
             />
-            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`} data-lenis-prevent>
-                 <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white gap-4">
+            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-[#f4f8ef] shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`} data-lenis-prevent>
+                 <div className="p-5 sm:p-6 border-b border-[#1d4a2e]/15 flex items-center justify-between bg-white gap-4">
                      <div>
-                         <h2 className="text-xl font-semibold text-slate-800">Reservation History</h2>
-                         <p className="text-sm text-slate-500 mt-1">Review bookings, payment status, and archived reservations.</p>
+                         <h2 className="text-xl font-semibold text-[#1d4a2e]">Reservation History</h2>
+                         <p className="text-sm text-[#1d4a2e]/70 mt-1">Review bookings, payment status, and archived reservations.</p>
                      </div>
-                     <button onClick={onClose} aria-label="Close reservation history" title="Close" className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700">
+                     <button onClick={onClose} aria-label="Close reservation history" title="Close" className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#1d4a2e]/15 bg-white text-[#1d4a2e]/65 transition hover:border-[#1d4a2e]/15 hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80">
                          <Icons.Close />
                      </button>
                 </div>
@@ -847,16 +847,16 @@ const explainFailure = (error, fallback) => {
                 {!isAuthenticated ? (
                     <div className="flex-1 flex items-center justify-center p-8">
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 bg-[#e6f1df] text-[#1d4a2e]/65 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Icons.Ticket />
                             </div>
-                            <h3 className="font-semibold text-slate-700 mb-2">Sign in required</h3>
-                            <p className="text-slate-500 text-sm">Please sign in to view your history</p>
+                            <h3 className="font-semibold text-[#1d4a2e]/80 mb-2">Sign in required</h3>
+                            <p className="text-[#1d4a2e]/70 text-sm">Please sign in to view your history</p>
                         </div>
                     </div>
                 ) : (
                     <>
-                        <div className="p-4 border-b border-slate-200 bg-white space-y-4">
+                        <div className="p-4 border-b border-[#1d4a2e]/15 bg-white space-y-4">
                             <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
                                 {[
                                     { key: 'all', label: 'All', count: combinedReservations.length },
@@ -875,8 +875,8 @@ const explainFailure = (error, fallback) => {
                                             }
                                         }}
                                         className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg whitespace-nowrap transition ${(tab.key === 'archived' && showArchived) || (!showArchived && activeTab === tab.key)
-                                                ? 'bg-slate-700 text-white shadow-sm'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                ? 'bg-[#1d4a2e] text-white shadow-sm'
+                                                : 'bg-[#e6f1df] text-[#1d4a2e]/80 hover:bg-[#e6f1df]'
                                             }`}
                                     >
                                         {tab.label} <span className="ml-1 opacity-70">({tab.count})</span>
@@ -886,7 +886,7 @@ const explainFailure = (error, fallback) => {
                             <select
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
+                                className="w-full px-4 py-2.5 bg-[#f4f8ef] border border-[#1d4a2e]/15 text-[#1d4a2e]/80 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 transition"
                             >
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
@@ -902,7 +902,7 @@ const explainFailure = (error, fallback) => {
                                 <button
                                     type="button"
                                     onClick={() => selectAllVisible(filteredReservations)}
-                                    className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition"
+                                    className="text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70 hover:text-[#1d4a2e] transition"
                                 >
                                     {filteredReservations.length > 0
                                         && filteredReservations.every((r) => selected.has(selectionKey(r)))
@@ -912,7 +912,7 @@ const explainFailure = (error, fallback) => {
 
                                 {selected.size > 0 && (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70">
                                             {selected.size} selected
                                         </span>
                                         {showArchived ? (
@@ -924,14 +924,14 @@ const explainFailure = (error, fallback) => {
                                                     type="button"
                                                     onClick={restoreSelected}
                                                     disabled={archiving}
-                                                    className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                                    className="px-4 py-2 rounded-lg bg-[#1d4a2e] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#1f7a3e] disabled:opacity-50 transition shadow-sm"
                                                 >
                                                     {archiving ? 'Working...' : 'Restore'}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={openPermanentDelete}
-                                                    className="px-4 py-2 rounded-lg bg-red-600 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-red-700 transition shadow-sm"
+                                                    className="px-4 py-2 rounded-lg bg-red-600 text-white text-xs font-semibold uppercase tracking-wider hover:bg-red-700 transition shadow-sm"
                                                 >
                                                     Delete Permanently
                                                 </button>
@@ -941,7 +941,7 @@ const explainFailure = (error, fallback) => {
                                                 type="button"
                                                 onClick={archiveSelected}
                                                 disabled={archiving}
-                                                className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                                className="px-4 py-2 rounded-lg bg-[#1d4a2e] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#1f7a3e] disabled:opacity-50 transition shadow-sm"
                                             >
                                                 {archiving ? 'Archiving...' : 'Archive'}
                                             </button>
@@ -949,7 +949,7 @@ const explainFailure = (error, fallback) => {
                                         <button
                                             type="button"
                                             onClick={() => setSelected(new Map())}
-                                            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-100 transition"
+                                            className="px-3 py-2 rounded-lg border border-[#1d4a2e]/15 text-[#1d4a2e]/80 text-xs font-semibold uppercase tracking-wider hover:bg-[#e6f1df] transition"
                                         >
                                             Clear
                                         </button>
@@ -961,15 +961,15 @@ const explainFailure = (error, fallback) => {
                         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" data-lenis-prevent>
                             {loading ? (
                                 <div className="flex items-center justify-center py-12">
-                                    <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                                    <div className="w-6 h-6 border-2 border-[#1d4a2e]/15 border-t-slate-700 rounded-full animate-spin" />
                                 </div>
                             ) : filteredReservations.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="w-12 h-12 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                    <div className="w-12 h-12 bg-white border border-[#1d4a2e]/15 text-[#1d4a2e]/65 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
                                         <Icons.Calendar />
                                     </div>
-                                    <p className="font-medium text-slate-600">No reservations found</p>
-                                    <p className="text-sm text-slate-400 mt-1">Try adjusting your filters</p>
+                                    <p className="font-medium text-[#1d4a2e]/80">No reservations found</p>
+                                    <p className="text-sm text-[#1d4a2e]/65 mt-1">Try adjusting your filters</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
@@ -977,7 +977,7 @@ const explainFailure = (error, fallback) => {
                                          <div
                                              key={`${reservation.type}-${reservation.id}`}
                                              onClick={() => { setShowQR(false); setSelectedReservation(reservation); }}
-                                             className="relative bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
+                                             className="relative bg-white border border-[#1d4a2e]/15 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
                                          >
                                              <div className="flex items-start gap-4 pr-10">
                                                 {/* Checkbox sits outside the card's click handler so
@@ -991,7 +991,7 @@ const explainFailure = (error, fallback) => {
                                                         checked={selected.has(selectionKey(reservation))}
                                                         onChange={() => toggleSelected(reservation)}
                                                         aria-label={`Select reservation ${reservation.reservation_reference}`}
-                                                        className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-400 cursor-pointer"
+                                                        className="h-4 w-4 rounded border-[#1d4a2e]/15 text-[#1d4a2e]/80 focus:ring-slate-400 cursor-pointer"
                                                     />
                                                 </label>
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${reservation.type === 'ticket' ? 'bg-indigo-50 text-indigo-500' : 'bg-teal-50 text-teal-500'
@@ -1000,22 +1000,22 @@ const explainFailure = (error, fallback) => {
                                                 </div>
                                                 <div className="flex-1 min-w-0 pt-1">
                                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className="font-semibold text-slate-800 truncate">
+                                                        <h4 className="font-semibold text-[#1d4a2e] truncate">
                                                             {reservation.type === 'ticket' ? 'Zoo Visit' : (reservation.venue_event_name || reservation.event_title || 'Venue Booking')}
                                                         </h4>
-                                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${getStatusBadge(reservation.status)}`}>
+                                                        <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded-full ${getStatusBadge(reservation.status)}`}>
                                                             {reservation.status}
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+                                                    <div className="flex items-center gap-2 text-sm text-[#1d4a2e]/70 mb-2">
                                                         <span>{formatDate(reservation.reservation_date || reservation.venue_event_date || reservation.event_date)}</span>
                                                     </div>
-                                                    <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-3 mt-1">
-                                                        <span className="font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                                                    <div className="flex items-center justify-between text-xs border-t border-[#1d4a2e]/15 pt-3 mt-1">
+                                                        <span className="font-mono text-[#1d4a2e]/65 bg-[#f4f8ef] px-2 py-1 rounded">
                                                             {reservation.reservation_reference}
                                                         </span>
                                                         {reservation.type === 'ticket' && (
-                                                            <span className="font-semibold text-slate-700">
+                                                            <span className="font-semibold text-[#1d4a2e]/80">
                                                                 {calculateTotal(reservation) === 0 ? 'FREE' : `₱${calculateTotal(reservation)}`}
                                                             </span>
                                                         )}
@@ -1027,7 +1027,7 @@ const explainFailure = (error, fallback) => {
                                                         showArchived ? handleUnarchive(reservation) : handleArchive(reservation);
                                                     }}
                                                     disabled={archiving}
-                                                     className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 sm:opacity-0 sm:group-hover:opacity-100"
+                                                     className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#1d4a2e]/15 bg-white text-[#1d4a2e]/65 transition hover:border-[#1d4a2e]/15 hover:bg-[#f4f8ef] hover:text-[#1d4a2e]/80 sm:opacity-0 sm:group-hover:opacity-100"
                                                      title={showArchived ? 'Restore' : 'Archive'}
                                                      aria-label={showArchived ? 'Restore reservation' : 'Archive reservation'}
                                                 >
@@ -1060,12 +1060,12 @@ const explainFailure = (error, fallback) => {
                             <div className="absolute top-[65%] left-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
                             <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
 
-                            <div className="px-5 sm:px-6 py-6 text-center bg-slate-50 border-b border-slate-100 relative">
+                            <div className="px-5 sm:px-6 py-6 text-center bg-[#f4f8ef] border-b border-[#1d4a2e]/15 relative">
                                 <button
                                     onClick={() => setSelectedReservation(null)}
                                      aria-label="Close reservation details"
                                      title="Close"
-                                     className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:bg-slate-200 hover:text-slate-700 transition sm:right-4 sm:top-4"
+                                     className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#1d4a2e]/15 bg-white text-[#1d4a2e]/65 shadow-sm hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80 transition sm:right-4 sm:top-4"
                                 >
                                     <Icons.Close />
                                 </button>
@@ -1073,11 +1073,11 @@ const explainFailure = (error, fallback) => {
                                     }`}>
                                     {selectedReservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
                                 </div>
-                                <h3 className="text-base sm:text-lg font-bold text-slate-800 uppercase tracking-wide break-words px-4">
+                                <h3 className="text-base sm:text-lg font-bold text-[#1d4a2e] uppercase tracking-wide break-words px-4">
                                     {selectedReservation.type === 'ticket' ? 'Zoo Visit' : (selectedReservation.venue_event_name || selectedReservation.event_title || 'Venue Booking')}
                                 </h3>
                                 <div className="mt-2 inline-block">
-                                    <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full ${getStatusBadge(selectedReservation.status)}`}>
+                                    <span className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${getStatusBadge(selectedReservation.status)}`}>
                                         {selectedReservation.status}
                                     </span>
                                 </div>
@@ -1085,53 +1085,53 @@ const explainFailure = (error, fallback) => {
 
                             <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-4">
                                 <div className="text-center mb-5 sm:mb-6">
-                                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Reference No.</p>
-                                    <p className="font-mono text-base sm:text-lg font-bold text-slate-700 break-all">{selectedReservation.reservation_reference}</p>
+                                    <p className="text-xs text-[#1d4a2e]/65 uppercase tracking-widest mb-1">Reference No.</p>
+                                    <p className="font-mono text-base sm:text-lg font-bold text-[#1d4a2e]/80 break-all">{selectedReservation.reservation_reference}</p>
                                 </div>
 
                                 <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
-                                        <span className="text-slate-500 flex-shrink-0">Buyer</span>
-                                        <span className="font-semibold text-slate-800 text-right break-words">{getBuyerName(selectedReservation)}</span>
+                                    <div className="flex justify-between items-start gap-3 py-2 border-b border-[#1d4a2e]/15">
+                                        <span className="text-[#1d4a2e]/70 flex-shrink-0">Buyer</span>
+                                        <span className="font-semibold text-[#1d4a2e] text-right break-words">{getBuyerName(selectedReservation)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                        <span className="text-slate-500">Date</span>
-                                        <span className="font-semibold text-slate-800 text-right">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
+                                    <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                        <span className="text-[#1d4a2e]/70">Date</span>
+                                        <span className="font-semibold text-[#1d4a2e] text-right">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                        <span className="text-slate-500">Time</span>
-                                        <span className="font-semibold text-slate-800 text-right">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
+                                    <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                        <span className="text-[#1d4a2e]/70">Time</span>
+                                        <span className="font-semibold text-[#1d4a2e] text-right">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
                                     </div>
                                     {selectedReservation.venue_event_end_time && (
-                                        <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                            <span className="text-slate-500">End Time</span>
-                                            <span className="font-semibold text-slate-800 text-right">{selectedReservation.venue_event_end_time}</span>
+                                        <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                            <span className="text-[#1d4a2e]/70">End Time</span>
+                                            <span className="font-semibold text-[#1d4a2e] text-right">{selectedReservation.venue_event_end_time}</span>
                                         </div>
                                     )}
 
                                     {selectedReservation.type === 'ticket' && (
                                         <>
                                             {selectedReservation.adult_quantity > 0 && (
-                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                                    <span className="text-slate-500">Adults</span>
-                                                    <span className="font-medium text-slate-700">{selectedReservation.adult_quantity} × ₱40</span>
+                                                <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                                    <span className="text-[#1d4a2e]/70">Adults</span>
+                                                    <span className="font-medium text-[#1d4a2e]/80">{selectedReservation.adult_quantity} × ₱40</span>
                                                 </div>
                                             )}
                                             {selectedReservation.child_quantity > 0 && (
-                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                                    <span className="text-slate-500">Children</span>
-                                                    <span className="font-medium text-slate-700">{selectedReservation.child_quantity} × ₱20</span>
+                                                <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                                    <span className="text-[#1d4a2e]/70">Children</span>
+                                                    <span className="font-medium text-[#1d4a2e]/80">{selectedReservation.child_quantity} × ₱20</span>
                                                 </div>
                                             )}
                                             {selectedReservation.bulusan_resident_quantity > 0 && (
-                                                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                                    <span className="text-slate-500">Residents</span>
-                                                    <span className="font-medium text-slate-700">{selectedReservation.bulusan_resident_quantity} (FREE)</span>
+                                                <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                                    <span className="text-[#1d4a2e]/70">Residents</span>
+                                                    <span className="font-medium text-[#1d4a2e]/80">{selectedReservation.bulusan_resident_quantity} (FREE)</span>
                                                 </div>
                                             )}
                                             <div className="flex justify-between items-center pt-4 pb-2">
-                                                <span className="font-semibold text-slate-800 uppercase tracking-wide">Total</span>
-                                                <span className="font-bold text-base sm:text-lg text-slate-800">
+                                                <span className="font-semibold text-[#1d4a2e] uppercase tracking-wide">Total</span>
+                                                <span className="font-bold text-base sm:text-lg text-[#1d4a2e]">
                                                     {calculateTotal(selectedReservation) === 0 ? 'FREE' : `₱${calculateTotal(selectedReservation)}`}
                                                 </span>
                                             </div>
@@ -1141,7 +1141,7 @@ const explainFailure = (error, fallback) => {
                                                                           {selectedReservation.type === 'ticket' && (
                                          <>
                                             <div className="pt-4">
-                                                <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Ticket Payment</p>
+                                                <p className="text-xs text-[#1d4a2e]/65 uppercase tracking-widest mb-3 font-semibold">Ticket Payment</p>
                                                 {selectedReservation.payment_status === 'paid' && (
                                                     <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                                                         <p className="text-sm font-bold text-emerald-700">Payment successful</p>
@@ -1149,11 +1149,11 @@ const explainFailure = (error, fallback) => {
                                                     </div>
                                                 )}
                                                 <div className="space-y-2 text-sm">
-                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{calculateTotal(selectedReservation) > 0 ? `${selectedReservation.currency === 'USD' ? '$' : 'P'}${calculateTotal(selectedReservation).toFixed(2)}` : 'Free entry'}</span></div>
-                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
-                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
-                                                    {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
-                                                    {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                    <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Amount</span><span className="font-bold text-[#1d4a2e]">{calculateTotal(selectedReservation) > 0 ? `${selectedReservation.currency === 'USD' ? '$' : 'P'}${calculateTotal(selectedReservation).toFixed(2)}` : 'Free entry'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Method</span><span className="font-semibold text-[#1d4a2e]">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                    {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Paid on</span><span className="font-semibold text-[#1d4a2e]">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                    {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-[#1d4a2e]">{selectedReservation.paymongo_payment_id}</span></div>}
                                                 </div>
                                                 {selectedReservation.payment_status === 'paid' ? (
                                                     <div className="mt-4 space-y-2">
@@ -1177,7 +1177,7 @@ const explainFailure = (error, fallback) => {
                                                                 {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
                                                             </button>
                                                         ) : isPaidAtVenue(selectedReservation.payment_method) && (
-                                                            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                            <p className="rounded-xl border border-[#1d4a2e]/15 bg-[#f4f8ef] px-4 py-3 text-xs leading-5 text-[#1d4a2e]/70">
                                                                 Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.
                                                             </p>
                                                         )}
@@ -1186,7 +1186,7 @@ const explainFailure = (error, fallback) => {
                                                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                         {ticketPaymentConfig.qrphEnabled && <button
                                                             onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
-                                                            className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                            className="flex-1 py-3 bg-[#1d4a2e] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#1f7a3e] transition flex items-center justify-center gap-2 shadow-sm"
                                                         >
                                                             <Icons.CreditCard />
                                                             Pay with QR Ph
@@ -1205,16 +1205,16 @@ const explainFailure = (error, fallback) => {
                                      )}
 {selectedReservation.type === 'event' && (
                                          <>
-                                            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                                <span className="text-slate-500">Participants</span>
-                                                <span className="font-semibold text-slate-800">{selectedReservation.number_of_participants}</span>
+                                            <div className="flex justify-between items-center py-2 border-b border-[#1d4a2e]/15">
+                                                <span className="text-[#1d4a2e]/70">Participants</span>
+                                                <span className="font-semibold text-[#1d4a2e]">{selectedReservation.number_of_participants}</span>
                                             </div>
-                                            <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
-                                                <span className="text-slate-500 flex-shrink-0">Organizer</span>
-                                                <span className="font-semibold text-slate-800 text-right break-words">{selectedReservation.participant_name}</span>
+                                            <div className="flex justify-between items-start gap-3 py-2 border-b border-[#1d4a2e]/15">
+                                                <span className="text-[#1d4a2e]/70 flex-shrink-0">Organizer</span>
+                                                <span className="font-semibold text-[#1d4a2e] text-right break-words">{selectedReservation.participant_name}</span>
                                             </div>
                                               <div className="pt-4">
-                                                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
+                                                  <p className="text-xs text-[#1d4a2e]/65 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
                                                   {selectedReservation.payment_status === 'paid' && (
                                                       <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                                                           <p className="text-sm font-bold text-emerald-700">Payment successful</p>
@@ -1222,11 +1222,11 @@ const explainFailure = (error, fallback) => {
                                                       </div>
                                                   )}
                                                    <div className="space-y-2 text-sm">
-                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
-                                              <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
-                                                       <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
-                                                       {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
-                                                       {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                      <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Amount</span><span className="font-bold text-[#1d4a2e]">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
+                                              <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Method</span><span className="font-semibold text-[#1d4a2e]">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                       <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                       {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Paid on</span><span className="font-semibold text-[#1d4a2e]">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                       {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-[#1d4a2e]/70">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-[#1d4a2e]">{selectedReservation.paymongo_payment_id}</span></div>}
                                                   </div>
                                                    {selectedReservation.payment_status === 'paid' ? (
                                                            <div className="mt-4 space-y-2">
@@ -1248,7 +1248,7 @@ const explainFailure = (error, fallback) => {
                                                                            {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
                                                                        </button>
                                                                    ) : isPaidAtVenue(selectedReservation.payment_method) && (
-                                                                       <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                       <p className="rounded-xl border border-[#1d4a2e]/15 bg-[#f4f8ef] px-4 py-3 text-xs leading-5 text-[#1d4a2e]/70">
                                                                            Paid via {paymentMethodLabel(selectedReservation.payment_method)}, so there is no online charge to refund. Any refund is settled at the gate.
                                                                        </p>
                                                                    )}
@@ -1257,7 +1257,7 @@ const explainFailure = (error, fallback) => {
                                                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                           {eventPaymentConfig.qrphEnabled && <button
                                                              onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
-                                                             className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                             className="flex-1 py-3 bg-[#1d4a2e] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#1f7a3e] transition flex items-center justify-center gap-2 shadow-sm"
                                                          >
                                                              <Icons.CreditCard />
                                                               Pay with QR Ph
@@ -1279,17 +1279,17 @@ const explainFailure = (error, fallback) => {
 
                              {selectedReservation.reservation_reference && (
                                 <>
-                                    <div className="w-full border-t-2 border-dashed border-slate-200 relative z-10"></div>
-                                    <div className="p-5 sm:p-8 flex flex-col items-center bg-slate-50">
+                                    <div className="w-full border-t-2 border-dashed border-[#1d4a2e]/15 relative z-10"></div>
+                                    <div className="p-5 sm:p-8 flex flex-col items-center bg-[#f4f8ef]">
                                         <button
                                             onClick={() => setShowQR(prev => !prev)}
-                                            className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                            className="w-full py-3 bg-[#1d4a2e] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#1f7a3e] transition flex items-center justify-center gap-2 shadow-sm"
                                         >
                                             <Icons.Ticket />
                                             {showQR ? 'Hide QR Code' : 'Show QR Code'}
                                         </button>
                                         <div className={showQR ? 'mt-5 flex flex-col items-center' : 'hidden'}>
-                                            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                                            <div className="bg-white p-3 rounded-xl shadow-sm border border-[#1d4a2e]/15">
                                                  <QRCodeSVG
                                                      className="receipt-qr-code"
                                                      value={`${window.location.origin}/verify/${selectedReservation.type}/${encodeURIComponent(selectedReservation.reservation_reference)}`}
@@ -1300,7 +1300,7 @@ const explainFailure = (error, fallback) => {
                                                      style={{ display: 'block', width: '280px', height: '280px', maxWidth: '100%' }}
                                                  />
                                             </div>
-                                            <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
+                                            <p className="text-xs uppercase tracking-widest font-semibold text-[#1d4a2e]/65 mt-5 text-center">
                                                 Scan at the entrance
                                             </p>
                                         </div>
@@ -1322,7 +1322,7 @@ const explainFailure = (error, fallback) => {
                                 <>
                                     <button
                                         onClick={() => openEditModal(selectedReservation)}
-                                        className="flex-1 py-3.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                        className="flex-1 py-3.5 bg-[#1d4a2e] hover:bg-[#1f7a3e] text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
                                     >
                                         Edit
                                     </button>
@@ -1337,7 +1337,7 @@ const explainFailure = (error, fallback) => {
                             <button
                                 onClick={handleDownload}
                                 disabled={downloading}
-                                className="flex-1 py-3.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm font-semibold uppercase tracking-wider text-xs rounded-xl transition disabled:opacity-50"
+                                className="flex-1 py-3.5 bg-white text-[#1d4a2e]/80 hover:bg-[#f4f8ef] border border-[#1d4a2e]/15 shadow-sm font-semibold uppercase tracking-wider text-xs rounded-xl transition disabled:opacity-50"
                             >
                                 {downloading ? 'Preparing...' : 'Download'}
                             </button>
@@ -1345,7 +1345,7 @@ const explainFailure = (error, fallback) => {
                                 onClick={() => selectedReservation.is_archived ? handleUnarchive(selectedReservation) : handleArchive(selectedReservation)}
                                 disabled={archiving}
                                 className={`flex-1 py-3.5 font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2 ${selectedReservation.is_archived
-                                        ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                                        ? 'bg-[#1d4a2e] hover:bg-[#1f7a3e] text-white'
                                         : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
                                     }`}
                             >
@@ -1369,29 +1369,29 @@ const explainFailure = (error, fallback) => {
                     >
                         <button
                             onClick={() => setShowPaymentDemo(false)}
-                            className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                            className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-[#1d4a2e]/65 hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80 rounded-full transition"
                         >
                             <Icons.Close />
                         </button>
-                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 ${paymentOption === 'now' ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white'}`}>
+                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 ${paymentOption === 'now' ? 'bg-[#1d4a2e] text-white' : 'bg-emerald-600 text-white'}`}>
                             {paymentOption === 'now' ? <Icons.CreditCard /> : <Icons.Cash />}
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+                        <h3 className="text-xl font-bold text-[#1d4a2e] uppercase tracking-wide">
                             {paymentOption === 'now' ? 'Pay Now' : 'Pay at Bulusan'}
                         </h3>
-                        <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+                        <p className="text-sm text-[#1d4a2e]/70 mt-3 leading-relaxed">
                             {paymentOption === 'now'
                                  ? 'Pay securely with QR Ph through PayMongo. The checkout page will display the QR code for scanning.'
                                 : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
                         </p>
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
+                        <div className="bg-[#f4f8ef] border border-[#1d4a2e]/15 rounded-xl p-4 mt-6 text-left">
                             <div className="flex justify-between items-start gap-3 py-1.5">
-                                <span className="text-xs text-slate-500 flex-shrink-0">{selectedReservation?.type === 'ticket' ? 'Booking' : 'Event'}</span>
-                                <span className="text-xs font-semibold text-slate-800 text-right break-words">{selectedReservation?.type === 'ticket' ? 'Zoo admission' : (selectedReservation?.venue_event_name || selectedReservation?.event_title)}</span>
+                                <span className="text-xs text-[#1d4a2e]/70 flex-shrink-0">{selectedReservation?.type === 'ticket' ? 'Booking' : 'Event'}</span>
+                                <span className="text-xs font-semibold text-[#1d4a2e] text-right break-words">{selectedReservation?.type === 'ticket' ? 'Zoo admission' : (selectedReservation?.venue_event_name || selectedReservation?.event_title)}</span>
                             </div>
                             <div className="flex justify-between items-center py-1.5">
-                                <span className="text-xs text-slate-500">Reference</span>
-                                <span className="font-mono text-xs font-semibold text-slate-800 break-all text-right">{selectedReservation?.reservation_reference}</span>
+                                <span className="text-xs text-[#1d4a2e]/70">Reference</span>
+                                <span className="font-mono text-xs font-semibold text-[#1d4a2e] break-all text-right">{selectedReservation?.reservation_reference}</span>
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col gap-3">
@@ -1401,35 +1401,35 @@ const explainFailure = (error, fallback) => {
                                         type="checkbox"
                                         checked={paymentConsent}
                                         onChange={(e) => setPaymentConsent(e.target.checked)}
-                                        className="peer appearance-none w-4 h-4 border border-slate-300 rounded bg-white checked:bg-slate-800 checked:border-slate-800 transition-all cursor-pointer"
+                                        className="peer appearance-none w-4 h-4 border border-[#1d4a2e]/15 rounded bg-white checked:bg-[#1d4a2e] checked:border-slate-800 transition-all cursor-pointer"
                                     />
                                     <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
                                         <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <p className="text-xs text-[#1d4a2e]/70 leading-relaxed">
                                     I consent to this payment being processed per the Bulusan Zoo{' '}
-                                    <Link to="/terms" className="text-slate-800 font-semibold hover:underline">Terms of Service</Link>,{' '}
-                                    <Link to="/privacy" className="text-slate-800 font-semibold hover:underline">Privacy Policy</Link>,{' '}
-                                    <Link to="/refund-policy" className="text-slate-800 font-semibold hover:underline">Refund Policy</Link>, and{' '}
-                                    <Link to="/cookies" className="text-slate-800 font-semibold hover:underline">Cookie Policy</Link>.
+                                    <Link to="/terms" className="text-[#1d4a2e] font-semibold hover:underline">Terms of Service</Link>,{' '}
+                                    <Link to="/privacy" className="text-[#1d4a2e] font-semibold hover:underline">Privacy Policy</Link>,{' '}
+                                    <Link to="/refund-policy" className="text-[#1d4a2e] font-semibold hover:underline">Refund Policy</Link>, and{' '}
+                                    <Link to="/cookies" className="text-[#1d4a2e] font-semibold hover:underline">Cookie Policy</Link>.
                                 </p>
                             </label>
                             <button
                                  onClick={handleReservationPayment}
                                  disabled={paymentLoading}
-                                 className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
+                                 className="w-full py-3 bg-[#1d4a2e] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#1f7a3e] transition"
                              >
                                   {paymentLoading ? 'Processing...' : paymentOption === 'now' ? 'Proceed to QR Ph Payment' : 'Confirm Pay at Bulusan'}
                             </button>
                             <button
                                 onClick={() => setShowPaymentDemo(false)}
-                                className="w-full py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition"
+                                className="w-full py-3 border border-[#1d4a2e]/15 text-[#1d4a2e]/80 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#f4f8ef] transition"
                             >
                                 Cancel
                             </button>
                         </div>
-                        <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-300 mt-4">
+                        <p className="text-xs uppercase tracking-widest font-semibold text-[#1d4a2e]/65 mt-4">
                         </p>
                     </div>
                 </div>
@@ -1440,10 +1440,10 @@ const explainFailure = (error, fallback) => {
                 <div className="fixed inset-0 z-[260] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="self-edit-title">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !selfSaving && setEditModal({ isOpen: false, reservation: null })} />
                     <div className="relative w-full max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-                        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 shrink-0">
+                        <div className="flex items-start justify-between gap-4 border-b border-[#1d4a2e]/15 px-5 py-4 shrink-0">
                             <div>
-                                <h3 id="self-edit-title" className="text-lg font-bold text-slate-900">Edit</h3>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <h3 id="self-edit-title" className="text-lg font-bold text-[#1d4a2e]">Edit</h3>
+                                <p className="mt-1 text-sm text-[#1d4a2e]/70">
                                     {editModal.reservation?.type === 'event'
                                         ? 'Update the details of your event booking.'
                                         : 'Update the details of your visit.'}
@@ -1454,7 +1454,7 @@ const explainFailure = (error, fallback) => {
                                 onClick={() => setEditModal({ isOpen: false, reservation: null })}
                                 disabled={selfSaving}
                                 aria-label="Close"
-                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#1d4a2e]/65 transition hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80 disabled:opacity-50"
                             >
                                 <Icons.Close className="h-5 w-5" />
                             </button>
@@ -1485,10 +1485,10 @@ const explainFailure = (error, fallback) => {
 
                             {editModal.reservation?.type === 'event' ? (
                                 <div>
-                                    <label htmlFor="self-edit-participants" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Participants *</label>
+                                    <label htmlFor="self-edit-participants" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/80">Participants *</label>
                                     <input id="self-edit-participants" type="number" min="1" inputMode="numeric" value={editParticipants}
                                         onChange={(e) => setEditParticipants(e.target.value)}
-                                        className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                        className="w-full min-h-[52px] rounded-xl border border-[#1d4a2e]/15 bg-white px-4 py-3 text-base text-[#1d4a2e] outline-none transition focus:border-[#1d4a2e] focus:ring-2 focus:ring-slate-900/15" />
                                 </div>
                             ) : (
                                 // Bulusan resident is intentionally absent: a resident ticket is
@@ -1497,10 +1497,10 @@ const explainFailure = (error, fallback) => {
                                 [['adult', 'Adult', editAdult, setEditAdult],
                                  ['child', 'Child (4-17)', editChild, setEditChild]].map(([key, label, value, setter]) => (
                                     <div key={key}>
-                                        <label htmlFor={`self-edit-${key}`} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+                                        <label htmlFor={`self-edit-${key}`} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/80">{label}</label>
                                         <input id={`self-edit-${key}`} type="number" min="0" inputMode="numeric" value={value}
                                             onChange={(e) => setter(e.target.value)}
-                                            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                            className="w-full min-h-[52px] rounded-xl border border-[#1d4a2e]/15 bg-white px-4 py-3 text-base text-[#1d4a2e] outline-none transition focus:border-[#1d4a2e] focus:ring-2 focus:ring-slate-900/15" />
                                     </div>
                                 ))
                             )}
@@ -1508,25 +1508,25 @@ const explainFailure = (error, fallback) => {
                             <div className="sm:col-span-2">
                                 {editModal.reservation?.type === 'event' && (
                                     <div className="mb-4">
-                                        <label htmlFor="self-edit-description" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                                        <label htmlFor="self-edit-description" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/80">Description</label>
                                         <textarea id="self-edit-description" rows={2} value={editDraft.description} onChange={(e) => setEditField('description', e.target.value)}
-                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                            className="w-full rounded-xl border border-[#1d4a2e]/15 bg-white px-4 py-3 text-base text-[#1d4a2e] outline-none transition focus:border-[#1d4a2e] focus:ring-2 focus:ring-slate-900/15" />
                                     </div>
                                 )}
-                                <label htmlFor="self-edit-notes" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Notes (optional)</label>
+                                <label htmlFor="self-edit-notes" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/80">Notes (optional)</label>
                                 <textarea id="self-edit-notes" rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                    className="w-full rounded-xl border border-[#1d4a2e]/15 bg-white px-4 py-3 text-base text-[#1d4a2e] outline-none transition focus:border-[#1d4a2e] focus:ring-2 focus:ring-slate-900/15" />
                             </div>
                         </div>
                         </div>
 
-                        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 shrink-0 sm:flex-row-reverse">
+                        <div className="flex flex-col gap-3 border-t border-[#1d4a2e]/15 px-5 py-4 shrink-0 sm:flex-row-reverse">
                             <button onClick={submitSelfEdit} disabled={selfSaving}
-                                className="min-h-11 flex-1 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-800 disabled:opacity-50">
+                                className="min-h-11 flex-1 rounded-xl bg-[#1d4a2e] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#1f7a3e] disabled:opacity-50">
                                 {selfSaving ? 'Saving...' : 'Save Changes'}
                             </button>
                             <button onClick={() => setEditModal({ isOpen: false, reservation: null })} disabled={selfSaving}
-                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                className="min-h-11 flex-1 rounded-xl border border-[#1d4a2e]/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#1d4a2e]/80 transition hover:bg-[#f4f8ef] disabled:opacity-50">
                                 Cancel
                             </button>
                         </div>
@@ -1542,8 +1542,8 @@ const explainFailure = (error, fallback) => {
                         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
                             <Icons.Close className="h-6 w-6 text-rose-600" />
                         </div>
-                        <h3 id="self-cancel-title" className="text-lg font-bold text-slate-900">Cancel this booking?</h3>
-                        <p className="mt-2 text-sm text-slate-500">
+                        <h3 id="self-cancel-title" className="text-lg font-bold text-[#1d4a2e]">Cancel this booking?</h3>
+                        <p className="mt-2 text-sm text-[#1d4a2e]/70">
                             This releases your slot and cannot be undone. You can always make a new booking afterwards.
                         </p>
                         <div className="mt-7 flex flex-col gap-3 sm:flex-row-reverse">
@@ -1552,7 +1552,7 @@ const explainFailure = (error, fallback) => {
                                 {selfSaving ? 'Cancelling...' : 'Yes, Cancel It'}
                             </button>
                             <button onClick={() => setCancelModal({ isOpen: false, reservation: null })} disabled={selfSaving}
-                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                className="min-h-11 flex-1 rounded-xl border border-[#1d4a2e]/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#1d4a2e]/80 transition hover:bg-[#f4f8ef] disabled:opacity-50">
                                 Keep Booking
                             </button>
                         </div>
@@ -1569,14 +1569,14 @@ const explainFailure = (error, fallback) => {
                         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
                             <Icons.Close className="h-6 w-6 text-red-600" />
                         </div>
-                        <h3 id="perm-delete-title" className="text-center text-lg font-bold text-slate-900">
+                        <h3 id="perm-delete-title" className="text-center text-lg font-bold text-[#1d4a2e]">
                             Delete {deleteModal.keys.length} reservation{deleteModal.keys.length > 1 ? 's' : ''}?
                         </h3>
-                        <p className="mt-2 text-center text-sm text-slate-500">
+                        <p className="mt-2 text-center text-sm text-[#1d4a2e]/70">
                             This permanently removes your booking history and cannot be undone.
                         </p>
 
-                        <label htmlFor="perm-delete-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <label htmlFor="perm-delete-password" className="mt-5 mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70">
                             Your password
                         </label>
                         <input
@@ -1586,10 +1586,10 @@ const explainFailure = (error, fallback) => {
                             value={deletePassword}
                             onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
                             onKeyDown={(e) => { if (e.key === 'Enter') confirmPermanentDelete(); }}
-                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="w-full rounded-xl border border-[#1d4a2e]/15 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                         />
                         {deleteError && (
-                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{deleteError}</p>
+                            <p role="alert" className="mt-2 text-xs font-semibold text-red-600">{deleteError}</p>
                         )}
 
                         {/* Signed up with Google and never set a password? Offer the step up
@@ -1599,7 +1599,7 @@ const explainFailure = (error, fallback) => {
                         <button
                             type="button"
                             onClick={() => setPasswordModal({ isOpen: true, pendingKeys: deleteModal.keys })}
-                            className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 underline underline-offset-2 hover:text-slate-800 transition"
+                            className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70 underline underline-offset-2 hover:text-[#1d4a2e] transition"
                         >
                             No password yet? Create one
                         </button>
@@ -1617,7 +1617,7 @@ const explainFailure = (error, fallback) => {
                                 type="button"
                                 onClick={() => setDeleteModal({ isOpen: false, keys: [] })}
                                 disabled={deleting}
-                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                                className="min-h-11 flex-1 rounded-xl border border-[#1d4a2e]/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#1d4a2e]/80 transition hover:bg-[#f4f8ef] disabled:opacity-50"
                             >
                                 Keep
                             </button>
@@ -1631,13 +1631,13 @@ const explainFailure = (error, fallback) => {
                 <div className="fixed inset-0 z-[290] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="set-password-title">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !passwordSaving && setPasswordModal({ isOpen: false, pendingKeys: [] })} />
                     <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-                        <h3 id="set-password-title" className="text-lg font-bold text-slate-900">Create a password</h3>
-                        <p className="mt-2 text-sm text-slate-500">
+                        <h3 id="set-password-title" className="text-lg font-bold text-[#1d4a2e]">Create a password</h3>
+                        <p className="mt-2 text-sm text-[#1d4a2e]/70">
                             Needed once to confirm permanent deletion. At least 8 characters, with an
                             uppercase letter, a number and a special character.
                         </p>
 
-                        <label htmlFor="new-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <label htmlFor="new-password" className="mt-5 mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70">
                             New password
                         </label>
                         <input
@@ -1646,9 +1646,9 @@ const explainFailure = (error, fallback) => {
                             autoComplete="new-password"
                             value={newPassword}
                             onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
-                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="w-full rounded-xl border border-[#1d4a2e]/15 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                         />
-                        <label htmlFor="confirm-new-password" className="mt-4 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <label htmlFor="confirm-new-password" className="mt-4 mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1d4a2e]/70">
                             Confirm password
                         </label>
                         <input
@@ -1658,10 +1658,10 @@ const explainFailure = (error, fallback) => {
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
                             onKeyDown={(e) => { if (e.key === 'Enter') submitInitialPassword(); }}
-                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="w-full rounded-xl border border-[#1d4a2e]/15 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                         />
                         {passwordError && (
-                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{passwordError}</p>
+                            <p role="alert" className="mt-2 text-xs font-semibold text-red-600">{passwordError}</p>
                         )}
 
                         <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
@@ -1669,7 +1669,7 @@ const explainFailure = (error, fallback) => {
                                 type="button"
                                 onClick={submitInitialPassword}
                                 disabled={passwordSaving || !newPassword || !confirmPassword}
-                                className="min-h-11 flex-1 rounded-xl bg-slate-800 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-900 disabled:opacity-50"
+                                className="min-h-11 flex-1 rounded-xl bg-[#1d4a2e] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#1f7a3e] disabled:opacity-50"
                             >
                                 {passwordSaving ? 'Saving...' : 'Create Password'}
                             </button>
@@ -1682,7 +1682,7 @@ const explainFailure = (error, fallback) => {
                                     setPasswordError('');
                                 }}
                                 disabled={passwordSaving}
-                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                                className="min-h-11 flex-1 rounded-xl border border-[#1d4a2e]/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#1d4a2e]/80 transition hover:bg-[#f4f8ef] disabled:opacity-50"
                             >
                                 Cancel
                             </button>

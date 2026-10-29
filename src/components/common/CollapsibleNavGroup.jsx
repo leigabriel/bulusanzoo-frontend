@@ -37,7 +37,7 @@ const CollapsibleNavGroup = ({ label, items, open, onToggle, pathname, onNavigat
                                 </span>
                                 <span className="font-medium flex-1">{item.label}</span>
                                 {badge > 0 && (
-                                    <span className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    <span className="min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                                         {badge > 99 ? '99+' : badge}
                                     </span>
                                 )}

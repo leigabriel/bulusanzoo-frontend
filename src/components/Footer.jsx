@@ -6,7 +6,7 @@ const MotionDiv = motion.div;
 const MotionSpan = motion.span;
 
 const PillBadge = ({ text }) => (
-    <div className="inline-block border border-white/20 text-white/50 px-4 py-1 rounded-full text-[11px] font-medium uppercase tracking-widest mb-5 select-none">
+    <div className="inline-block border border-white/20 text-white/50 px-4 py-1 rounded-full text-xs font-medium uppercase tracking-widest mb-5 select-none">
         {text}
     </div>
 );
@@ -141,7 +141,7 @@ const Footer = () => {
                             <a href="tel:+63432887291" className="block text-[2rem] hover:text-green-400 transition-colors">
                                 (043) 288-7291
                             </a>
-                            <p className="mt-2 text-[11px] font-medium uppercase tracking-widest text-white/35">Direct park contact published by City CEED</p>
+                            <p className="mt-2 text-xs font-medium uppercase tracking-widest text-white/35">Direct park contact published by City CEED</p>
                             <a href="mailto:calapancitytourism@gmail.com" className="mt-6 block break-all text-base text-white/70 hover:text-green-400 transition-colors">
                                 calapancitytourism@gmail.com
                             </a>
@@ -149,7 +149,7 @@ const Footer = () => {
                                 0967 233 6074
                             </a>
                         </div>
-                        <p className="text-[11px] mt-4 text-white/35 leading-relaxed">
+                        <p className="text-xs mt-4 text-white/35 leading-relaxed">
                             City Tourism, Culture &amp; Arts Office contacts are for visitor assistance, not direct park operations.
                         </p>
                         <div className="flex gap-2 mt-6">
@@ -180,7 +180,7 @@ const Footer = () => {
                         transition={{ duration: 0.5, delay: 0.8 }}
                         className="mt-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4"
                     >
-                        <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">
+                        <span className="text-xs font-medium text-white/30 uppercase tracking-widest">
                             © {currentYear} Bulusan Zoo. All rights reserved.
                         </span>
                         <ul className="flex flex-wrap gap-x-5 gap-y-2">
@@ -188,7 +188,7 @@ const Footer = () => {
                                 <li key={link.path}>
                                     <Link
                                         to={link.path}
-                                        className="text-[11px] font-medium text-white/40 uppercase tracking-widest hover:text-green-400 transition-colors"
+                                        className="text-xs font-medium text-white/40 uppercase tracking-widest hover:text-green-400 transition-colors"
                                     >
                                         {link.label}
                                     </Link>

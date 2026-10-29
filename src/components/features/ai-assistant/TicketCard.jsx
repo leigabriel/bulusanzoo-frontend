@@ -57,19 +57,19 @@ const TicketCard = ({ data }) => {
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-bold truncate leading-tight" style={{ color: THEME.text }}>{data.title}</p>
-                        <p className="text-[11px] leading-tight mt-0.5" style={{ color: THEME.textMuted }}>
+                        <p className="text-xs leading-tight mt-0.5" style={{ color: THEME.textMuted }}>
                             {isEvent ? 'Event Reservation' : 'Ticket Reservation'}
                         </p>
                     </div>
                 </div>
-                <span className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusClass}`}>
+                <span className={`text-xs uppercase font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusClass}`}>
                     {data.status || 'pending'}
                 </span>
             </div>
 
             <div className="px-4 py-3">
                 <div className="text-center pb-2 mb-1">
-                    <p className="text-[10px] uppercase tracking-widest" style={{ color: THEME.textMuted }}>Reference No.</p>
+                    <p className="text-xs uppercase tracking-widest" style={{ color: THEME.textMuted }}>Reference No.</p>
                     <p className="font-mono text-sm font-bold mt-0.5 break-all" style={{ color: THEME.text }}>{data.reference || '—'}</p>
                 </div>
 

@@ -222,7 +222,7 @@ const CommunityPage = () => {
                     <img src={PHOTOS.trees} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover blur-[3px]" />
                     <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(196,236,124,0.94)_0%,rgba(110,196,80,0.86)_9%,rgba(40,134,56,0.88)_30%,rgba(24,104,50,0.92)_100%)]" />
                     <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-24 pt-28 text-center sm:px-6">
-                        <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
+                        <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
                             <span className="h-2 w-2 rounded-full bg-[#c6fe69]" aria-hidden="true" />
                             Share the wild with us
                         </p>

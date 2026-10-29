@@ -41,7 +41,7 @@ export const PlayIcon = ({ className = 'h-4 w-4' }) => (
 
 // Rounded pill label used above section headings.
 export const Eyebrow = ({ children, tone = 'light' }) => (
-    <p className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] sm:text-xs ${tone === 'light' ? 'bg-white/80 text-[#1d4a2e]' : 'bg-white/15 text-[#c6fe69]'}`}>
+    <p className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] sm:text-xs ${tone === 'light' ? 'bg-white/80 text-[#1d4a2e]' : 'bg-white/15 text-[#c6fe69]'}`}>
         <span className="h-2 w-2 rounded-full bg-[#4ade80]" aria-hidden="true" />
         {children}
     </p>

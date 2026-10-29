@@ -83,7 +83,7 @@ const MapPageFallback = () => (
     <div className="flex items-center justify-center h-screen bg-[#eef3ed]">
         <div className="flex flex-col items-center gap-6">
             <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
-            <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+            <p className="text-[#1f3328] font-bold text-xs uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
         </div>
     </div>
 );
@@ -446,6 +446,7 @@ function App() {
                     <CookieConsentBanner />
                     <GooeyToaster
                         position="top-right"
+                        offset={72}
                         duration={3000}
                         closeButton="top-right"
                         showTimestamp={false}

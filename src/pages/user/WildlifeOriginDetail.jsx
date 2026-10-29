@@ -92,7 +92,7 @@ const WildlifeOriginDetail = () => {
                 <img loading="lazy" decoding="async" src={animal.image} alt={animal.name} className="h-full w-full object-cover" onClick={() => setImageOpen(true)} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1f3328]/70 via-transparent to-[#1f3328]/30" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${regionClass}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-widest ${regionClass}`}>
                         <MapPin className="h-3 w-3" /> {animal.region}
                     </span>
                     <h1 className="mt-4 text-4xl sm:text-5xl md:text-7xl font-black leading-[0.92] tracking-[-0.05em] text-white drop-shadow-lg">{animal.name}</h1>
@@ -170,7 +170,7 @@ const WildlifeOriginDetail = () => {
 
 const FactCard = ({ label, value, mono }) => (
     <div className="rounded-2xl bg-white border border-[#dce5dc] p-4 md:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6d8572] mb-1">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6d8572] mb-1">{label}</p>
         <p className={`font-bold text-[#1f3328] text-sm ${mono ? 'font-mono break-words' : ''}`}>{value || '—'}</p>
     </div>
 );

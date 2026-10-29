@@ -55,7 +55,7 @@ const AboutHero = () => (
         />
 
         <div className="relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col items-center justify-center px-4 pb-10 pt-28 text-center sm:px-6">
-            <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
+            <p className="hero-rise inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md sm:text-xs">
                 <span className="h-2 w-2 rounded-full bg-[#c6fe69]" aria-hidden="true" />
                 A park of Calapan City
             </p>
@@ -75,7 +75,7 @@ const AboutHero = () => (
             <dl className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
                 {facts.map((fact) => (
                     <div key={fact.label} className="rounded-2xl border border-white/30 bg-white/20 p-4 backdrop-blur-md sm:p-5">
-                        <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c6fe69]">{fact.label}</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c6fe69]">{fact.label}</dt>
                         <dd className="mt-2 text-sm font-semibold leading-6 text-white">{fact.value}</dd>
                     </div>
                 ))}

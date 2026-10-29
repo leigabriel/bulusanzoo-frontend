@@ -161,7 +161,7 @@ const CalendarView = ({ events, calendarDate, onCalendarDateChange, onSelect }) 
                                 >
                                     {day && (
                                         <>
-                                            <span className={`inline-flex items-center justify-center h-6 w-6 sm:h-8 sm:w-8 rounded-full text-[10px] sm:text-xs font-bold ${todayCell ? 'bg-[#1d4a2e] text-white' : 'text-[#1d4a2e]'}`}>
+                                            <span className={`inline-flex items-center justify-center h-6 w-6 sm:h-8 sm:w-8 rounded-full text-xs sm:text-xs font-bold ${todayCell ? 'bg-[#1d4a2e] text-white' : 'text-[#1d4a2e]'}`}>
                                                 {day}
                                             </span>
 
@@ -176,17 +176,17 @@ const CalendarView = ({ events, calendarDate, onCalendarDateChange, onSelect }) 
                                                             onClick={() => onSelect(event)}
                                                             className="w-full text-left px-1.5 md:px-2 py-1 rounded-lg bg-[#c6fe69] hover:bg-[#b4ee50] transition-colors focus-visible:outline-2 focus-visible:outline-[#1f7a3e]"
                                                         >
-                                                            <span className="block text-[11px] md:text-xs font-semibold text-[#1d4a2e] leading-tight truncate">
+                                                            <span className="block text-xs md:text-xs font-semibold text-[#1d4a2e] leading-tight truncate">
                                                                 {event.title}
                                                             </span>
-                                                            <span className="block hidden sm:block text-[10px] text-[#1d4a2e]/75 truncate">
+                                                            <span className="block hidden sm:block text-xs text-[#1d4a2e]/75 truncate">
                                                                 {formatTime(event.startTime) || '—'}
                                                             </span>
                                                         </button>
                                                     </li>
                                                 ))}
                                                 {dayEvents.length > 3 && (
-                                                    <li className="px-1.5 md:px-2 text-[10px] md:text-xs font-semibold text-[#1d4a2e]/75">
+                                                    <li className="px-1.5 md:px-2 text-xs md:text-xs font-semibold text-[#1d4a2e]/75">
                                                         +{dayEvents.length - 3} more
                                                     </li>
                                                 )}

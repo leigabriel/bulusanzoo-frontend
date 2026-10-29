@@ -119,10 +119,10 @@ const PolicyPage = ({ title, lastUpdated, content, children }) => {
     return (
         <div className="min-h-screen bg-white">
             <div className="border-b border-gray-100">
-                <div className="max-w-3xl mx-auto px-6 md:px-8 py-5">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-2">
                     <button
                         onClick={handleBack}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                        className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#1d4a2e]/80 hover:text-[#1d4a2e] transition-colors"
                     >
                         <svg
                             className="w-4 h-4"
@@ -142,8 +142,8 @@ const PolicyPage = ({ title, lastUpdated, content, children }) => {
                 </div>
             </div>
 
-            <main className="max-w-3xl mx-auto px-6 md:px-8 py-14 md:py-20">
-                <p className="text-xs uppercase tracking-[0.2em] font-medium text-gray-400 mb-4">
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 md:py-20">
+                <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#1f7a3e] mb-4">
                     Bulusan Zoo &amp; Wildlife Park
                 </p>
 
@@ -169,12 +169,12 @@ const PolicyPage = ({ title, lastUpdated, content, children }) => {
                                 key={link.path}
                                 to={link.path}
                                 aria-current={isActive ? 'page' : undefined}
-                                className={`text-sm px-4 py-1 first:pl-0 ${idx !== 0
+                                className={`inline-flex min-h-11 items-center text-sm px-4 py-2 first:pl-0 ${idx !== 0
                                         ? 'border-l border-gray-200'
                                         : ''
                                     } ${isActive
-                                        ? 'text-gray-900 font-medium'
-                                        : 'text-gray-500 hover:text-gray-900 transition-colors'
+                                        ? 'text-[#1d4a2e] font-semibold'
+                                        : 'text-[#1d4a2e]/70 hover:text-[#1d4a2e] transition-colors'
                                     }`}
                             >
                                 {link.label}

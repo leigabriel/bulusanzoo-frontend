@@ -128,19 +128,19 @@ const AuthSuccessModal = ({
                     {/* Title */}
                     <h2 
                         id="auth-success-title"
-                        className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2"
+                        className="text-xl sm:text-2xl font-bold text-[#1d4a2e] text-center mb-2"
                     >
                         {displayTitle}
                     </h2>
 
                     {/* Message */}
-                    <p className="text-gray-500 text-center text-sm sm:text-base leading-relaxed mb-6">
+                    <p className="text-[#1d4a2e]/70 text-center text-sm sm:text-base leading-relaxed mb-6">
                         {displayMessage}
                     </p>
 
                     {/* Progress bar for auto-close */}
                     {autoCloseDelay > 0 && (
-                        <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="w-full h-1 bg-[#e6f1df] rounded-full overflow-hidden">
                             <div 
                                 className="h-full bg-emerald-500 rounded-full animate-progress"
                                 style={{ 
@@ -154,7 +154,7 @@ const AuthSuccessModal = ({
                     {/* Optional: Manual close button */}
                     <button
                         onClick={handleClose}
-                        className="w-full mt-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        className="w-full mt-4 py-3 text-sm font-medium text-[#1d4a2e]/70 hover:text-[#1d4a2e]/80 hover:bg-[#f4f8ef] rounded-xl transition-colors"
                     >
                         Continue
                     </button>

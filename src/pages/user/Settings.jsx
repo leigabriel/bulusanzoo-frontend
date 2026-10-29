@@ -190,13 +190,13 @@ const Settings = ({ embedded = false, onClose }) => {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full">
+            <div className="min-h-screen bg-[#f4f8ef] flex items-center justify-center p-4">
+                <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-[#1d4a2e]/15 max-w-md w-full">
                     <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Icons.Bell />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-                    <p className="text-gray-600 mb-6">Please log in to manage your settings and view your activities.</p>
+                    <h2 className="text-2xl font-bold text-[#1d4a2e] mb-2">Access Denied</h2>
+                    <p className="text-[#1d4a2e]/80 mb-6">Please log in to manage your settings and view your activities.</p>
                     <Link to="/login" className="block w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors">
                         Go to Login
                     </Link>
@@ -225,7 +225,7 @@ const Settings = ({ embedded = false, onClose }) => {
         if (type?.includes('like') || type?.includes('heart')) return 'bg-red-100 text-red-600';
         if (type?.includes('post')) return 'bg-emerald-100 text-emerald-600';
         if (type?.includes('comment') || type?.includes('message')) return 'bg-purple-100 text-purple-600';
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-[#e6f1df] text-[#1d4a2e]/80';
     };
 
     const getActivityTitle = (activity) => {
@@ -255,8 +255,8 @@ const Settings = ({ embedded = false, onClose }) => {
                 return (
                     <div className="space-y-6 animate-fade-in">
                         <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">Notification Preferences</h3>
-                            <p className="text-gray-500 mb-6 text-sm">Choose how you want us to communicate with you.</p>
+                            <h3 className="text-xl font-bold text-[#1d4a2e] mb-2">Notification Preferences</h3>
+                            <p className="text-[#1d4a2e]/70 mb-6 text-sm">Choose how you want us to communicate with you.</p>
 
                             {/* Announces save results to screen readers; toasts alone are not announced. */}
                             <p className="sr-only" role="status" aria-live="polite">{statusMessage}</p>
@@ -271,12 +271,12 @@ const Settings = ({ embedded = false, onClose }) => {
                                 ].map(item => {
                                     const isPending = pendingKeys.has(item.key);
                                     return (
-                                    <div key={item.key} className="flex items-start sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100/50 rounded-xl transition-colors border border-gray-100">
+                                    <div key={item.key} className="flex items-start sm:items-center justify-between p-4 bg-[#f4f8ef] hover:bg-gray-100/50 rounded-xl transition-colors border border-[#1d4a2e]/15">
                                         <div className="pr-4">
-                                            <p className="font-semibold text-gray-800">{item.label}</p>
-                                            <p className="text-sm text-gray-500 mt-0.5">{item.desc}</p>
+                                            <p className="font-semibold text-[#1d4a2e]">{item.label}</p>
+                                            <p className="text-sm text-[#1d4a2e]/70 mt-0.5">{item.desc}</p>
                                             {isPending && (
-                                                <p className="text-xs text-gray-400 mt-1" aria-hidden="true">Saving…</p>
+                                                <p className="text-xs text-[#1d4a2e]/65 mt-1" aria-hidden="true">Saving…</p>
                                             )}
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1 sm:mt-0">
@@ -287,7 +287,7 @@ const Settings = ({ embedded = false, onClose }) => {
                                                 onChange={(e) => handleNotificationToggle(item.key, e.target.checked)}
                                                 className="sr-only peer disabled:cursor-not-allowed"
                                             />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 border border-gray-200 peer-checked:border-emerald-500 peer-disabled:opacity-60"></div>
+                                            <div className="w-11 h-6 bg-[#e6f1df] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-[#1d4a2e]/15 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 border border-[#1d4a2e]/15 peer-checked:border-emerald-500 peer-disabled:opacity-60"></div>
                                         </label>
                                     </div>
                                     );
@@ -302,17 +302,17 @@ const Settings = ({ embedded = false, onClose }) => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
                             <div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-2">Activity Log</h3>
-                                <p className="text-gray-500 text-sm">A history of your recent interactions and bookings.</p>
+                                <h3 className="text-xl font-bold text-[#1d4a2e] mb-2">Activity Log</h3>
+                                <p className="text-[#1d4a2e]/70 text-sm">A history of your recent interactions and bookings.</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <label className="sr-only" htmlFor="activity-filter">Filter activity</label>
-                                <select id="activity-filter" value={activityFilter} onChange={(event) => setActivityFilter(event.target.value)} className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                <select id="activity-filter" value={activityFilter} onChange={(event) => setActivityFilter(event.target.value)} className="min-w-0 rounded-lg border border-[#1d4a2e]/15 bg-white px-3 py-2 text-sm font-medium text-[#1d4a2e]/80 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                                     <option value="all">All actions</option>
                                     {activityTypes.map(type => <option key={type} value={type}>{type.replaceAll('_', ' ')}</option>)}
                                 </select>
                                 <label className="sr-only" htmlFor="activity-sort">Sort activity</label>
-                                <select id="activity-sort" value={activitySort} onChange={(event) => setActivitySort(event.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                <select id="activity-sort" value={activitySort} onChange={(event) => setActivitySort(event.target.value)} className="rounded-lg border border-[#1d4a2e]/15 bg-white px-3 py-2 text-sm font-medium text-[#1d4a2e]/80 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                                     <option value="newest">Newest first</option>
                                     <option value="oldest">Oldest first</option>
                                 </select>
@@ -323,7 +323,7 @@ const Settings = ({ embedded = false, onClose }) => {
                         {activitiesLoading ? (
                             <div className="flex flex-col items-center justify-center h-48 space-y-3">
                                 <LoadingSpinner />
-                                <p className="text-gray-500 text-sm animate-pulse">Loading your activity...</p>
+                                <p className="text-[#1d4a2e]/70 text-sm animate-pulse">Loading your activity...</p>
                             </div>
                         ) : activitiesError ? (
                             <div className="p-6 bg-red-50 text-red-600 rounded-xl text-center border border-red-100">
@@ -336,30 +336,30 @@ const Settings = ({ embedded = false, onClose }) => {
                                 </button>
                             </div>
                         ) : activities.length === 0 ? (
-                            <div className="p-10 bg-gray-50 rounded-xl text-center border border-gray-100">
-                                <div className="w-16 h-16 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="p-10 bg-[#f4f8ef] rounded-xl text-center border border-[#1d4a2e]/15">
+                                <div className="w-16 h-16 bg-[#e6f1df] text-[#1d4a2e]/65 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Icons.Activity />
                                 </div>
-                                <p className="text-gray-600 font-medium">No activity yet</p>
-                                <p className="text-sm text-gray-500 mt-1">When you book tickets or post in the community, it will show up here.</p>
+                                <p className="text-[#1d4a2e]/80 font-medium">No activity yet</p>
+                                <p className="text-sm text-[#1d4a2e]/70 mt-1">When you book tickets or post in the community, it will show up here.</p>
                             </div>
                         ) : visibleActivities.length === 0 ? (
-                            <div className="rounded-xl border border-gray-100 bg-gray-50 p-8 text-center text-sm text-gray-500">No activity matches this action.</div>
+                            <div className="rounded-xl border border-[#1d4a2e]/15 bg-[#f4f8ef] p-8 text-center text-sm text-[#1d4a2e]/70">No activity matches this action.</div>
                         ) : (
                             <div className="space-y-4">
                                 {visibleActivities.map((activity, index) => (
-                                    <div key={activity.id ? `${activity.type || 'activity'}-${activity.id}` : `activity-${index}`} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div key={activity.id ? `${activity.type || 'activity'}-${activity.id}` : `activity-${index}`} className="flex items-start gap-4 p-4 bg-white border border-[#1d4a2e]/15 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getActivityColor(activity.type)}`}>
                                             {getActivityIcon(activity.type)}
                                         </div>
                                         <div className="flex-grow min-w-0">
-                                            <p className="font-semibold text-gray-800 truncate">
+                                            <p className="font-semibold text-[#1d4a2e] truncate">
                                                 {getActivityTitle(activity)}
                                             </p>
-                                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 font-medium">
+                                            <div className="flex items-center gap-3 mt-2 text-xs text-[#1d4a2e]/70 font-medium">
                                                 <span>{formatDate(activity.created_at)}</span>
                                                 {activity.status && (
-                                                    <span className="capitalize px-2 py-0.5 bg-gray-100 rounded-md">
+                                                    <span className="capitalize px-2 py-0.5 bg-[#e6f1df] rounded-md">
                                                         {activity.status.replace('_', ' ')}
                                                     </span>
                                                 )}
@@ -376,8 +376,8 @@ const Settings = ({ embedded = false, onClose }) => {
                 return (
                     <div className="space-y-6 animate-fade-in">
                         <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">Need Help?</h3>
-                            <p className="text-gray-500 mb-6 text-sm">We're here to assist you with any questions or issues.</p>
+                            <h3 className="text-xl font-bold text-[#1d4a2e] mb-2">Need Help?</h3>
+                            <p className="text-[#1d4a2e]/70 mb-6 text-sm">We're here to assist you with any questions or issues.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <div className="p-5 bg-emerald-50 rounded-xl border border-emerald-100">
@@ -396,20 +396,20 @@ const Settings = ({ embedded = false, onClose }) => {
                                 </div>
                             </div>
 
-                            <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
-                                <h4 className="font-semibold text-gray-800 mb-3">Frequently Asked Questions</h4>
+                            <div className="p-5 bg-[#f4f8ef] rounded-xl border border-[#1d4a2e]/15">
+                                <h4 className="font-semibold text-[#1d4a2e] mb-3">Frequently Asked Questions</h4>
                                 <div className="space-y-3">
-                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
-                                        <summary className="font-medium text-sm text-gray-700">How do I get a refund for my ticket?</summary>
-                                        <p className="text-sm text-gray-500 mt-2 pl-2">Refunds must be requested at least 24 hours before your visit date. Please contact support with your booking reference.</p>
+                                    <details className="group bg-white p-3 rounded-lg border border-[#1d4a2e]/15 cursor-pointer">
+                                        <summary className="font-medium text-sm text-[#1d4a2e]/80">How do I get a refund for my ticket?</summary>
+                                        <p className="text-sm text-[#1d4a2e]/70 mt-2 pl-2">Refunds must be requested at least 24 hours before your visit date. Please contact support with your booking reference.</p>
                                     </details>
-                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
-                                        <summary className="font-medium text-sm text-gray-700">Can I change my visit date?</summary>
-                                        <p className="text-sm text-gray-500 mt-2 pl-2">Yes, you can reschedule your visit up to 48 hours prior. Contact support to arrange a new date.</p>
+                                    <details className="group bg-white p-3 rounded-lg border border-[#1d4a2e]/15 cursor-pointer">
+                                        <summary className="font-medium text-sm text-[#1d4a2e]/80">Can I change my visit date?</summary>
+                                        <p className="text-sm text-[#1d4a2e]/70 mt-2 pl-2">Yes, you can reschedule your visit up to 48 hours prior. Contact support to arrange a new date.</p>
                                     </details>
-                                    <details className="group bg-white p-3 rounded-lg border border-gray-200 cursor-pointer">
-                                        <summary className="font-medium text-sm text-gray-700">Do I need to print my tickets?</summary>
-                                        <p className="text-sm text-gray-500 mt-2 pl-2">No, you can simply show the QR code on your mobile device at the entrance.</p>
+                                    <details className="group bg-white p-3 rounded-lg border border-[#1d4a2e]/15 cursor-pointer">
+                                        <summary className="font-medium text-sm text-[#1d4a2e]/80">Do I need to print my tickets?</summary>
+                                        <p className="text-sm text-[#1d4a2e]/70 mt-2 pl-2">No, you can simply show the QR code on your mobile device at the entrance.</p>
                                     </details>
                                 </div>
                             </div>
@@ -428,26 +428,26 @@ const Settings = ({ embedded = false, onClose }) => {
             {!embedded && <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button
                     onClick={() => navigate(-1)}
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-gray-700 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium text-sm"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-[#1d4a2e]/80 rounded-full shadow-sm border border-[#1d4a2e]/15 hover:bg-[#f4f8ef] hover:shadow-md transition-all duration-300 font-medium text-sm"
                 >
                     <Icons.Back />
                     <span className="hidden sm:inline">Back</span>
                 </button>
                 <Link
                     to="/"
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-gray-700 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium text-sm"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-[#1d4a2e]/80 rounded-full shadow-sm border border-[#1d4a2e]/15 hover:bg-[#f4f8ef] hover:shadow-md transition-all duration-300 font-medium text-sm"
                 >
                     <Icons.Home />
                     <span className="hidden sm:inline">Home</span>
                 </Link>
             </div>}
 
-            {embedded && <div className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+            {embedded && <div className="flex items-center justify-between border-b border-[#1d4a2e]/15 bg-white px-5 py-4">
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
-                    <h2 className="mt-1 text-lg font-bold text-gray-900">Account settings</h2>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
+                    <h2 className="mt-1 text-lg font-bold text-[#1d4a2e]">Account settings</h2>
                 </div>
-                <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings"><X className="h-5 w-5" /></button>
+                <button onClick={onClose} className="rounded-full p-2 text-[#1d4a2e]/65 transition-colors hover:bg-[#e6f1df] hover:text-[#1d4a2e]/80" aria-label="Close settings"><X className="h-5 w-5" /></button>
             </div>}
 
             {/* Hero Section */}
@@ -462,7 +462,7 @@ const Settings = ({ embedded = false, onClose }) => {
             <div className={`flex-grow container mx-auto px-4 ${embedded ? 'py-6' : 'py-8'} max-w-5xl`}>
                 <div>
                     <div className="relative mb-4 flex items-center justify-between">
-                        <button type="button" onClick={() => setSettingsMenuOpen(open => !open)} aria-expanded={settingsMenuOpen} aria-haspopup="menu" className="inline-flex items-center gap-2 rounded-xl border border-[#dce5dc] bg-white px-3.5 py-2.5 text-sm font-bold text-gray-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                        <button type="button" onClick={() => setSettingsMenuOpen(open => !open)} aria-expanded={settingsMenuOpen} aria-haspopup="menu" className="inline-flex items-center gap-2 rounded-xl border border-[#dce5dc] bg-white px-3.5 py-2.5 text-sm font-bold text-[#1d4a2e] shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
                             <Menu className="h-5 w-5" />
                             Settings menu
                         </button>
@@ -470,9 +470,9 @@ const Settings = ({ embedded = false, onClose }) => {
                         {settingsMenuOpen && (
                             <div role="menu" className="absolute left-0 top-full z-30 mt-2 w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-[#dce5dc] bg-white p-2 shadow-xl">
                                 {menuItems.map(item => (
-                                    <button key={item.id} role="menuitem" onClick={() => { setActiveSection(item.id); setSettingsMenuOpen(false); }} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${activeSection === item.id ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}>
-                                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${activeSection === item.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}><item.icon /></span>
-                                        <span><span className="block text-sm font-bold">{item.label}</span><span className="block text-xs text-gray-500">{item.description}</span></span>
+                                    <button key={item.id} role="menuitem" onClick={() => { setActiveSection(item.id); setSettingsMenuOpen(false); }} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${activeSection === item.id ? 'bg-emerald-50 text-emerald-800' : 'text-[#1d4a2e]/80 hover:bg-[#f4f8ef]'}`}>
+                                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${activeSection === item.id ? 'bg-emerald-600 text-white' : 'bg-[#e6f1df] text-[#1d4a2e]/70'}`}><item.icon /></span>
+                                        <span><span className="block text-sm font-bold">{item.label}</span><span className="block text-xs text-[#1d4a2e]/70">{item.description}</span></span>
                                     </button>
                                 ))}
                             </div>

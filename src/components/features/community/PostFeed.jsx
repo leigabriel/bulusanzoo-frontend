@@ -80,7 +80,7 @@ const PostCarousel = ({ postId, images }) => {
                 ))}
             </div>
 
-            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold text-white">
+            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-bold text-white">
                 {index + 1}/{images.length}
             </span>
         </div>

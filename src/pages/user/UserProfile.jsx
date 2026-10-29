@@ -11,7 +11,7 @@ import PasswordInput from '../../components/common/PasswordInput';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { Camera, CheckCircle, ChevronLeft, FaceSmile, Save, Trash, User } from 'reicon-react';
 
-const UserIcon = () => <User className="h-16 w-16 text-gray-300" />;
+const UserIcon = () => <User className="h-16 w-16 text-[#1d4a2e]/65" />;
 const CameraIcon = () => <Camera className="h-4 w-4" />;
 const VerifiedIcon = () => <CheckCircle className="h-5 w-5 text-blue-500" />;
 
@@ -296,12 +296,12 @@ const hasPassword = user?.hasPassword === true;
 
                 <div className="flex items-center justify-between border-b border-[#dce5dc] bg-white px-5 py-4 sm:px-8">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">Your account</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Your account</p>
                         <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Profile</h2>
                     </div>
                     <button
                         onClick={() => embedded ? onClose?.() : navigate(-1)}
-                        className="flex items-center gap-2 rounded-full border border-gray-200 px-3.5 py-2 text-xs font-bold text-gray-600 transition hover:border-gray-300 hover:bg-gray-50"
+                        className="flex items-center gap-2 rounded-full border border-[#1d4a2e]/15 px-3.5 py-2 text-xs font-bold text-[#1d4a2e]/80 transition hover:border-[#1d4a2e]/15 hover:bg-[#f4f8ef]"
                     >
                         <ChevronLeft className="h-4 w-4" />
                         {embedded ? 'Close' : 'Back'}
@@ -312,7 +312,7 @@ const hasPassword = user?.hasPassword === true;
                     <div className="flex flex-col sm:flex-row justify-between items-start mb-10 gap-6">
                         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
                              <div className="relative group">
-                                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
+                                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[#e6f1df]">
                                     {getProfileImageUrl() && !imageLoadError ? (
                                         <img loading="lazy" decoding="async" 
                                             src={getProfileImageUrl()} 
@@ -332,14 +332,14 @@ const hasPassword = user?.hasPassword === true;
                                 <div className="absolute bottom-2 right-2 flex gap-1">
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
+                                        className="p-2 bg-white border border-[#1d4a2e]/15 rounded-full shadow-lg text-[#1d4a2e]/80 hover:text-emerald-600 transition"
                                         title="Upload photo"
                                     >
                                         <CameraIcon />
                                     </button>
                                     <button
                                         onClick={() => setShowAvatarSelector(true)}
-                                        className="p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
+                                        className="p-2 bg-white border border-[#1d4a2e]/15 rounded-full shadow-lg text-[#1d4a2e]/80 hover:text-emerald-600 transition"
                                         title="Choose avatar"
                                     >
                                         <FaceSmile className="h-4 w-4" />
@@ -354,7 +354,7 @@ const hasPassword = user?.hasPassword === true;
                                          </h1>
                                     <VerifiedIcon/>
                                 </div>
-                                <p className="text-lg text-gray-400 font-medium">@{user.username}</p>
+                                <p className="text-lg text-[#1d4a2e]/65 font-medium">@{user.username}</p>
                                 {(user?.profileImage || user?.profile_image) && !selectedFile && (
                                     <button onClick={handleRemoveImage} className="text-sm text-red-500 font-bold hover:underline mt-2">Remove photo</button>
                                 )}
@@ -363,7 +363,7 @@ const hasPassword = user?.hasPassword === true;
                          <div className="w-full sm:w-auto">
                             <button
                                 onClick={() => setIsEditing(!isEditing)}
-                                className="w-full sm:w-auto px-8 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                                className="w-full sm:w-auto px-8 py-2.5 bg-white border border-[#1d4a2e]/15 rounded-lg text-sm font-bold text-[#1d4a2e]/80 shadow-sm hover:bg-[#f4f8ef] transition"
                             >
                                 {isEditing ? 'Cancel' : 'Edit profile'}
                             </button>
@@ -374,8 +374,8 @@ const hasPassword = user?.hasPassword === true;
 
                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pb-14">
                          <div className="lg:col-span-4 lg:pt-1">
-                            <h3 className="text-lg font-bold text-gray-900">Personal information</h3>
-                            <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                            <h3 className="text-lg font-bold text-[#1d4a2e]">Personal information</h3>
+                            <p className="text-sm text-[#1d4a2e]/65 mt-2 leading-relaxed">
                                 Manage your personal details and account settings to keep your profile up to date.
                             </p>
                         </div>
@@ -383,33 +383,33 @@ const hasPassword = user?.hasPassword === true;
                          <div className="lg:col-span-8 space-y-8 rounded-2xl border border-[#dce5dc] bg-white p-5 shadow-sm sm:p-7">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">First name</label>
+                                    <label className="text-sm font-bold text-[#1d4a2e]/80 ml-1">First name</label>
                                     <input
                                         name="firstName"
                                         value={isEditing ? formData.firstName : user.firstName}
                                         onChange={handleChange}
                                         disabled={!isEditing}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400"
+                                        className="w-full px-4 py-3 bg-white border border-[#1d4a2e]/15 rounded-xl text-[#1d4a2e] focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-[#f4f8ef] disabled:text-[#1d4a2e]/65"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">Last name</label>
+                                    <label className="text-sm font-bold text-[#1d4a2e]/80 ml-1">Last name</label>
                                     <input
                                         name="lastName"
                                         value={isEditing ? formData.lastName : user.lastName}
                                         onChange={handleChange}
                                         disabled={!isEditing}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400"
+                                        className="w-full px-4 py-3 bg-white border border-[#1d4a2e]/15 rounded-xl text-[#1d4a2e] focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-[#f4f8ef] disabled:text-[#1d4a2e]/65"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Email address</label>
+                                <label className="text-sm font-bold text-[#1d4a2e]/80 ml-1">Email address</label>
                                 <input
                                     value={user.email}
                                     disabled
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 outline-none cursor-not-allowed"
+                                    className="w-full px-4 py-3 bg-[#f4f8ef] border border-[#1d4a2e]/15 rounded-xl text-[#1d4a2e]/65 outline-none cursor-not-allowed"
                                 />
                             </div>
 
@@ -420,13 +420,13 @@ const hasPassword = user?.hasPassword === true;
                             )}
 
                             <div className="pt-8 border-t border-gray-50">
-                                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Security & Session</h3>
+                                <h3 className="text-sm font-bold text-[#1d4a2e] mb-4 uppercase tracking-wider">Security & Session</h3>
                                 {/* Stacked full-width below sm: three side-by-side pills overflow a
                                     narrow phone and sat under the 44px touch minimum. */}
                                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                                      <button
                                          onClick={() => setShowPasswordModal(true)}
-                                        className="w-full min-h-11 sm:w-auto sm:min-h-0 sm:flex-none px-6 py-3 sm:py-2.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition"
+                                        className="w-full min-h-11 sm:w-auto sm:min-h-0 sm:flex-none px-6 py-3 sm:py-2.5 border border-[#1d4a2e]/15 rounded-lg text-sm font-bold text-[#1d4a2e]/80 hover:bg-[#f4f8ef] active:bg-[#e6f1df] transition"
                                     >
                         {hasPassword ? 'Change Password' : 'Add Password'}
                                     </button>
@@ -451,10 +451,10 @@ const hasPassword = user?.hasPassword === true;
             </div>
 
             {selectedFile && (
-                <div className="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-2xl animate-in slide-in-from-bottom-10 sm:bottom-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:gap-6 sm:rounded-full sm:px-8 sm:py-4">
-                    <p className="whitespace-nowrap text-sm font-extrabold text-gray-900">Update photo?</p>
+                <div className="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-between gap-3 rounded-2xl border border-[#1d4a2e]/15 bg-white px-4 py-3 shadow-2xl animate-in slide-in-from-bottom-10 sm:bottom-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:gap-6 sm:rounded-full sm:px-8 sm:py-4">
+                    <p className="whitespace-nowrap text-sm font-extrabold text-[#1d4a2e]">Update photo?</p>
                     <div className="flex min-w-0 gap-1 sm:gap-2">
-                        <button onClick={() => { setSelectedFile(null); setImagePreview(null); }} className="px-4 py-2 text-sm font-bold text-gray-400">Cancel</button>
+                        <button onClick={() => { setSelectedFile(null); setImagePreview(null); }} className="px-4 py-2 text-sm font-bold text-[#1d4a2e]/65">Cancel</button>
                         <button onClick={handleImageUpload} disabled={uploadingImage} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-emerald-100 sm:px-6">Update</button>
                     </div>
                 </div>
@@ -463,21 +463,21 @@ const hasPassword = user?.hasPassword === true;
             {showPasswordModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
                     <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-5 shadow-2xl sm:p-8">
-                        <h3 id="password-modal-title" className="text-xl font-black text-gray-900 mb-2 sm:text-2xl">{hasPassword ? 'Change password' : 'Add a password'}</h3>
-                        {!hasPassword && <p className="text-sm text-gray-500 mb-6">Your account uses Google Sign-In. Add a password so you can also sign in with your email.</p>}
-                        <p className="text-xs text-gray-400 mb-4">Password must be 8+ characters and include an uppercase letter, number, and special character.</p>
+                        <h3 id="password-modal-title" className="text-xl font-black text-[#1d4a2e] mb-2 sm:text-2xl">{hasPassword ? 'Change password' : 'Add a password'}</h3>
+                        {!hasPassword && <p className="text-sm text-[#1d4a2e]/70 mb-6">Your account uses Google Sign-In. Add a password so you can also sign in with your email.</p>}
+                        <p className="text-xs text-[#1d4a2e]/65 mb-4">Password must be 8+ characters and include an uppercase letter, number, and special character.</p>
                         {passwordError && (
                             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">
                                 {passwordError}
                             </div>
                         )}
                         <div className="space-y-4">
-                            {hasPassword && <PasswordInput placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />}
-                            <PasswordInput placeholder="New Password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
-                            <PasswordInput placeholder="Confirm New Password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                            {hasPassword && <PasswordInput placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-[#f4f8ef] border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />}
+                            <PasswordInput placeholder="New Password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-[#f4f8ef] border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                            <PasswordInput placeholder="Confirm New Password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="w-full px-5 py-3.5 text-base bg-[#f4f8ef] border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                         </div>
                         <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:mt-10">
-                            <button onClick={closePasswordModal} className="w-full py-3.5 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 active:bg-gray-100 transition">Cancel</button>
+                            <button onClick={closePasswordModal} className="w-full py-3.5 border border-[#1d4a2e]/15 rounded-xl font-bold text-[#1d4a2e]/65 hover:bg-[#f4f8ef] active:bg-[#e6f1df] transition">Cancel</button>
                             <button onClick={handlePasswordChange} disabled={loading} className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 active:bg-emerald-800 transition disabled:opacity-50">{loading ? 'Updating...' : 'Update'}</button>
                         </div>
                     </div>
@@ -490,12 +490,12 @@ const hasPassword = user?.hasPassword === true;
                         <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
                             <Trash className="h-6 w-6 text-red-600" />
                         </div>
-                        <h3 id="delete-modal-title" className="text-xl font-black text-gray-900 mb-2 sm:text-2xl">Delete your account?</h3>
-                        <p className="text-sm leading-relaxed text-gray-500 mb-5">This permanently deletes your profile, messages, reservations, community activity, scans, and account data. This cannot be undone.</p>
+                        <h3 id="delete-modal-title" className="text-xl font-black text-[#1d4a2e] mb-2 sm:text-2xl">Delete your account?</h3>
+                        <p className="text-sm leading-relaxed text-[#1d4a2e]/70 mb-5">This permanently deletes your profile, messages, reservations, community activity, scans, and account data. This cannot be undone.</p>
                         {deleteError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{deleteError}</div>}
-                        <input type="password" autoComplete="current-password" value={deletePassword} onChange={event => setDeletePassword(event.target.value)} placeholder="Enter your password" className="w-full px-5 py-3.5 text-base bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-red-500 transition-all" />
+                        <input type="password" autoComplete="current-password" value={deletePassword} onChange={event => setDeletePassword(event.target.value)} placeholder="Enter your password" className="w-full px-5 py-3.5 text-base bg-[#f4f8ef] border border-transparent rounded-2xl outline-none focus:bg-white focus:border-red-500 transition-all" />
                         <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:mt-8">
-                            <button onClick={() => setShowDeleteModal(false)} className="w-full py-3.5 border border-gray-200 rounded-xl font-bold text-gray-500 hover:bg-gray-50 active:bg-gray-100 transition">Cancel</button>
+                            <button onClick={() => setShowDeleteModal(false)} className="w-full py-3.5 border border-[#1d4a2e]/15 rounded-xl font-bold text-[#1d4a2e]/70 hover:bg-[#f4f8ef] active:bg-[#e6f1df] transition">Cancel</button>
                             <button onClick={handleDeleteAccount} disabled={deleteLoading} className="w-full py-3.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50">{deleteLoading ? 'Deleting...' : 'Delete permanently'}</button>
                         </div>
                     </div>
@@ -517,10 +517,10 @@ const hasPassword = user?.hasPassword === true;
                         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Save className="h-8 w-8 text-emerald-600" />
                         </div>
-                        <h3 id="save-modal-title" className="text-xl font-black text-gray-900 mb-2">Save Changes?</h3>
-                        <p className="text-gray-500 text-sm mb-6">Are you sure you want to save your profile changes?</p>
+                        <h3 id="save-modal-title" className="text-xl font-black text-[#1d4a2e] mb-2">Save Changes?</h3>
+                        <p className="text-[#1d4a2e]/70 text-sm mb-6">Are you sure you want to save your profile changes?</p>
                         <div className="flex flex-col-reverse gap-3 sm:flex-row">
-                            <button onClick={() => setShowSaveConfirm(false)} className="w-full py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 active:bg-gray-100 transition">Cancel</button>
+                            <button onClick={() => setShowSaveConfirm(false)} className="w-full py-3 border border-[#1d4a2e]/15 rounded-xl font-bold text-[#1d4a2e]/65 hover:bg-[#f4f8ef] active:bg-[#e6f1df] transition">Cancel</button>
                             <button onClick={handleSave} disabled={loading} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-700 active:bg-emerald-800 transition disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
                         </div>
                     </div>

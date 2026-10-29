@@ -52,10 +52,10 @@ const StatusBadge = ({ item, isAppeal }) => {
             rejected: 'bg-red-100 text-red-700',
             pending: 'bg-amber-100 text-amber-800'
         };
-        return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${styles[item.status] || styles.pending}`}>{item.status}</span>;
+        return <span className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize ${styles[item.status] || styles.pending}`}>{item.status}</span>;
     }
-    if (item.admin_response) return <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-700">Replied</span>;
-    if (!item.is_read) return <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-800">New</span>;
+    if (item.admin_response) return <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">Replied</span>;
+    if (!item.is_read) return <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-800">New</span>;
     return null;
 };
 

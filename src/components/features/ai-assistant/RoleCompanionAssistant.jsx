@@ -26,18 +26,18 @@ const OperationalCard = ({ data }) => {
         <div className="rounded-2xl p-4" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: THEME.accentDark }}>{label}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: THEME.accentDark }}>{label}</p>
                     <p className="mt-1 text-sm font-bold truncate" style={{ color: THEME.text }}>{data.title || 'Reservation'}</p>
                 </div>
-                <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold" style={{ background: THEME.accentSoft, color: THEME.accentDark }}>
+                <span className="shrink-0 rounded-full px-2.5 py-1 text-xs uppercase font-bold" style={{ background: THEME.accentSoft, color: THEME.accentDark }}>
                     {data.status || 'pending'}
                 </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs" style={{ color: THEME.textMuted }}>
-                {data.reference && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Reference</span>{data.reference}</div>}
-                {data.date && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Date</span>{data.date}</div>}
-                {data.visitors !== undefined && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Visitors</span>{data.visitors}</div>}
-                {data.participants !== undefined && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Participants</span>{data.participants}</div>}
+                {data.reference && <div><span className="block text-xs uppercase" style={{ color: THEME.textSoft }}>Reference</span>{data.reference}</div>}
+                {data.date && <div><span className="block text-xs uppercase" style={{ color: THEME.textSoft }}>Date</span>{data.date}</div>}
+                {data.visitors !== undefined && <div><span className="block text-xs uppercase" style={{ color: THEME.textSoft }}>Visitors</span>{data.visitors}</div>}
+                {data.participants !== undefined && <div><span className="block text-xs uppercase" style={{ color: THEME.textSoft }}>Participants</span>{data.participants}</div>}
             </div>
         </div>
     );

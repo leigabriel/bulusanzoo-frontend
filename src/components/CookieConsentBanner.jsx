@@ -52,15 +52,15 @@ const CookieConsentBanner = () => {
             role="dialog"
             aria-live="polite"
             aria-label="Cookie consent"
-            className={`fixed z-[300] bottom-4 left-4 right-4 sm:right-auto sm:bottom-6 sm:left-6
+            className={`fixed z-[90] bottom-4 left-4 right-4 sm:right-auto sm:bottom-6 sm:left-6
                 w-auto sm:w-[360px] transition-all duration-200 ease-out
                 ${entered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
         >
-            <div className="bg-white border border-[#1f2d23]/12 rounded-lg shadow-[0_4px_20px_rgba(15,23,18,0.08)] px-5 py-4">
-                <p className="text-[13px] font-semibold text-[#1f2d23] mb-1.5 tracking-tight">
+            <div className="bg-white border border-[#1f2d23]/12 rounded-2xl shadow-[0_14px_34px_-12px_rgba(29,74,46,0.45)] px-5 py-4">
+                <p className="text-sm font-semibold text-[#1d4a2e] mb-1.5">
                     Cookie notice
                 </p>
-                <p className="text-[12.5px] text-[#1f2d23]/65 leading-relaxed mb-4">
+                <p className="text-[13px] text-[#1d4a2e]/75 leading-relaxed mb-4">
                     We use cookies to keep this site secure, understand how it's used, and
                     process payments through PayMongo.{' '}
                     <Link
@@ -75,14 +75,14 @@ const CookieConsentBanner = () => {
                     <button
                         type="button"
                         onClick={() => handleDecision(true)}
-                        className="flex-1 px-3.5 py-2 rounded-md bg-[#1f2d23] hover:bg-[#14201a] text-white text-[12.5px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                        className="min-h-11 flex-1 px-3.5 py-2 rounded-full bg-[#1d4a2e] hover:bg-[#1f7a3e] text-white text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                     >
                         Accept
                     </button>
                     <button
                         type="button"
                         onClick={() => handleDecision(false)}
-                        className="flex-1 px-3.5 py-2 rounded-md border border-[#1f2d23]/15 text-[#1f2d23]/80 text-[12.5px] font-medium hover:bg-[#1f2d23]/[0.04] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                        className="min-h-11 flex-1 px-3.5 py-2 rounded-full border border-[#1d4a2e]/20 text-[#1d4a2e] text-sm font-semibold hover:bg-[#e6f1df] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                     >
                         Decline
                     </button>

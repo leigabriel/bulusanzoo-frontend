@@ -22,7 +22,7 @@ const Avatar = ({ person, className = 'h-12 w-12' }) => (
         src={getProfileImageUrl(person?.profileImage) || defaultAvatar}
         alt=""
         onError={(event) => { event.currentTarget.src = defaultAvatar; }}
-        className={`${className} rounded-full border border-gray-100 bg-gray-50 object-cover shrink-0`}
+        className={`${className} rounded-full border border-[#1d4a2e]/15 bg-[#f4f8ef] object-cover shrink-0`}
     />
 );
 
@@ -154,19 +154,19 @@ const UserMessages = () => {
     const recipient = recipientFor(selected);
 
     return (
-        <div className="flex h-[100dvh] overflow-hidden bg-white text-gray-900 antialiased">
+        <div className="flex h-[100dvh] overflow-hidden bg-white text-[#1d4a2e] antialiased">
             {/* Sidebar List */}
-            <aside className={`${selected || selectedSupport ? 'hidden md:flex' : 'flex'} w-full flex-col border-r border-gray-100 bg-gray-50/50 md:w-[380px]`}>
+            <aside className={`${selected || selectedSupport ? 'hidden md:flex' : 'flex'} w-full flex-col border-r border-[#1d4a2e]/15 bg-gray-50/50 md:w-[380px]`}>
                 <header className="flex flex-col gap-4 px-5 py-5 pb-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <button type="button" onClick={() => navigate(-1)} className="rounded-full p-2 text-gray-500 hover:bg-gray-200 transition-colors">
+                            <button type="button" onClick={() => navigate(-1)} className="rounded-full p-2 text-[#1d4a2e]/70 hover:bg-[#e6f1df] transition-colors">
                                 <ChevronLeft className="h-6 w-6" />
                             </button>
                             <h1 className="text-2xl font-bold tracking-tight">{activeView === 'chats' ? 'Chats' : 'Support Requests'}</h1>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button type="button" onClick={() => navigate('/')} className="rounded-full p-2 text-gray-500 hover:bg-gray-200 transition-colors">
+                            <button type="button" onClick={() => navigate('/')} className="rounded-full p-2 text-[#1d4a2e]/70 hover:bg-[#e6f1df] transition-colors">
                                 <Home className="h-5 w-5" />
                             </button>
                             {activeView === 'chats' && <button type="button" onClick={() => setPickerOpen(true)} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100 transition-colors">
@@ -174,9 +174,9 @@ const UserMessages = () => {
                             </button>}
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
-                        <button type="button" onClick={() => { setActiveView('chats'); setSelectedSupport(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'chats' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>Live Chats</button>
-                        <button type="button" onClick={() => { setActiveView('support'); setSelected(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'support' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>Contact Support</button>
+                    <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#e6f1df] p-1">
+                        <button type="button" onClick={() => { setActiveView('chats'); setSelectedSupport(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'chats' ? 'bg-white text-blue-600 shadow-sm' : 'text-[#1d4a2e]/70 hover:text-[#1d4a2e]'}`}>Live Chats</button>
+                        <button type="button" onClick={() => { setActiveView('support'); setSelected(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'support' ? 'bg-white text-blue-600 shadow-sm' : 'text-[#1d4a2e]/70 hover:text-[#1d4a2e]'}`}>Contact Support</button>
                     </div>
                 </header>
 
@@ -184,13 +184,13 @@ const UserMessages = () => {
                     {activeView === 'support' ? (supportLoading ? (
                         <div className="flex h-64 items-center justify-center"><Loader className="h-7 w-7 animate-spin text-blue-500" /></div>
                     ) : supportMessages.length ? supportMessages.map((support) => (
-                        <button type="button" key={support.id} onClick={() => setSelectedSupport(support)} className={`mb-1 w-full rounded-2xl p-4 text-left transition ${selectedSupport?.id === support.id ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-gray-100'}`}>
-                            <div className="flex items-start justify-between gap-3"><strong className="truncate text-sm">{support.subject}</strong><span className={`shrink-0 text-[10px] ${selectedSupport?.id === support.id ? 'text-blue-100' : 'text-gray-400'}`}>{support.created_at ? formatTime(support.created_at) : ''}</span></div>
-                            <p className={`mt-2 line-clamp-2 text-sm ${selectedSupport?.id === support.id ? 'text-blue-50' : 'text-gray-500'}`}>{support.content}</p>
-                            <span className={`mt-2 inline-block text-[10px] font-bold uppercase ${selectedSupport?.id === support.id ? 'text-blue-100' : support.admin_response ? 'text-emerald-600' : 'text-amber-600'}`}>{support.admin_response ? 'Replied' : 'Awaiting reply'}</span>
+                        <button type="button" key={support.id} onClick={() => setSelectedSupport(support)} className={`mb-1 w-full rounded-2xl p-4 text-left transition ${selectedSupport?.id === support.id ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-[#e6f1df]'}`}>
+                            <div className="flex items-start justify-between gap-3"><strong className="truncate text-sm">{support.subject}</strong><span className={`shrink-0 text-xs ${selectedSupport?.id === support.id ? 'text-blue-100' : 'text-[#1d4a2e]/65'}`}>{support.created_at ? formatTime(support.created_at) : ''}</span></div>
+                            <p className={`mt-2 line-clamp-2 text-sm ${selectedSupport?.id === support.id ? 'text-blue-50' : 'text-[#1d4a2e]/70'}`}>{support.content}</p>
+                            <span className={`mt-2 inline-block text-xs font-bold uppercase ${selectedSupport?.id === support.id ? 'text-blue-100' : support.admin_response ? 'text-emerald-600' : 'text-amber-600'}`}>{support.admin_response ? 'Replied' : 'Awaiting reply'}</span>
                         </button>
                     )) : (
-                        <div className="flex flex-col items-center justify-center pt-20 text-center text-gray-500"><Envelope className="mb-4 h-8 w-8 text-gray-400" /><p className="text-sm font-medium">No support requests yet</p><p className="mt-1 text-xs text-gray-400">Contact Support messages will appear here.</p></div>
+                        <div className="flex flex-col items-center justify-center pt-20 text-center text-[#1d4a2e]/70"><Envelope className="mb-4 h-8 w-8 text-[#1d4a2e]/65" /><p className="text-sm font-medium">No support requests yet</p><p className="mt-1 text-xs text-[#1d4a2e]/65">Contact Support messages will appear here.</p></div>
                     )) : conversations.map((conversation) => {
                         const person = recipientFor(conversation);
                         const isSelected = selected?.id === conversation.id;
@@ -199,22 +199,22 @@ const UserMessages = () => {
                                 type="button"
                                 key={conversation.id}
                                 onClick={() => setSelected(conversation)}
-                                className={`mb-1 flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all ${isSelected ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-gray-100'}`}
+                                className={`mb-1 flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all ${isSelected ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-[#e6f1df]'}`}
                             >
                                 <Avatar person={person} className="h-12 w-12 shadow-sm" />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex justify-between items-center mb-0.5">
-                                        <strong className={`truncate font-semibold ${isSelected ? 'text-white' : 'text-gray-900'}`}>{personName(person)}</strong>
-                                        <span className={`shrink-0 text-xs ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                                        <strong className={`truncate font-semibold ${isSelected ? 'text-white' : 'text-[#1d4a2e]'}`}>{personName(person)}</strong>
+                                        <span className={`shrink-0 text-xs ${isSelected ? 'text-blue-100' : 'text-[#1d4a2e]/65'}`}>
                                             {conversation.lastMessage?.createdAt ? formatTime(conversation.lastMessage.createdAt) : ''}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <p className={`min-w-0 flex-1 truncate text-sm ${isSelected ? 'text-blue-50' : 'text-gray-500'}`}>
+                                        <p className={`min-w-0 flex-1 truncate text-sm ${isSelected ? 'text-blue-50' : 'text-[#1d4a2e]/70'}`}>
                                             {conversation.lastMessage?.content || 'Start the conversation'}
                                         </p>
                                         {conversation.unreadCount > 0 && (
-                                            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${isSelected ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>
+                                            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${isSelected ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>
                                                 {conversation.unreadCount}
                                             </span>
                                         )}
@@ -224,12 +224,12 @@ const UserMessages = () => {
                         );
                     })}
                     {activeView === 'chats' && !conversations.length && (
-                        <div className="flex flex-col items-center justify-center pt-20 text-center text-gray-500">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                                <Envelope className="h-8 w-8 text-gray-400" />
+                        <div className="flex flex-col items-center justify-center pt-20 text-center text-[#1d4a2e]/70">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#e6f1df]">
+                                <Envelope className="h-8 w-8 text-[#1d4a2e]/65" />
                             </div>
                             <p className="text-sm font-medium">No messages yet</p>
-                            <p className="text-xs text-gray-400 mt-1">Tap the plus icon to start chatting</p>
+                            <p className="text-xs text-[#1d4a2e]/65 mt-1">Tap the plus icon to start chatting</p>
                         </div>
                     )}
                 </div>
@@ -240,30 +240,30 @@ const UserMessages = () => {
                 {activeView === 'support' ? (
                     selectedSupport ? (
                         <article className="flex h-full min-h-0 flex-col bg-white">
-                            <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
-                                <button type="button" onClick={() => setSelectedSupport(null)} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 md:hidden" aria-label="Back to support requests"><ChevronLeft className="h-6 w-6" /></button>
-                                <div className="min-w-0"><h2 className="truncate font-bold text-gray-900">{selectedSupport.subject}</h2><p className="text-xs text-gray-500">{selectedSupport.created_at ? new Date(selectedSupport.created_at).toLocaleString() : 'Support request'} · <span className={selectedSupport.case_status === 'closed' ? 'text-gray-500' : 'text-emerald-600'}>{selectedSupport.case_status === 'closed' ? 'Closed' : 'Open'}</span></p></div>
+                            <header className="flex items-center gap-3 border-b border-[#1d4a2e]/15 px-4 py-3 sm:px-6">
+                                <button type="button" onClick={() => setSelectedSupport(null)} className="rounded-full p-2 text-[#1d4a2e]/70 hover:bg-[#e6f1df] md:hidden" aria-label="Back to support requests"><ChevronLeft className="h-6 w-6" /></button>
+                                <div className="min-w-0"><h2 className="truncate font-bold text-[#1d4a2e]">{selectedSupport.subject}</h2><p className="text-xs text-[#1d4a2e]/70">{selectedSupport.created_at ? new Date(selectedSupport.created_at).toLocaleString() : 'Support request'} · <span className={selectedSupport.case_status === 'closed' ? 'text-[#1d4a2e]/70' : 'text-emerald-600'}>{selectedSupport.case_status === 'closed' ? 'Closed' : 'Open'}</span></p></div>
                             </header>
                             <div className="flex-1 overflow-y-auto p-5 sm:p-8">
                                 <div className="mx-auto max-w-2xl">
-                                    <div className="rounded-2xl bg-blue-50 p-5"><p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.content}</p><p className="mt-3 text-xs text-gray-500">You</p></div>
-                                    {selectedSupport.user_response && <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-blue-700">Your reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.user_response}</p></div>}
-                                    {selectedSupport.admin_response ? <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Support reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.admin_response}</p>{selectedSupport.responded_at && <p className="mt-3 text-xs text-gray-500">{new Date(selectedSupport.responded_at).toLocaleString()}</p>}</div> : <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">Your request is waiting for a support reply.</div>}
-                                    {selectedSupport.case_status === 'closed' ? <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">This support case is closed. Start a new Contact Support request if you need more help.</div> : <form onSubmit={sendSupportReply} className="mt-6"><label htmlFor="support-reply" className="text-sm font-bold text-gray-900">Reply to support</label><textarea id="support-reply" value={supportReply} onChange={(event) => setSupportReply(event.target.value)} rows={4} maxLength={4000} placeholder="Add more information or reply to support..." className="mt-2 w-full resize-y rounded-xl border border-blue-100 bg-blue-50/30 px-4 py-3 text-sm leading-6 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" /><button type="submit" disabled={!supportReply.trim() || supportReplySending} className="mt-3 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50">{supportReplySending ? 'Sending...' : 'Send reply'}</button></form>}
+                                    <div className="rounded-2xl bg-blue-50 p-5"><p className="whitespace-pre-wrap text-sm leading-7 text-[#1d4a2e]">{selectedSupport.content}</p><p className="mt-3 text-xs text-[#1d4a2e]/70">You</p></div>
+                                    {selectedSupport.user_response && <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-blue-700">Your reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#1d4a2e]">{selectedSupport.user_response}</p></div>}
+                                    {selectedSupport.admin_response ? <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Support reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#1d4a2e]">{selectedSupport.admin_response}</p>{selectedSupport.responded_at && <p className="mt-3 text-xs text-[#1d4a2e]/70">{new Date(selectedSupport.responded_at).toLocaleString()}</p>}</div> : <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">Your request is waiting for a support reply.</div>}
+                                    {selectedSupport.case_status === 'closed' ? <div className="mt-5 rounded-2xl border border-[#1d4a2e]/15 bg-[#f4f8ef] p-4 text-sm text-[#1d4a2e]/80">This support case is closed. Start a new Contact Support request if you need more help.</div> : <form onSubmit={sendSupportReply} className="mt-6"><label htmlFor="support-reply" className="text-sm font-bold text-[#1d4a2e]">Reply to support</label><textarea id="support-reply" value={supportReply} onChange={(event) => setSupportReply(event.target.value)} rows={4} maxLength={4000} placeholder="Add more information or reply to support..." className="mt-2 w-full resize-y rounded-xl border border-blue-100 bg-blue-50/30 px-4 py-3 text-sm leading-6 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" /><button type="submit" disabled={!supportReply.trim() || supportReplySending} className="mt-3 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50">{supportReplySending ? 'Sending...' : 'Send reply'}</button></form>}
                                 </div>
                             </div>
                         </article>
-                    ) : <div className="m-auto flex flex-col items-center text-center p-8"><Envelope className="h-10 w-10 text-blue-300" /><h3 className="mt-4 text-xl font-semibold text-gray-900">Select a support request</h3><p className="mt-2 max-w-sm text-sm text-gray-500">Open a request to read your message and any reply from support.</p></div>
+                    ) : <div className="m-auto flex flex-col items-center text-center p-8"><Envelope className="h-10 w-10 text-blue-300" /><h3 className="mt-4 text-xl font-semibold text-[#1d4a2e]">Select a support request</h3><p className="mt-2 max-w-sm text-sm text-[#1d4a2e]/70">Open a request to read your message and any reply from support.</p></div>
                 ) : selected ? (
                     <>
                         {/* Glassmorphism Header */}
-                        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-md">
-                            <button type="button" onClick={() => setSelected(null)} className="rounded-full p-2 -ml-2 text-gray-500 md:hidden hover:bg-gray-100">
+                        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-[#1d4a2e]/15 bg-white/80 px-4 py-3 backdrop-blur-md">
+                            <button type="button" onClick={() => setSelected(null)} className="rounded-full p-2 -ml-2 text-[#1d4a2e]/70 md:hidden hover:bg-[#e6f1df]">
                                 <ChevronLeft className="h-6 w-6" />
                             </button>
                             <Avatar person={recipient} className="h-10 w-10" />
                             <div className="flex flex-col">
-                                <h2 className="font-semibold text-gray-900 leading-tight">{personName(recipient)}</h2>
+                                <h2 className="font-semibold text-[#1d4a2e] leading-tight">{personName(recipient)}</h2>
                                 <span className="text-xs text-green-500 font-medium">Online</span>
                             </div>
                         </header>
@@ -282,13 +282,13 @@ const UserMessages = () => {
                                                 className={`group relative max-w-[75%] px-4 py-2.5 text-[15px] leading-relaxed shadow-sm
                                                     ${own
                                                         ? `bg-blue-500 text-white rounded-2xl rounded-tr-sm ${isLastInGroup ? 'rounded-br-sm' : ''}`
-                                                        : `bg-gray-100 text-gray-900 rounded-2xl rounded-tl-sm ${isLastInGroup ? 'rounded-bl-sm' : ''}`
+                                                        : `bg-[#e6f1df] text-[#1d4a2e] rounded-2xl rounded-tl-sm ${isLastInGroup ? 'rounded-bl-sm' : ''}`
                                                     }`
                                                 }
                                             >
                                                 <p className="whitespace-pre-wrap">{message.content}</p>
 
-                                                <div className={`mt-1 flex items-center gap-1.5 text-[10px] select-none ${own ? 'text-blue-100 justify-end' : 'text-gray-400 justify-start'}`}>
+                                                <div className={`mt-1 flex items-center gap-1.5 text-xs select-none ${own ? 'text-blue-100 justify-end' : 'text-[#1d4a2e]/65 justify-start'}`}>
                                                     <span>{formatTime(message.createdAt)}</span>
                                                     {own && (
                                                         <svg className={`h-3 w-3 ${message.isRead ? 'text-blue-200' : 'text-blue-300/50'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -305,8 +305,8 @@ const UserMessages = () => {
                         </div>
 
                         {/* Chat Input */}
-                        <form onSubmit={send} className="bg-white px-4 py-3 border-t border-gray-100">
-                            <div className="mx-auto flex max-w-4xl items-end gap-2 bg-gray-100 rounded-3xl p-1 shadow-sm border border-gray-200/50">
+                        <form onSubmit={send} className="bg-white px-4 py-3 border-t border-[#1d4a2e]/15">
+                            <div className="mx-auto flex max-w-4xl items-end gap-2 bg-[#e6f1df] rounded-3xl p-1 shadow-sm border border-gray-200/50">
                                 <textarea
                                     value={draft}
                                     onChange={(event) => setDraft(event.target.value)}
@@ -319,7 +319,7 @@ const UserMessages = () => {
                                     maxLength={4000}
                                     rows={1}
                                     placeholder="Type a message..."
-                                    className="max-h-32 min-h-[44px] flex-1 resize-y bg-transparent px-4 py-2.5 text-[15px] outline-none placeholder:text-gray-400"
+                                    className="max-h-32 min-h-[44px] flex-1 resize-y bg-transparent px-4 py-2.5 text-[15px] outline-none placeholder:text-[#1d4a2e]/65"
                                     style={{ border: 'none', boxShadow: 'none' }}
                                 />
                                 <button
@@ -337,8 +337,8 @@ const UserMessages = () => {
                         <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-blue-50/50">
                             <Envelope className="h-10 w-10 text-blue-400" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900">Your Messages</h3>
-                        <p className="mt-2 max-w-sm text-sm text-gray-500">Send private photos and messages to your favorite connections.</p>
+                        <h3 className="text-xl font-semibold text-[#1d4a2e]">Your Messages</h3>
+                        <p className="mt-2 max-w-sm text-sm text-[#1d4a2e]/70">Send private photos and messages to your favorite connections.</p>
                         <button onClick={() => setPickerOpen(true)} className="mt-6 rounded-full bg-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-blue-600 transition-colors">
                             Start a new chat
                         </button>
@@ -350,9 +350,9 @@ const UserMessages = () => {
             {pickerOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm transition-opacity">
                     <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
-                        <header className="flex items-center justify-between border-b border-gray-100 p-4">
-                            <h2 className="text-lg font-bold text-gray-900 mx-auto pl-8">New Message</h2>
-                            <button type="button" onClick={() => setPickerOpen(false)} className="rounded-full p-2 text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+                        <header className="flex items-center justify-between border-b border-[#1d4a2e]/15 p-4">
+                            <h2 className="text-lg font-bold text-[#1d4a2e] mx-auto pl-8">New Message</h2>
+                            <button type="button" onClick={() => setPickerOpen(false)} className="rounded-full p-2 text-[#1d4a2e]/65 bg-[#f4f8ef] hover:bg-[#e6f1df] hover:text-[#1d4a2e] transition-colors">
                                 <X className="h-5 w-5" />
                             </button>
                         </header>
@@ -362,12 +362,12 @@ const UserMessages = () => {
                                     type="button"
                                     key={`${person.type}-${person.id || 'general'}`}
                                     onClick={() => chooseRecipient(person)}
-                                    className="flex w-full items-center gap-4 rounded-2xl p-3 text-left transition-colors hover:bg-gray-50"
+                                    className="flex w-full items-center gap-4 rounded-2xl p-3 text-left transition-colors hover:bg-[#f4f8ef]"
                                 >
                                     <Avatar person={person} className="h-12 w-12" />
                                     <div className="flex flex-col">
-                                        <strong className="text-sm font-bold text-gray-900">{personName(person)}</strong>
-                                        <span className="text-xs text-gray-500 font-medium">{person.type === 'admin' ? 'General inbox' : 'Zoo staff'}</span>
+                                        <strong className="text-sm font-bold text-[#1d4a2e]">{personName(person)}</strong>
+                                        <span className="text-xs text-[#1d4a2e]/70 font-medium">{person.type === 'admin' ? 'General inbox' : 'Zoo staff'}</span>
                                     </div>
                                 </button>
                             ))}

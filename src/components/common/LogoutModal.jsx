@@ -49,16 +49,16 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
                 aria-hidden="true"
             />
 
-            <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-5 sm:p-8 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain animate-scale-in border border-gray-100">
+            <div className="relative bg-[#fbf6e9] rounded-3xl shadow-2xl w-full max-w-md mx-4 p-5 sm:p-8 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain animate-scale-in border border-[#1d4a2e]/15">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500 mb-5 sm:h-16 sm:w-16 sm:mb-6">
                     <Logout size={28} className="w-7 h-7" aria-hidden="true" />
                 </div>
 
                 <div className="text-center mb-8">
-                    <h2 id="logout-modal-title" className="text-xl font-extrabold text-gray-900 mb-2">
+                    <h2 id="logout-modal-title" className="text-xl font-bold text-[#1d4a2e] mb-2">
                         Logout Confirmation
                     </h2>
-                    <p className="text-gray-500 text-[15px] mt-1 leading-relaxed">
+                    <p className="text-[#1d4a2e]/70 text-[15px] mt-1 leading-relaxed">
                         Are you sure you want to logout?
                     </p>
                 </div>
@@ -68,14 +68,14 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
                         ref={cancelButtonRef}
                         onClick={onClose}
                         disabled={loading}
-                        className="flex-1 px-5 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors disabled:opacity-50 touch-target order-2 sm:order-1"
+                        className="flex-1 px-5 py-3.5 bg-[#e6f1df] text-[#1d4a2e]/80 rounded-full font-semibold hover:bg-[#e6f1df] transition-colors disabled:opacity-50 touch-target order-2 sm:order-1"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={loading}
-                        className="flex-1 px-5 py-3.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-md shadow-red-600/20 touch-target order-1 sm:order-2"
+                        className="flex-1 px-5 py-3.5 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-md shadow-red-600/20 touch-target order-1 sm:order-2"
                     >
                         {loading ? (
                             <>

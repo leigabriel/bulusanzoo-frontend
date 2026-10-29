@@ -403,7 +403,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                     {msg.type === 'image' && (
                                         <div className="relative">
                                              <img loading="lazy" decoding="async" src={msg.content} alt="Uploaded animal" className={`block w-auto max-w-full rounded-xl ${embedded ? 'max-h-48' : 'max-h-64'} object-contain border border-white/30 mb-2`} />
-                                             <span className="absolute bottom-4 left-2 rounded-full bg-[#1f3328]/80 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">Photo sent</span>
+                                             <span className="absolute bottom-4 left-2 rounded-full bg-[#1f3328]/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">Photo sent</span>
                                         </div>
                                     )}
 
@@ -418,10 +418,10 @@ const AnimalClassifier = ({ embedded = false }) => {
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="min-w-0">
-                                                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
+                                                            <p className="text-xs uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
                                                             <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
                                                         </div>
-                                                         {/* <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span> */}
+                                                         {/* <span className="shrink-0 rounded-full px-2.5 py-1 text-xs uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span> */}
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-3">
                                                         <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
@@ -433,7 +433,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                             </div>
                                              <p className="text-[#506057] leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
                                             {msg.meta.wikipediaLoading && (
-                                                <p className="mt-2 text-[11px] font-medium text-[#718078]">Loading Wikipedia details...</p>
+                                                <p className="mt-2 text-xs font-medium text-[#718078]">Loading Wikipedia details...</p>
                                             )}
                                             {msg.meta.wikipediaData?.scientificName && (
                                                  <p className="mt-3 text-xs text-[#718078]"><span className="font-semibold text-[#405047]">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
@@ -479,9 +479,9 @@ const AnimalClassifier = ({ embedded = false }) => {
                     <div className="flex items-center justify-between gap-3 mb-3">
                         <div>
                             <p className="text-sm font-bold text-[#1f3328]">Scan an animal</p>
-                            <p className="text-[11px] text-[#718078]">Upload a photo or use your camera</p>
+                            <p className="text-xs text-[#718078]">Upload a photo or use your camera</p>
                         </div>
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${isModelLoading ? 'bg-amber-50 text-amber-700' : isProcessing ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${isModelLoading ? 'bg-amber-50 text-amber-700' : isProcessing ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
                             <span className={`h-1.5 w-1.5 rounded-full ${isModelLoading ? 'bg-amber-500 animate-pulse' : isProcessing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                             {isModelLoading ? 'Preparing AI' : isProcessing ? 'Scanning' : 'Ready'}
                         </span>
@@ -532,7 +532,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                         </MotionButton>
                     </div>
 
-                     <p className="text-center text-[11px] text-[#718078] mt-2.5 font-medium">
+                     <p className="text-center text-xs text-[#718078] mt-2.5 font-medium">
                         Best results come from a clear, well-lit photo
                     </p>
                 </div>
